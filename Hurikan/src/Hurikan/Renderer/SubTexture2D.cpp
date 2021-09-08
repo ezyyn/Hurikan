@@ -12,21 +12,12 @@ namespace Hurikan {
 	}
 
 
-    Ref<SubTexture2D> SubTexture2D::CreateFromCoords(glm::vec2& coords, glm::vec2& spriteSize)
+    Ref<SubTexture2D> SubTexture2D::CreateFromCoords(const Ref<Texture2D>& texture, glm::vec2& coords, glm::vec2& spriteSize)
 	{
-		constexpr float x = 2, y = 3;
-		constexpr float sheetWidth = 2560.0f, sheetHeight = 1664.0f;
-		constexpr float spriteWidth = 128.0f, spriteHeight = 128.0f;
+		glm::vec2 min = { (coords.x * spriteSize.x) / texture->GetWidth(), (coords.y * spriteSize.y) / texture->GetHeight() };
+		glm::vec2 max = { ((coords.x + 1)* spriteSize.x) / texture->GetWidth(), ((coords.y + 1) * spriteSize.y) / texture->GetHeight() };
 
-		constexpr glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
-		constexpr glm::vec2 textureCoords[] = {
-			{ (x * spriteWidth) / sheetWidth,(y * spriteHeight) / sheetHeight},
-			{ ((x + 1) * spriteWidth) / sheetWidth,(y * spriteHeight) / sheetHeight},
-			{ ((x + 1) * spriteWidth) / sheetWidth,((y + 1) * spriteHeight) / sheetHeight},
-			{ (x * spriteWidth) / sheetWidth,((y + 1) * spriteHeight) / sheetHeight},
-		};
-
-		return CreateRef<SubTexture2D>(coords, spriteSize);
+		return CreateRef<SubTexture2D>(texture, min, max);
 	}
 
 }
