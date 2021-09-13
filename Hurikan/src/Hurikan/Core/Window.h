@@ -1,15 +1,15 @@
 #pragma once
 #include "hupch.h"
 
-#include "Hurikan/Core/Core.h"
+#include "Hurikan/Core/Base.h"
 #include "Hurikan/Events/Event.h"
 
 namespace Hurikan {
 
    struct WindowProps {
-		unsigned int Width, Height;
 		std::string Title;
-		WindowProps(const std::string& title = "Hurikan Engine", unsigned int w = 1280, unsigned h = 720) :Title(title), Width(w), Height(h)
+		uint32_t Width, Height;
+		WindowProps(const std::string& title = "Hurikan Engine", uint32_t w = 1280, uint32_t h = 720) :Title(title), Width(w), Height(h)
 		{
 
 		}

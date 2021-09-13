@@ -1,7 +1,7 @@
 #pragma once
 #include "hupch.h"
 
-#include "Hurikan/Core/Core.h"
+#include "Hurikan/Core/Base.h"
 // This ignores all warnings raised inside External headers
 #pragma warning(push, 0)
 #include "spdlog/spdlog.h"

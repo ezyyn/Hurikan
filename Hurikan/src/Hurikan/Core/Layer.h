@@ -1,7 +1,7 @@
 #pragma once
 #include "hupch.h"
 
-#include "Hurikan/Core/Core.h"
+#include "Hurikan/Core/Base.h"
 #include "Hurikan/Core/Timestep.h"
 
 #include "Hurikan/Events/Event.h"

@@ -17,6 +17,5 @@ public:
 private:
 	Hurikan::OrthographicCameraController m_CameraController;
 	Hurikan::Ref<Hurikan::Texture2D> m_Texture2D;
-	Hurikan::Ref<Hurikan::Texture2D> m_SpriteSheet;
 };
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "Hurikan/Core/Core.h"
+#include "Hurikan/Core/Base.h"
 
 #define EVENT_CLASS_TYPE(type) static EventType GetStaticType() { return EventType::type; }\
 								virtual EventType GetEventType() const override { return GetStaticType(); }\
@@ -33,6 +33,8 @@ namespace Hurikan {
 	class Event
 	{
 	public:
+		virtual ~Event() = default;
+
 		bool Handled = false;
 
 		virtual EventType GetEventType() const = 0;

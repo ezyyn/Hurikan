@@ -14,7 +14,7 @@ namespace Hurikan {
 			HU_CORE_ASSERT(false, "RendererAPI: None is an invalid API!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
-			return CreateRef<Hurikan::OpenGLTexture2D>(path);
+			return CreateRef<OpenGLTexture2D>(path);
 		case RendererAPI::API::Vulkan:
 			HU_CORE_ASSERT(false, "RendererAPI: Vulkan currently not supported!");
 		}

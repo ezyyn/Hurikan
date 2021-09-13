@@ -404,3 +404,5 @@ FodyWeavers.xsd
 *.filters
 *.filters
 Sandbox/Sandbox.vcxproj.filters
+*.filters
+*.filters

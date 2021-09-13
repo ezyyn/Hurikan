@@ -24,11 +24,10 @@
 
 #include "Hurikan/Renderer/Buffer.h"
 #include "Hurikan/Renderer/Shader.h"
+#include "Hurikan/Renderer/Framebuffer.h"
 #include "Hurikan/Renderer/VertexArray.h"
 #include "Hurikan/Renderer/Texture.h"
+#include "Hurikan/Renderer/SubTexture2D.h"
 
-#include "Platform/OpenGL/OpenGLShader.h"
-
-#include "Hurikan/Renderer/OrthographicCamera.h"
 #include "Hurikan/Renderer/OrthographicCameraController.h"
 //------------------------------------

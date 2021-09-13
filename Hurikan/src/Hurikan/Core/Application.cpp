@@ -16,14 +16,14 @@ namespace Hurikan {
 
 	Application* Application::s_Instance = nullptr;
 
-	Application::Application()  
+	Application::Application(const std::string& name = "Hurikan App")
 	{
 		HU_PROFILE_FUNCTION();
 
 		HU_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 
-		m_Window = std::unique_ptr<Window>(Window::Create());
+		m_Window = std::unique_ptr<Window>(Window::Create(WindowProps(name)));
 		m_Window->SetEventCallback(HU_BIND_EVENT_FN(Application::OnEvent));
 		//m_Window->SetVSync(false);
 		
@@ -100,7 +100,12 @@ namespace Hurikan {
 		}
 	}
 
-	bool Application::OnWindowClose(WindowCloseEvent& e) 
+	void Application::Close()
+	{
+		m_Running = false;
+	}
+
+	bool Application::OnWindowClose(WindowCloseEvent& e)
 	{
 		m_Running = false;
 		return true;

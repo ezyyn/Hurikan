@@ -1,37 +1,36 @@
 #include "hupch.h"
-#include "Windows_Input.h"
+#include "Hurikan/Core/Input.h"
 
 #include "Hurikan/Core/Application.h"
-#include "GLFW/glfw3.h"
+#include <GLFW/glfw3.h>
+
 namespace Hurikan {
 
-	Input* Input::s_Instance = new Windows_Input();
-
-	bool Windows_Input::IsKeyPressedImpl(int keycode)
+	bool Input::IsKeyPressed(int keycode)
 	{
 		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		auto state = glfwGetKey(window, keycode);
 		return state == GLFW_PRESS || state == GLFW_REPEAT;
 	}
 
-	bool Windows_Input::IsMouseButtonPressedImpl(int button)
+	bool Input::IsMouseButtonPressed(int button)
 	{
 		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		auto state = glfwGetMouseButton(window, button);
 		return state == GLFW_PRESS;
 	}
 
-	float Windows_Input::GetMouseXImpl()
+	float Input::GetMouseX()
 	{
-		return (float)GetMousePositionImpl().first;// FIRST -> X
+		return (float)GetMousePosition().first;// FIRST -> X
 	}
 
-	float Windows_Input::GetMouseYImpl()
+	float Input::GetMouseY()
 	{
-		return (float)GetMousePositionImpl().second; // SECOND -> Y
+		return (float)GetMousePosition().second; // SECOND -> Y
 	}
 
-	std::pair<float, float> Windows_Input::GetMousePositionImpl()
+	std::pair<float, float> Input::GetMousePosition()
 	{
 		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		double xpos, ypos;

@@ -1,7 +1,7 @@
 #pragma once
 #include "hupch.h"
 
-#include "Core.h"
+#include "Base.h"
 #include "Window.h"
 
 #include "Hurikan/Core/Timestep.h"
@@ -15,10 +15,11 @@ namespace Hurikan {
 	class Application
 	{
 	public:
-		Application();
+		Application(const std::string& name);
 		virtual ~Application();
 
 		void Run();
+		void Close();
 
 		void OnEvent(Event& e);
 

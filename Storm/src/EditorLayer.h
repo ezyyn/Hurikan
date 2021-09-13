@@ -1,0 +1,29 @@
+#pragma once
+
+#include "Hurikan.h"
+
+namespace Hurikan {
+	class EditorLayer : public Layer
+	{
+	public:
+		EditorLayer();
+		virtual ~EditorLayer() = default;
+
+		virtual void OnAttach() override;
+		virtual void OnDetach() override;
+
+		virtual void OnUpdate(Timestep deltaTime) override;
+		virtual void OnImGuiRender() override;
+		virtual void OnEvent(Event& e) override;
+	private:
+		Hurikan::OrthographicCameraController m_CameraController;
+
+		Hurikan::Ref<Texture2D> m_Texture2D;
+		Hurikan::Ref<Texture2D> m_SpriteSheet;
+		Hurikan::Ref<Framebuffer> m_Framebuffer;
+
+		glm::vec2 m_ViewportSize = {0,0};
+
+		std::unordered_map<char, Ref<SubTexture2D>> m_TextureMap;
+	};
+}

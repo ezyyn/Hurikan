@@ -12,12 +12,10 @@ namespace Hurikan {
 	}
 
 
-    Ref<SubTexture2D> SubTexture2D::CreateFromCoords(const Ref<Texture2D>& texture, glm::vec2& coords, glm::vec2& spriteSize)
+    Ref<SubTexture2D> SubTexture2D::CreateFromCoords(const Ref<Texture2D>& texture, glm::vec2 coords, glm::vec2 spriteSize)
 	{
-		glm::vec2 min = { (coords.x * spriteSize.x) / texture->GetWidth(), (coords.y * spriteSize.y) / texture->GetHeight() };
+	    glm::vec2 min = { (coords.x * spriteSize.x) / texture->GetWidth(), (coords.y * spriteSize.y) / texture->GetHeight() };
 		glm::vec2 max = { ((coords.x + 1)* spriteSize.x) / texture->GetWidth(), ((coords.y + 1) * spriteSize.y) / texture->GetHeight() };
-
-		return CreateRef<SubTexture2D>(texture, min, max);
+		return CreateRef<SubTexture2D>(texture, min,max);
 	}
-
 }

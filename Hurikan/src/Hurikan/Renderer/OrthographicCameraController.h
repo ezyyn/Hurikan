@@ -24,7 +24,7 @@ namespace Hurikan {
 		void OnUpdate(Timestep ts);
 		void OnEvent(Event& e);
 
-		const OrthographicCameraBounds GetBounds() const { return m_CameraBounds; }
+		void OnResize(float width, float height);
 
 		OrthographicCamera& GetCamera() { return m_Camera; }
 		const OrthographicCamera& GetCamera() const { return m_Camera; }
@@ -43,7 +43,6 @@ namespace Hurikan {
 		glm::vec3 m_CameraPosition = {0.0f,0.0f,0.0f};
 
 		OrthographicCamera m_Camera;
-		OrthographicCameraBounds m_CameraBounds;
 	};
 }
 
