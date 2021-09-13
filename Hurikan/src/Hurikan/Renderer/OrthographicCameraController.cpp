@@ -16,16 +16,16 @@ namespace Hurikan {
 	void OrthographicCameraController::OnUpdate(Timestep deltaTime)
 	{
 		HU_PROFILE_FUNCTION();
-		if (Input::IsKeyPressed(Key::Left)) {
+		if (Input::IsKeyPressed(Key::A)) {
 			m_CameraPosition.x -= m_CameraTranslationSpeed * deltaTime;
 		}
 		else
-			if (Input::IsKeyPressed(Key::Right)) {
+			if (Input::IsKeyPressed(Key::D)) {
 				m_CameraPosition.x += m_CameraTranslationSpeed * deltaTime;
-			}  if (Input::IsKeyPressed(Key::Up)) {
+			}  if (Input::IsKeyPressed(Key::W)) {
 				m_CameraPosition.y += m_CameraTranslationSpeed * deltaTime;
 			}
-			else if (Input::IsKeyPressed(Key::Down)) {
+			else if (Input::IsKeyPressed(Key::S)) {
 				m_CameraPosition.y -= m_CameraTranslationSpeed * deltaTime;
 			}
 			m_Camera.SetPosition(m_CameraPosition);
