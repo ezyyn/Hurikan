@@ -26,6 +26,8 @@ namespace Hurikan {
 		void PushLayer(Layer* layer);
 		void PushOverLay(Layer* overlayer);
 
+		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
+
 		static inline Application& Get() { return *s_Instance; }
 
 		inline Window& GetWindow() { return *m_Window; }

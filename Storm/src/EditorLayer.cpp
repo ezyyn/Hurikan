@@ -58,6 +58,7 @@ namespace Hurikan {
 	{
 		HU_PROFILE_FUNCTION();
 
+		if(m_ViewportFocus)
 		m_CameraController.OnUpdate(ts);
 
 
@@ -159,18 +160,20 @@ namespace Hurikan {
 			ImGui::EndMenuBar();
 		}
 		ImGui::Begin("Settings");
-
 		auto stats = Hurikan::Renderer2D::GetStats();
 		ImGui::Text("Renderer2D Stats:");
 		ImGui::Text("Draw Calls: %d", stats.DrawCalls);
 		ImGui::Text("Quads: %d", stats.QuadCount);
 		ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
 		ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
-
 		ImGui::End();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport");
+		m_ViewportFocus = ImGui::IsWindowFocused();
+		m_ViewportHovered = ImGui::IsAnyWindowHovered();
+		Application::Get().GetImGuiLayer()->SetBlockEvents(!m_ViewportFocus || !m_ViewportHovered);
+
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 		if (m_ViewportSize.x != viewportPanelSize.x && m_ViewportSize.y != viewportPanelSize.y)
 		{
@@ -183,7 +186,7 @@ namespace Hurikan {
 		ImGui::Image((void*)textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 		ImGui::PopStyleVar();
 		ImGui::End();
-		
+
 		ImGui::End();
 	}
 

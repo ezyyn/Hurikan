@@ -23,6 +23,7 @@ namespace Hurikan {
 		Hurikan::Ref<Framebuffer> m_Framebuffer;
 
 		glm::vec2 m_ViewportSize = {0,0};
+		bool m_ViewportFocus = false, m_ViewportHovered = false;
 
 		std::unordered_map<char, Ref<SubTexture2D>> m_TextureMap;
 	};
