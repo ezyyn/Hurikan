@@ -23,7 +23,7 @@ namespace Hurikan {
 		static inline RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 	private:
 		struct SceneData {
-			glm::mat4 ViewProjectionMaxtrix;
+			glm::mat4 ViewProjectionMatrix;
 		};
 
 		static SceneData* m_SceneData;

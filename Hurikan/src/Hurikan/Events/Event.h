@@ -1,6 +1,8 @@
 #pragma once
 #include "Hurikan/Core/Base.h"
 
+#define HU_BIND_EVENT_FN(x) std::bind(&x,this,std::placeholders::_1)
+
 #define EVENT_CLASS_TYPE(type) static EventType GetStaticType() { return EventType::type; }\
 								virtual EventType GetEventType() const override { return GetStaticType(); }\
 								virtual const char* GetName() const override { return #type; }

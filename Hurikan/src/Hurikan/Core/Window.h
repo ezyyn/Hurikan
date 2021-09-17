@@ -11,7 +11,6 @@ namespace Hurikan {
 		uint32_t Width, Height;
 		WindowProps(const std::string& title = "Hurikan Engine", uint32_t w = 1280, uint32_t h = 720) :Title(title), Width(w), Height(h)
 		{
-
 		}
 	};
 	//Window Interface

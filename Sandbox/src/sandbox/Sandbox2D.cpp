@@ -39,7 +39,7 @@ void Sandbox2D::OnUpdate(Hurikan::Timestep ts)
 	// Scene lifetime
 
 	Hurikan::Renderer2D::BeginScene(m_CameraController.GetCamera());
-	Hurikan::Renderer2D::DrawQuad({ 0.0f,0.0f,0.0f }, { 1,1 },m_Texture2D);
+	Hurikan::Renderer2D::DrawQuad({ 0.0f,0.0f,0.0f }, { 1,1 }, {1,1,1,1});
 	Hurikan::Renderer2D::EndScene();
 }
 

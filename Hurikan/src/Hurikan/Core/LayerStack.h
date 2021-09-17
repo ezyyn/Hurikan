@@ -8,7 +8,7 @@
 
 namespace Hurikan {
 
-	class HU_API LayerStack
+	class LayerStack
 	{
 	public:
 		LayerStack();

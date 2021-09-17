@@ -11,7 +11,7 @@
 
 namespace Hurikan {
 
-	class HU_API Log
+	class Log
 	{
 	private:
 		static Ref<spdlog::logger> s_CoreLogger;
@@ -37,6 +37,5 @@ namespace Hurikan {
 #define HU_CORE_TRACE(...) ::Hurikan::Log::GetCoreLogger()->trace(__VA_ARGS__);
 #define HU_CORE_INFO(...) ::Hurikan::Log::GetCoreLogger()->info(__VA_ARGS__);
 #define HU_CORE_FATAL(...) ::Hurikan::Log::GetCoreLogger()->critical(__VA_ARGS__);
-#define HU_CORE_ASSERT(x,...) if(!(x)){ HU_CORE_ERROR(__VA_ARGS__); __debugbreak();}
 }
 

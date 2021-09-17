@@ -9,8 +9,9 @@
 namespace Hurikan {
 
 	OrthographicCameraController::OrthographicCameraController(float aspectRatio = 16/9, bool rotation = false)
-		: m_AspectRatio(aspectRatio), m_Camera(-m_AspectRatio * m_ZoomLevel, m_AspectRatio* m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel), /*m_CameraBounds({-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel}),*/ m_Rotation(rotation)
+		: m_AspectRatio(aspectRatio), m_Camera(-m_AspectRatio * m_ZoomLevel, m_AspectRatio* m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel), m_CameraBounds({-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel}), m_Rotation(rotation)
 	{
+		CalculateView();
 	}
 
 	void OrthographicCameraController::OnUpdate(Timestep deltaTime)
@@ -52,24 +53,27 @@ namespace Hurikan {
 	void OrthographicCameraController::OnResize(float width, float height)
 	{
 		m_AspectRatio = width/height;
-	//	m_CameraBounds = { -m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel };
-	//	m_Camera.SetProjection(m_CameraBounds.Left, m_CameraBounds.Right, m_CameraBounds.Bottom, m_CameraBounds.Top);
-		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
+		CalculateView();
 	}
 
-/*	void OrthographicCameraController::CalculateView()
+	void OrthographicCameraController::SetPosition(const glm::vec3& position)
+	{
+		m_CameraPosition = position;
+		CalculateView();
+	}
+
+	void OrthographicCameraController::CalculateView()
 	{
 		m_CameraBounds = { -m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel };
 		m_Camera.SetProjection(m_CameraBounds.Left, m_CameraBounds.Right, m_CameraBounds.Bottom, m_CameraBounds.Top);
-	}*/
+	}
 
 	bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
 	{
 		HU_PROFILE_FUNCTION();
 		m_ZoomLevel -= e.GetYOffset() * .25f;
 		m_ZoomLevel = std::max(m_ZoomLevel, .25f);
-		m_Camera.SetProjection(-m_AspectRatio * m_ZoomLevel, m_AspectRatio * m_ZoomLevel, -m_ZoomLevel, m_ZoomLevel);
-	//	CalculateView();
+		CalculateView();
 		return false;
 	}
 
@@ -78,7 +82,6 @@ namespace Hurikan {
 		HU_PROFILE_FUNCTION();
 
 		OnResize((float)e.GetWidth(), (float)e.GetHeight());
-		//CalculateView();
 		return false;
 	}
 

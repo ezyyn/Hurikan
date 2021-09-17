@@ -3,7 +3,7 @@
 #include "Hurikan/Core/Layer.h"
 
 namespace Hurikan {
-	class HU_API ImGuiLayer : public Layer
+	class  ImGuiLayer : public Layer
 	{
 	public:
 		ImGuiLayer();
