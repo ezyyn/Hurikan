@@ -14,7 +14,9 @@ namespace Hurikan {
 		const glm::vec3& GetPosition() const { return m_Position; }
 		float GetRotation() const { return m_Rotation; }
 
-		void SetPosition(const glm::vec3& position) { RecalculateViewMatrix(); m_Position = position; }
+		void SetPosition(const glm::vec3& position) {
+			m_Position = position; RecalculateViewMatrix();
+		}
 		void SetRotation(float rotation) { RecalculateViewMatrix(); m_Rotation = rotation; }
 
 		const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }

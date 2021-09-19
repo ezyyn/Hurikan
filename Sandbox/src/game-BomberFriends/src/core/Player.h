@@ -1,5 +1,6 @@
 #pragma once
 #include "Entity.h"
+#include "GameGrid.h"
 
 enum PlayerEffectType
 {
@@ -8,7 +9,7 @@ enum PlayerEffectType
 
 struct PlayerEffect
 {
-	uint32_t Speed = 1;
+	uint32_t Speed = 2;
 	uint32_t MaxBomb = 1;
 	bool Shield = false;
 	bool Curse = false;
@@ -39,17 +40,31 @@ struct PlayerStats
 	PlayerEffect Effect;
 };
 
+struct PlayerBorder
+{
+	float x, y;
+	//float width, height;
+	float center_x, center_y;
+	float radius;
+};
+
 class Player : public Entity
 {
 public:
 	Player(OrthographicCameraController& controller);
-	~Player() = default;
+
+	void LoadBoxProperties(BoxProperties** boxprops) { m_GridCollision = boxprops; }
 
 	void Draw() override;
-	void Update(Timestep ts) override;
+	void Update(Timestep& ts) override; 
 private:
 	OrthographicCameraController m_Controller;
-	PlayerStats m_Stats;
-	glm::vec2 m_Position;
+	PlayerStats m_PlayerStats;
+	Ref<SubTexture2D> m_PlayerTexture;
+
+	PlayerBorder m_PlayerBorder;
+
+	BoxProperties** m_GridCollision;
 };
+
 

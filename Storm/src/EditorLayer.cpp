@@ -54,7 +54,7 @@ namespace Hurikan {
 	}
 
 #define TEST 1
-	void EditorLayer::OnUpdate(Hurikan::Timestep ts)
+	void EditorLayer::OnUpdate(Hurikan::Timestep& ts)
 	{
 		HU_PROFILE_FUNCTION();
 

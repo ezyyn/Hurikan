@@ -19,7 +19,7 @@ namespace Hurikan {
 	};
 	struct Renderer2D_Data
 	{
-		static const uint32_t MaxQuads = 200;
+		static const uint32_t MaxQuads = 20000;
 		static const uint32_t MaxVertices = MaxQuads * 4;
 		static const uint32_t MaxIndices = MaxQuads * 6;
 		static const uint32_t MaxTextureSlots = 32; // TODO: RenderCaps
@@ -105,6 +105,7 @@ namespace Hurikan {
 
 	void Renderer2D::FlushAndReset()
 	{
+		HU_CORE_INFO("d");
 		EndScene();
 
 		s_Data.QuadIndexCount = 0;
@@ -243,7 +244,6 @@ namespace Hurikan {
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
 		HU_PROFILE_FUNCTION();
-
 		if (s_Data.QuadIndexCount >= Renderer2D_Data::MaxIndices)
 			FlushAndReset();
 

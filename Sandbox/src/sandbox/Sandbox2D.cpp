@@ -21,7 +21,7 @@ void Sandbox2D::OnDetach()
 #define TEST 2
 
 
-void Sandbox2D::OnUpdate(Hurikan::Timestep ts)
+void Sandbox2D::OnUpdate(Hurikan::Timestep& ts)
 {
 	HU_PROFILE_FUNCTION();
 

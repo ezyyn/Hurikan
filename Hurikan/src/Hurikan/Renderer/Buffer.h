@@ -1,4 +1,5 @@
 #pragma once
+#include "Hurikan/Core/Base.h"
 
 namespace Hurikan {
 

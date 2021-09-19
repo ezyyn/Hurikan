@@ -64,7 +64,6 @@ namespace Hurikan {
 			if (e.Handled)
 				break;
 			(*--it)->OnEvent(e);
-			
 		}
 	}
 
@@ -77,6 +76,8 @@ namespace Hurikan {
 			float time = (float)glfwGetTime(); // -> Platform::GetTime()
 			Timestep timestep = time - m_LastFrameTime;
 			m_LastFrameTime = time;
+
+			//HU_CORE_INFO("{0} ms", timestep); // MS
 
 			if (!m_Minimized) 
 			{

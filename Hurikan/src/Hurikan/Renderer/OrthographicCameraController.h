@@ -33,7 +33,7 @@ namespace Hurikan {
 		OrthographicCameraBounds& GetCameraBounds() { return m_CameraBounds; }
 		const OrthographicCamera& GetCamera() const { return m_Camera; }
 
-		void SetZoomLevel(float level) { m_ZoomLevel = level; }
+		void SetZoomLevel(float level) { m_ZoomLevel = level; CalculateView(); }
 		float GetZoomLevel() const { return m_ZoomLevel; }
 	private:
 		bool OnMouseScrolled(MouseScrolledEvent& e);
@@ -41,6 +41,7 @@ namespace Hurikan {
 	private:
 		float m_AspectRatio;
 		float m_ZoomLevel = 1.0;
+		float m_yOffset = 0;
 		float m_CameraRotation = 0.0f;
 		bool m_Rotation;
 		float m_CameraTranslationSpeed = 5.0f, m_CameraRotationSpeed = 1.0f;

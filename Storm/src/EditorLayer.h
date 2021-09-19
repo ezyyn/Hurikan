@@ -12,7 +12,7 @@ namespace Hurikan {
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
 
-		virtual void OnUpdate(Timestep deltaTime) override;
+		virtual void OnUpdate(Timestep& deltaTime) override;
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& e) override;
 	private:

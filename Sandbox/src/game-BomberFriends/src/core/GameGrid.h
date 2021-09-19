@@ -1,24 +1,45 @@
 #pragma once
 #include "Entity.h"
 
+enum BoxTypeEnum
+{
+	WALL,BOX,EMPTY
+};
+
+struct BoxProperties
+{
+	uint32_t X, Y;
+	uint32_t Width, Height;
+	BoxTypeEnum BoxType;
+	//Ref<Texture2D> Texture;
+	/*BoxProperties(float _x, float _y, float _width, float _height, Ref<Texture2D> _texture ) : X(_x), Y(_y), Width(_width), Height(_height), Texture(_texture)
+	{
+	}*/
+};
 class GameGrid : public Entity
 {
 public:
 	GameGrid(unsigned int width, unsigned int height);
 	~GameGrid() = default;
 
+	BoxProperties** GetBoxProperties() { return m_CollisionGrid; }
+
 	void Init();
-	void Draw() override;
-	void Update(Timestep ts) override;
+	void Draw();
+	void Update(Timestep& ts);
 private:
 	unsigned int m_Width, m_Height;
 
 	std::string m_MapSkeleton;
-	std::unordered_map<char, Ref<Texture2D>> m_TextureMap;
-	Hurikan::Ref<Hurikan::Texture2D> m_SpriteSheet;
-	std::array<Ref<SubTexture2D>, 64> m_SubTextureList;
+	
+	Ref<Texture2D> m_SpriteSheet;
 
-	char** m_GameGrid;
+	Ref<SubTexture2D> m_WallTile;
+	Ref<Texture2D> m_BackgroundTile;
+
+	char** m_GameGrid = nullptr;
+
+	BoxProperties** m_CollisionGrid;
 
 	//Level map
 };

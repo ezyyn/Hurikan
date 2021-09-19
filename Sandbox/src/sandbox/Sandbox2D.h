@@ -11,7 +11,7 @@ public:
 	virtual void OnAttach() override;
 	virtual void OnDetach() override;
 
-	virtual void OnUpdate(Hurikan::Timestep deltaTime) override;
+	virtual void OnUpdate(Hurikan::Timestep& deltaTime) override;
 	virtual void OnImGuiRender() override;
 	virtual void OnEvent(Hurikan::Event& e) override;
 private:

@@ -12,14 +12,15 @@ namespace GameFramework
 		TimeBomb,Dynamite,Rocket
 	};
 
-	class Game : public Layer
+	class GameLayer : public Layer
 	{
 	public:
-		Game();
+		GameLayer();
 	private:
 		void Init();
 
-		void OnUpdate(Timestep ts) override;
+		void OnImGuiRender() override;
+		void OnUpdate(Timestep& ts) override;
 		void OnEvent(Event& e) override;
 	private:
 		uint32_t m_Width = 1280, m_Height = 720;

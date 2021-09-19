@@ -17,29 +17,30 @@ namespace Hurikan {
 	void OrthographicCameraController::OnUpdate(Timestep deltaTime)
 	{
 		HU_PROFILE_FUNCTION();
-		if (Input::IsKeyPressed(Key::A)) {
+		if (Input::IsKeyPressed(Key::A)) 
+		{
 			m_CameraPosition.x -= m_CameraTranslationSpeed * deltaTime;
+		} else if (Input::IsKeyPressed(Key::D)) {
+			m_CameraPosition.x += m_CameraTranslationSpeed * deltaTime;
+		} else if (Input::IsKeyPressed(Key::W)) {
+			m_CameraPosition.y += m_CameraTranslationSpeed * deltaTime;
+		} else if (Input::IsKeyPressed(Key::S)) {
+			m_CameraPosition.y -= m_CameraTranslationSpeed * deltaTime;
 		}
-		else
-			if (Input::IsKeyPressed(Key::D)) {
-				m_CameraPosition.x += m_CameraTranslationSpeed * deltaTime;
-			}  if (Input::IsKeyPressed(Key::W)) {
-				m_CameraPosition.y += m_CameraTranslationSpeed * deltaTime;
+
+		m_Camera.SetPosition(m_CameraPosition);
+
+		if (m_Rotation) 
+		{
+			if (Input::IsKeyPressed(Key::Q)) {
+				m_CameraRotation += m_CameraRotationSpeed * deltaTime;
+			} else if (Input::IsKeyPressed(Key::E)) {
+				m_CameraRotation -= m_CameraRotationSpeed * deltaTime;
 			}
-			else if (Input::IsKeyPressed(Key::S)) {
-				m_CameraPosition.y -= m_CameraTranslationSpeed * deltaTime;
-			}
-			m_Camera.SetPosition(m_CameraPosition);
-			if (m_Rotation) {
-				if (Input::IsKeyPressed(Key::Q)) {
-					m_CameraRotation += m_CameraRotationSpeed * deltaTime;
-				}
-				else if (Input::IsKeyPressed(Key::E)) {
-					m_CameraRotation -= m_CameraRotationSpeed * deltaTime;
-				}
-				m_Camera.SetRotation(m_CameraRotation);
-			}
-			m_CameraTranslationSpeed = m_ZoomLevel;
+			m_Camera.SetRotation(m_CameraRotation);
+		}
+
+		m_CameraTranslationSpeed = m_ZoomLevel;
 	}
 
 	void OrthographicCameraController::OnEvent(Event& e)
@@ -59,6 +60,7 @@ namespace Hurikan {
 	void OrthographicCameraController::SetPosition(const glm::vec3& position)
 	{
 		m_CameraPosition = position;
+		m_Camera.SetPosition(m_CameraPosition);
 		CalculateView();
 	}
 
@@ -71,7 +73,8 @@ namespace Hurikan {
 	bool OrthographicCameraController::OnMouseScrolled(MouseScrolledEvent& e)
 	{
 		HU_PROFILE_FUNCTION();
-		m_ZoomLevel -= e.GetYOffset() * .25f;
+		m_yOffset = e.GetYOffset();
+		m_ZoomLevel -= m_yOffset * .25f;
 		m_ZoomLevel = std::max(m_ZoomLevel, .25f);
 		CalculateView();
 		return false;
