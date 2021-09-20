@@ -104,7 +104,7 @@ void GameGrid::Draw()
 			if (m_CollisionGrid[y][x].BoxType == BoxTypeEnum::WALL)
 			Renderer2D::DrawQuad({ m_CollisionGrid[y][x].X,m_CollisionGrid[y][x].Y,0 }, 
 				{ m_CollisionGrid[y][x].Width,  m_CollisionGrid[y][x].Height},
-				m_WallTile);
+				/*m_WallTile*/{0,0,0,1});
 		}
 	}
 }

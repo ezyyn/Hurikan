@@ -26,5 +26,7 @@ namespace Hurikan {
 		bool m_ViewportFocus = false, m_ViewportHovered = false;
 
 		std::unordered_map<char, Ref<SubTexture2D>> m_TextureMap;
+
+		Hurikan::Scene
 	};
 }

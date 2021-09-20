@@ -18,6 +18,7 @@ IncludeDir["Glad"] = "Hurikan/vendor/Glad/include"
 IncludeDir["GLFW"] = "Hurikan/vendor/GLFW/include"
 IncludeDir["ImGui"] = "Hurikan/vendor/imgui"
 IncludeDir["stb_image"] = "Hurikan/vendor/stb_image"
+IncludeDir["entt"] = "Hurikan/vendor/entt/include"
 
 group "Dependencies"
 	include "Hurikan/vendor/Glad"
@@ -58,7 +59,8 @@ project "Hurikan"
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.glm}",
-		"%{IncludeDir.stb_image}"
+		"%{IncludeDir.stb_image}",
+		"%{IncludeDir.entt}"
 	}
 	links {
 		"GLFW",
@@ -109,7 +111,8 @@ project "Sandbox"
 		"Hurikan/src",
 		"Hurikan/vendor/imgui",
 		"%{IncludeDir.glm}",
-		"Hurikan/vendor/Glad/include"
+		"Hurikan/vendor/Glad/include",
+		"%{IncludeDir.entt}"
 	}
 	links {
 		"Hurikan"
@@ -154,7 +157,8 @@ project "Storm"
 		"Hurikan/src",
 		"Hurikan/vendor/imgui",
 		"%{IncludeDir.glm}",
-		"Hurikan/vendor/Glad/include"
+		"Hurikan/vendor/Glad/include",
+		"%{IncludeDir.entt}"
 	}
 	links {
 		"Hurikan"

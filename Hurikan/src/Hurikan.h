@@ -31,3 +31,6 @@
 
 #include "Hurikan/Renderer/OrthographicCameraController.h"
 //------------------------------------
+//----Scene Components----------------
+#include "Hurikan/Scene/Scene.h"
+//------------------------------------

@@ -40,8 +40,10 @@ struct PlayerStats
 	PlayerEffect Effect;
 };
 
-struct PlayerBorder
+struct PlayerTransform
 {
+	glm::vec2 velocity;
+
 	float x, y;
 	//float width, height;
 	float center_x, center_y;
@@ -60,9 +62,9 @@ public:
 private:
 	OrthographicCameraController m_Controller;
 	PlayerStats m_PlayerStats;
-	Ref<SubTexture2D> m_PlayerTexture;
+	Ref<Texture2D> m_PlayerTexture;
 
-	PlayerBorder m_PlayerBorder;
+	PlayerTransform m_PlayerBorder;
 
 	BoxProperties** m_GridCollision;
 };
