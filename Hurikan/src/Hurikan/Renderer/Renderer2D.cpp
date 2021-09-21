@@ -197,15 +197,12 @@ namespace Hurikan {
 			FlushAndReset();
 
 		constexpr size_t quadVertexCount = 4;
-		constexpr float textureIndex = 0.0f; // White Texture
-		constexpr float tilingFactor = 1.0f; // Flat color does not need tiling factor
-		constexpr glm::vec2 textureCoords[] =
-		{
-			{ 0.0f, 0.0f },
-			{ 1.0f, 0.0f },
-			{ 1.0f, 1.0f },
-			{ 0.0f, 1.0f }
-		};
+		const float textureIndex = 0.0f; // White Texture
+		constexpr glm::vec2 textureCoords[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
+		const float tilingFactor = 1.0f;
+
+		if (s_Data.QuadIndexCount >= Renderer2D_Data::MaxIndices)
+			FlushAndReset();
 
 		for (size_t i = 0; i < quadVertexCount; i++)
 		{
@@ -216,8 +213,8 @@ namespace Hurikan {
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
 			s_Data.QuadVertexBufferPtr++;
 		}
-		s_Data.QuadIndexCount += 6;
 
+		s_Data.QuadIndexCount += 6;
 
 		s_Data.Stats.QuadCount++;
 	}

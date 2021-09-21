@@ -49,7 +49,6 @@ namespace Hurikan
 
 	Scene::~Scene()
 	{
-
 	}
 
 	entt::entity Scene::CreateEntity()
