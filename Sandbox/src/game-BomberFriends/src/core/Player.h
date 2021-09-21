@@ -1,5 +1,5 @@
 #pragma once
-#include "Entity.h"
+#include "GameEntity.h"
 #include "GameGrid.h"
 
 enum PlayerEffectType
@@ -50,7 +50,7 @@ struct PlayerTransform
 	float radius;
 };
 
-class Player : public Entity
+class Player : public GameEntity
 {
 public:
 	Player(OrthographicCameraController& controller);

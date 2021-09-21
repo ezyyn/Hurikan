@@ -1,5 +1,5 @@
 #pragma once
-#include "Entity.h"
+#include "GameEntity.h"
 
 enum BoxTypeEnum
 {
@@ -16,7 +16,7 @@ struct BoxProperties
 	{
 	}*/
 };
-class GameGrid : public Entity
+class GameGrid : public GameEntity
 {
 public:
 	GameGrid(unsigned int width, unsigned int height);

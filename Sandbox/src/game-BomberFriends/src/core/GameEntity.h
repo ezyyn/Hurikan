@@ -3,7 +3,7 @@
 
 using namespace Hurikan;
 
-class Entity
+class GameEntity
 {
 	virtual void Draw() = 0;
 	virtual void Update(Timestep& ts) = 0;

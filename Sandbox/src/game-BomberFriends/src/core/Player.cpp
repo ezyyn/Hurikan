@@ -37,7 +37,7 @@ float Clamp(float min, float max, float value)
 
 bool CircleVsRect(const PlayerTransform& player, const BoxProperties& collider)
 {
-	
+	return false;
 }
 //bool collision = false;
 

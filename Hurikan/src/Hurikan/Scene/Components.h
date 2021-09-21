@@ -1,8 +1,19 @@
 #pragma once
 #include <glm/glm.hpp>
 
+#include "Hurikan/Renderer/Camera.h"
+
 namespace Hurikan
 {
+	struct TagComponent
+	{
+		std::string Tag;
+
+		TagComponent() = default;
+		TagComponent(const TagComponent&) = default;
+		TagComponent(const std::string& tag) : Tag(tag) {}
+	};
+
 	struct TransformComponent
 	{
 		glm::mat4 Transform{1.0f};
@@ -26,5 +37,17 @@ namespace Hurikan
 
 		operator glm::vec4& () { return Color; }
 		operator const glm::vec4& () const { return Color; }
+	};
+
+	struct CameraComponent
+	{
+		Hurikan::Camera Camera;
+		bool Primary = true; // TODO: maybe move to scene system
+		bool FixedAspectRatio = false;
+
+		CameraComponent() = default;
+		CameraComponent(const CameraComponent&) = default;
+		CameraComponent(const glm::mat4& projection) : Camera(projection) {}
+
 	};
 }

@@ -49,12 +49,17 @@ namespace Hurikan {
 
 		m_ActiveScene = CreateRef<Scene>();
 
-		auto square = m_ActiveScene->CreateEntity();
-
-		m_ActiveScene->Reg().emplace<TransformComponent>(square);
-		m_ActiveScene->Reg().emplace<SpriteRendererComponent>(square, glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f });
-
+		auto square = m_ActiveScene->CreateEntity("Square");
+		square.AddComponent<SpriteRendererComponent>(glm::vec4{	1.0f, 0.0f, 0.0f, 1.0f });
 		m_SquareEntity = square;
+
+
+		m_CameraEntity = m_ActiveScene->CreateEntity("Camera Entity");
+		m_CameraEntity.AddComponent<CameraComponent>(glm::ortho(-16.0f, 16.0f, -9.0f, 9.0f, -1.0f, 1.0f));
+
+		m_SecondCamera = m_ActiveScene->CreateEntity("Second-Camera Entity");
+		auto& cc = m_SecondCamera.AddComponent<CameraComponent>(glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f));
+		cc.Primary = false;   
 	}
 
 	void EditorLayer::OnDetach()
@@ -63,13 +68,22 @@ namespace Hurikan {
 	}
 
 #define TEST 2
-	void EditorLayer::OnUpdate(Hurikan::Timestep& ts)
+	void EditorLayer::OnUpdate(Timestep& ts)
 	{
 		HU_PROFILE_FUNCTION();
 
+		if (FramebufferSpecification spec = m_Framebuffer->GetSpecification();
+			m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && 
+			(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
+		{
+			m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+
+			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+		}
+
 		if (m_ViewportFocus)
 			m_CameraController.OnUpdate(ts);
-
 
 		Hurikan::Renderer2D::ResetStats();
 		m_Framebuffer->Bind();
@@ -89,11 +103,8 @@ namespace Hurikan {
 		}
 		Hurikan::Renderer2D::EndScene();
 #elif TEST == 2
-		Hurikan::Renderer2D::BeginScene(m_CameraController.GetCamera());
 		// Update scene
 		m_ActiveScene->OnUpdate(ts);
-		//Hurikan::Renderer2D::DrawQuad({ 0.0f,0.0f,0.0f }, { 1,1 }, m_Texture2D);
-		Hurikan::Renderer2D::EndScene();
 #endif
 		m_Framebuffer->Unbind();
 	}
@@ -171,9 +182,24 @@ namespace Hurikan {
 		ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
 		ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
 
-		auto& square_color = m_ActiveScene->Reg().get<SpriteRendererComponent>(m_SquareEntity).Color;
+		if(m_SquareEntity)
+		{
+			ImGui::Separator();
+			auto& tag = m_SquareEntity.GetComponent<TagComponent>().Tag;
+			ImGui::Text("%s", tag.c_str());
 
-		ImGui::ColorEdit4("Square Color", glm::value_ptr(square_color));
+			auto& square_color = m_SquareEntity.GetComponent<SpriteRendererComponent>().Color;
+			ImGui::ColorEdit4("Square Color", glm::value_ptr(square_color));
+			ImGui::Separator();
+		}
+		ImGui::DragFloat3("Camera Transform",
+			glm::value_ptr(m_CameraEntity.GetComponent<TransformComponent>().Transform[3]));
+
+		if (ImGui::Checkbox("Camera A", &m_PrimaryCamera))
+		{
+			m_CameraEntity.GetComponent<CameraComponent>().Primary = m_PrimaryCamera;
+			m_SecondCamera.GetComponent<CameraComponent>().Primary = !m_PrimaryCamera;
+		}
 		ImGui::End();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
