@@ -52,6 +52,7 @@ namespace Hurikan {
 		auto square = m_ActiveScene->CreateEntity();
 
 		m_ActiveScene->Reg().emplace<TransformComponent>(square);
+		m_ActiveScene->Reg().emplace<SpriteRendererComponent>(square, glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f });
 	}
 
 	void EditorLayer::OnDetach()
@@ -59,45 +60,40 @@ namespace Hurikan {
 		HU_PROFILE_FUNCTION();
 	}
 
-#define TEST 1
+#define TEST 2
 	void EditorLayer::OnUpdate(Hurikan::Timestep& ts)
 	{
 		HU_PROFILE_FUNCTION();
 
-		if(m_ViewportFocus)
-		m_CameraController.OnUpdate(ts);
+		if (m_ViewportFocus)
+			m_CameraController.OnUpdate(ts);
 
 
 		Hurikan::Renderer2D::ResetStats();
-		{
-			HU_PROFILE_SCOPE("Sandbox2D:OnUpdate:RendererPrep");
-			m_Framebuffer->Bind();
-			Hurikan::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
-			Hurikan::RenderCommand::Clear();
-		}
-		{
-			HU_PROFILE_SCOPE("Sandbox2D:OnUpdate:RendererDraw");
-#if TEST == 1 
-			Hurikan::Renderer2D::BeginScene(m_CameraController.GetCamera());
-			for (size_t y = 0; y < s_MapHeight; y++)
-			{
-				for (size_t x = 0; x < s_MapWidth; x++)
-				{
-					char tileType = s_MapTiles[x + y * s_MapWidth];
-					Ref<SubTexture2D> tile = m_TextureMap[tileType];
-					Hurikan::Renderer2D::DrawQuad({ s_MapWidth - x, y, -0.1f }, { 1.0f,1.0f }, tile);
-				}
-			}
-			Hurikan::Renderer2D::EndScene();
-#elif TEST == 2
-			Hurikan::Renderer2D::BeginScene(m_CameraController.GetCamera());
-			Hurikan::Renderer2D::DrawQuad({ 0.0f,0.0f,0.0f }, { 1,1 }, m_Texture2D);
-			Hurikan::Renderer2D::EndScene();
-
-#endif
-			m_Framebuffer->Unbind();
-		}
+		m_Framebuffer->Bind();
+		Hurikan::RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+		Hurikan::RenderCommand::Clear();
 		
+#if TEST == 1 
+		Hurikan::Renderer2D::BeginScene(m_CameraController.GetCamera());
+		for (size_t y = 0; y < s_MapHeight; y++)
+		{
+			for (size_t x = 0; x < s_MapWidth; x++)
+			{
+				char tileType = s_MapTiles[x + y * s_MapWidth];
+				Ref<SubTexture2D> tile = m_TextureMap[tileType];
+				Hurikan::Renderer2D::DrawQuad({ s_MapWidth - x, y, -0.1f }, { 1.0f,1.0f }, tile);
+			}
+		}
+		Hurikan::Renderer2D::EndScene();
+#elif TEST == 2
+		Hurikan::Renderer2D::BeginScene(m_CameraController.GetCamera());
+		// Update scene
+		m_ActiveScene->OnUpdate(ts);
+		Hurikan::Renderer2D::DrawQuad({ 0.0f,0.0f,0.0f }, { 1,1 }, m_Texture2D);
+		Hurikan::Renderer2D::EndScene();
+#endif
+		m_Framebuffer->Unbind();
 	}
 
 	void EditorLayer::OnImGuiRender()
