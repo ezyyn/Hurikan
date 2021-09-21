@@ -28,5 +28,6 @@ namespace Hurikan {
 		std::unordered_map<char, Ref<SubTexture2D>> m_TextureMap;
 
 		Hurikan::Ref<Scene> m_ActiveScene;
+		entt::entity m_SquareEntity;
 	};
 }

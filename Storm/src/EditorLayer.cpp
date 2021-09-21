@@ -53,6 +53,8 @@ namespace Hurikan {
 
 		m_ActiveScene->Reg().emplace<TransformComponent>(square);
 		m_ActiveScene->Reg().emplace<SpriteRendererComponent>(square, glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f });
+
+		m_SquareEntity = square;
 	}
 
 	void EditorLayer::OnDetach()
@@ -90,7 +92,7 @@ namespace Hurikan {
 		Hurikan::Renderer2D::BeginScene(m_CameraController.GetCamera());
 		// Update scene
 		m_ActiveScene->OnUpdate(ts);
-		Hurikan::Renderer2D::DrawQuad({ 0.0f,0.0f,0.0f }, { 1,1 }, m_Texture2D);
+		//Hurikan::Renderer2D::DrawQuad({ 0.0f,0.0f,0.0f }, { 1,1 }, m_Texture2D);
 		Hurikan::Renderer2D::EndScene();
 #endif
 		m_Framebuffer->Unbind();
@@ -168,6 +170,10 @@ namespace Hurikan {
 		ImGui::Text("Quads: %d", stats.QuadCount);
 		ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
 		ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
+
+		auto& square_color = m_ActiveScene->Reg().get<SpriteRendererComponent>(m_SquareEntity).Color;
+
+		ImGui::ColorEdit4("Square Color", glm::value_ptr(square_color));
 		ImGui::End();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
