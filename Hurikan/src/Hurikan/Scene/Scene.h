@@ -14,7 +14,7 @@ namespace Hurikan
 		entt::entity CreateEntity();
 
 		//temp
-		entt::registry& Ref() { return m_Registry; }
+		entt::registry& Reg() { return m_Registry; }
 
 		void OnUpdate(Timestep& ts);
 	private:

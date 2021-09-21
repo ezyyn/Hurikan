@@ -46,6 +46,12 @@ namespace Hurikan {
 		m_TextureMap['W'] = Hurikan::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 11,11 }, { 128,128 });
 
 		m_CameraController.SetZoomLevel(5.0f);
+
+		m_ActiveScene = CreateRef<Scene>();
+
+		auto square = m_ActiveScene->CreateEntity();
+
+		m_ActiveScene->Reg().emplace<TransformComponent>(square);
 	}
 
 	void EditorLayer::OnDetach()
