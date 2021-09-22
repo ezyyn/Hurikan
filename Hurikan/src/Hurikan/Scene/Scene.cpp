@@ -65,6 +65,24 @@ namespace Hurikan
 
 	void Scene::OnUpdate(Timestep& ts)
 	{
+		// Update scripts
+		{
+			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
+				{
+					if (!nsc.Instance)
+					{
+						nsc.InstantiateFunction();
+						nsc.Instance->m_Entity = Entity{ entity, this };
+
+						if (nsc.OnCreateFunction)
+							nsc.OnCreateFunction(nsc.Instance);
+					}
+
+					if (nsc.OnUpdateFunction)
+						nsc.OnUpdateFunction(nsc.Instance, ts);
+				});
+		}
+
 		// Remder 2D
 		Camera* main_camera = nullptr;
 		glm::mat4* camera_transform = nullptr;
@@ -110,7 +128,7 @@ namespace Hurikan
 			auto& camera_component = view.get<CameraComponent>(entity);
 			if (!camera_component.FixedAspectRatio)
 			{
-
+				camera_component.Camera.SetViewportSize(width, height);
 			}
 		}
 	}

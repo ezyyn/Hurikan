@@ -44,4 +44,5 @@ namespace Hurikan
 		entt::entity m_EntityID = { entt::null };
 		Scene* m_Scene = nullptr;
 	};
+
 }

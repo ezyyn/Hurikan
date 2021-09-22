@@ -37,5 +37,6 @@
 //----Scene Components----------------
 #include "Hurikan/Scene/Scene.h"
 #include "Hurikan/Scene/Entity.h"
+#include "Hurikan/Scene/ScriptableEntity.h"
 #include "Hurikan/Scene/Components.h"
 //------------------------------------
