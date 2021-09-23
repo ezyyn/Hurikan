@@ -36,7 +36,7 @@ namespace Hurikan {
 		std::array<Ref<Texture2D>, MaxTextureSlots> TextureSlots;
 		uint32_t TextureSlotIndex = 1; // 0 = white texture
 
-		glm::vec4 QuadVertexPosition[4];
+		glm::vec4 QuadVertexPosition[4] = {};
 
 		Renderer2D::Statistics Stats;
 	};
