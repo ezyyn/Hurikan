@@ -1,7 +1,9 @@
 #include "hupch.h"
 #include "ImGuiLayer.h"
 
-#include "imgui.h"
+#pragma warning(push, 0)
+#include <imgui.h>
+#pragma warning(pop)
 
 #include <GLFW/glfw3.h>
 
