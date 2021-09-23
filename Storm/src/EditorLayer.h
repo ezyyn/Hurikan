@@ -2,6 +2,8 @@
 
 #include "Hurikan.h"
 
+#include "Panels/SceneHierarchyPanel.h"
+
 namespace Hurikan {
 	class EditorLayer : public Layer
 	{
@@ -33,5 +35,8 @@ namespace Hurikan {
 		Entity m_SecondCamera;
 
 		bool m_PrimaryCamera = true;
+
+		//Panels
+		SceneHierarchyPanel m_SceneHierarchyPanel;
 	};
 }
