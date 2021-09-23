@@ -6,7 +6,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#pragma warning(push, 0)
 #include <imgui.h>
+#pragma warning(pop)
 
 using namespace Hurikan;
 

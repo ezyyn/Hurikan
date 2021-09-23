@@ -5375,7 +5375,7 @@ void ShowExampleAppDockSpace(bool* p_open)
             ImGui::Separator();
 
             if (ImGui::MenuItem("Close", NULL, false, p_open != NULL))
-                *p_open = false;
+                p_open = false;
             ImGui::EndMenu();
         }
         HelpMarker(
