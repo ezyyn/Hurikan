@@ -1,5 +1,8 @@
 #include "EditorLayer.h"
-#include "imgui.h"
+
+#pragma warning(push, 0)
+#include <imgui.h>
+#pragma warning(pop)
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -49,10 +52,12 @@ namespace Hurikan {
 
 		m_ActiveScene = CreateRef<Scene>();
 
-		auto square = m_ActiveScene->CreateEntity("Square");
-		square.AddComponent<SpriteRendererComponent>(glm::vec4{	1.0f, 0.0f, 0.0f, 1.0f });
-		m_SquareEntity = square;
+		auto square_g = m_ActiveScene->CreateEntity("Green Square");
+		square_g.AddComponent<SpriteRendererComponent>(glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f });
+		auto square_b = m_ActiveScene->CreateEntity("Blue Square");
+		square_b.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.0f, 0.0f, 1.0f, 1.0f });
 
+		m_SquareEntity = square_g;
 
 		m_CameraEntity = m_ActiveScene->CreateEntity("Camera Entity");
 		m_CameraEntity.AddComponent<CameraComponent>();
@@ -67,13 +72,15 @@ namespace Hurikan {
 		public:
 			void OnCreate()
 			{
+				auto& transform = GetComponent<TransformComponent>().Transform;
+				transform[3][0] = rand() % 10 - 5.0f;
 			}
 
 			void OnDestroy()
 			{
 			}
 
-			void OnUpdate(Timestep& ts)
+			void OnUpdate(Timestep ts)
 			{
 				auto& transform = GetComponent<TransformComponent>().Transform;
 				float speed = 5.0f;
@@ -91,6 +98,9 @@ namespace Hurikan {
 		};
 
 		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
+		m_SecondCamera.AddComponent<NativeScriptComponent>().Bind<CameraController>();
+
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 	}
 
 	void EditorLayer::OnDetach()
@@ -112,8 +122,8 @@ namespace Hurikan {
 			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		}
 
-		if (m_ViewportFocus)
-			m_CameraController.OnUpdate(ts);
+	//	if (m_ViewportFocus)
+		//	m_CameraController.OnUpdate(ts);
 
 		Renderer2D::ResetStats();
 		m_Framebuffer->Bind();
@@ -203,6 +213,8 @@ namespace Hurikan {
 			ImGui::EndMenuBar();
 		}
 
+		m_SceneHierarchyPanel.OnImGuiRender();
+
 		ImGui::Begin("Settings");
 
 		auto stats = Renderer2D::GetStats();
@@ -223,8 +235,8 @@ namespace Hurikan {
 			ImGui::Separator();
 		}
 
-		ImGui::DragFloat3("Camera Transform",
-			glm::value_ptr(m_CameraEntity.GetComponent<TransformComponent>().Transform[3]));
+	//	ImGui::DragFloat3("Camera Transform",
+		//	glm::value_ptr(m_CameraEntity.GetComponent<TransformComponent>().Transform[3]));
 
 		if (ImGui::Checkbox("Camera A", &m_PrimaryCamera))
 		{
@@ -253,7 +265,7 @@ namespace Hurikan {
 		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
 		uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
-		ImGui::Image((void*)textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+		ImGui::Image((void*)(uint64_t)textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 		ImGui::End();
 		ImGui::PopStyleVar();
 
