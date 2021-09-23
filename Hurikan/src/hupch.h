@@ -14,7 +14,7 @@
 
 #include "Hurikan/Core/Log.h"
 
-#define HU_PROFILE
+//#define HU_PROFILE 0
 #include "Hurikan/Debug/Instrumentor.h"
 
 #ifdef HU_PLATFORM_WINDOWS
