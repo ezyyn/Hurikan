@@ -35,8 +35,6 @@ namespace Hurikan {
 			data = stbi_load(path.c_str(), &width, &height, &channels, 0);
 		}
 
-		HU_INFO("{0}", channels);
-
 		HU_CORE_ASSERT(data, "Failed to load image!");	
 		m_Width = width;
 		m_Height = height;
