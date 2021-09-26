@@ -5,8 +5,6 @@
 #include "Hurikan/Scene/Scene.h"
 #include "Hurikan/Scene/Entity.h"
 
-
-
 namespace Hurikan
 {
 	class SceneHierarchyPanel
@@ -21,6 +19,9 @@ namespace Hurikan
 	private:
 		void DrawEntityNode(Entity& entity);
 		void DrawComponents(Entity entity);
+
+		template<typename T,typename UIFunction>
+		void DrawComponent(Entity entity, const std::string& name, UIFunction function);
 	private:
 		Ref<Scene> m_Context;
 		Entity m_SelectionContext;

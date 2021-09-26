@@ -19,11 +19,13 @@ IncludeDir["GLFW"] = "Hurikan/vendor/GLFW/include"
 IncludeDir["ImGui"] = "Hurikan/vendor/imgui"
 IncludeDir["stb_image"] = "Hurikan/vendor/stb_image"
 IncludeDir["entt"] = "Hurikan/vendor/entt/include"
+IncludeDir["yaml_cpp"] = "Hurikan/vendor/yaml-cpp/include"
 
 group "Dependencies"
 	include "Hurikan/vendor/Glad"
 	include "Hurikan/vendor/GLFW"
 	include "Hurikan/vendor/ImGui"
+	include "Hurikan/vendor/yaml-cpp"
 group ""
 
 project "Hurikan"
@@ -60,12 +62,14 @@ project "Hurikan"
 		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.stb_image}",
-		"%{IncludeDir.entt}"
+		"%{IncludeDir.entt}",
+		"%{IncludeDir.yaml_cpp}"
 	}
 	links {
 		"GLFW",
 		"Glad",
 		"ImGui",
+		"yaml-cpp",
 		"opengl32.lib"
 	}
 

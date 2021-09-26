@@ -16,6 +16,7 @@
 	#define HU_ENABLE_ASSERTS
 #endif
 
+//#define HU_CORE_ASSERT(x) if(!(x)){ __debugbreak();}
 #define HU_CORE_ASSERT(x,...) if(!(x)){ HU_CORE_ERROR(__VA_ARGS__); __debugbreak();}
 #ifdef HU_ENABLE_ASSERTS
 	//#define HU_CORE_ASSERT(x,...) if(!(x)){ HU_CORE_ERROR(__VA_ARGS__); __debugbreak();}

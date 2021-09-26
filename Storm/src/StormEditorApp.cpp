@@ -8,7 +8,7 @@ namespace Hurikan {
 	class Storm : public Application
 	{
 	public:
-		Storm() : Application("Storm Editor")
+		Storm() : Application("Storm Editor", 1600, 900)
 		{
 			PushLayer(new EditorLayer());
 		}

@@ -18,6 +18,12 @@ namespace Hurikan {
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& e) override;
 	private:
+		bool OnKeyPressed(KeyPressedEvent& e);
+
+		void NewScene();
+		void OpenScene();
+		void SaveSceneAs();
+	private:
 		Hurikan::OrthographicCameraController m_CameraController;
 
 		Hurikan::Ref<Texture2D> m_Texture2D;
