@@ -55,15 +55,16 @@ namespace Hurikan {
 	void Application::OnEvent(Event& e) {
 		HU_PROFILE_FUNCTION();
 
+		HU_CORE_TRACE(e.GetName())
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(HU_BIND_EVENT_FN(Application::OnWindowClose));
 		dispatcher.Dispatch<WindowResizeEvent>(HU_BIND_EVENT_FN(Application::OnWindowResize));
 
-		for (auto it = m_LayerStack.end(); it != m_LayerStack.begin();) 
+		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it) 
 		{
 			if (e.Handled)
 				break;
-			(*--it)->OnEvent(e);
+			(*it)->OnEvent(e);
 		}
 	}
 
