@@ -1,6 +1,8 @@
 #pragma once
-#include "Event.h"
 
+#include <sstream>
+
+#include "Hurikan/Events/Event.h"
 #include "Hurikan/Core/MouseCodes.h"
 
 namespace Hurikan {

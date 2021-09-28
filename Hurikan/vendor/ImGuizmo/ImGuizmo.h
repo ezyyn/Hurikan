@@ -41,7 +41,9 @@
 // - OPERATION as bitmask
 // 
 // -------------------------------------------------------------------------------------------
-// Example 
+// Example
+#pragma warning(push, 0)
+
 #if 0
 void EditTransform(const Camera& camera, matrix_t& matrix)
 {

@@ -1,4 +1,6 @@
 #pragma once
+
+#include "Hurikan/Debug/Instrumentor.h"
 #include "Hurikan/Core/Base.h"
 
 namespace Hurikan {
@@ -72,5 +74,4 @@ namespace Hurikan {
 	{
 		return os << e.ToString();
 	}
-
 }
