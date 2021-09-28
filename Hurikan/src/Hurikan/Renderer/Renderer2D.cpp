@@ -149,9 +149,6 @@ namespace Hurikan {
 	{
 		HU_PROFILE_FUNCTION();
 
-		uint32_t dataSize = (uint8_t*) s_Data.QuadVertexBufferPtr - (uint8_t*)s_Data.QuadVertexBufferBase;
-		s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
-
 		Flush();
 	}
 	void Renderer2D::Flush()
@@ -160,6 +157,10 @@ namespace Hurikan {
 		{
 			s_Data.TextureSlots[i]->Bind(i);
 		}
+
+		uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferPtr - (uint8_t*)s_Data.QuadVertexBufferBase);
+		s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
+
 		RenderCommand::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexCount);
 		s_Data.Stats.DrawCalls++;
 	}
