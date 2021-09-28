@@ -1,6 +1,7 @@
 #pragma once
 #include "Event.h"
-#include "KeyCodes.h"
+
+#include "Hurikan/Core/KeyCodes.h"
 
 namespace Hurikan {
 

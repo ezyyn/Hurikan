@@ -1,16 +1,9 @@
 #include "hupch.h"
-
 #include "Application.h"
-#include "Hurikan/Core/Log.h"
 
-#include "Hurikan/Renderer/RenderCommand.h"
 #include "Hurikan/Renderer/Renderer.h"
 
-#include "Input.h"
-
-#include "GLFW/glfw3.h"
-
-#include "glad/glad.h"
+#include <GLFW/glfw3.h>
 
 namespace Hurikan {
 
@@ -54,8 +47,6 @@ namespace Hurikan {
 
 	void Application::OnEvent(Event& e) {
 		HU_PROFILE_FUNCTION();
-
-		HU_CORE_TRACE(e.GetName())
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>(HU_BIND_EVENT_FN(Application::OnWindowClose));
 		dispatcher.Dispatch<WindowResizeEvent>(HU_BIND_EVENT_FN(Application::OnWindowResize));
@@ -77,8 +68,6 @@ namespace Hurikan {
 			float time = (float)glfwGetTime(); // -> Platform::GetTime()
 			Timestep timestep = time - m_LastFrameTime;
 			m_LastFrameTime = time;
-
-			//HU_CORE_INFO("{0} ms", timestep); // MS
 
 			if (!m_Minimized) 
 			{

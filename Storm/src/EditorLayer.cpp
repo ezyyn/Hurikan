@@ -11,6 +11,10 @@
 
 #include "Hurikan/Utils/PlatformUtils.h"
 
+#include "Hurikan/Math/Math.h"
+
+#include "ImGuizmo.h"
+
 namespace Hurikan {
 	//temp
 	Ref<SubTexture2D> temp_Subtexture;
@@ -32,7 +36,7 @@ namespace Hurikan {
 		;
 
 	EditorLayer::EditorLayer()
-		: Layer("Sandbox2D"), m_CameraController(1280.0f / 720.0f, false)
+		: Layer("EditorLayer")
 	{
 	}
 
@@ -53,9 +57,9 @@ namespace Hurikan {
 		m_TextureMap['D'] = Hurikan::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 6,11 }, { 128,128 });
 		m_TextureMap['W'] = Hurikan::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 11,11 }, { 128,128 });
 
-		m_CameraController.SetZoomLevel(5.0f);
-
 		m_ActiveScene = CreateRef<Scene>();
+
+		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1, 1000);
 #if 0
 		// Entity
 		auto square_g = m_ActiveScene->CreateEntity("Green Square");
@@ -115,7 +119,6 @@ namespace Hurikan {
 		HU_PROFILE_FUNCTION();
 	}
 
-#define TEST 2
 	void EditorLayer::OnUpdate(Timestep& ts)
 	{
 		HU_PROFILE_FUNCTION();
@@ -124,35 +127,27 @@ namespace Hurikan {
 			(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
 		{
 			m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-			m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+		//	m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+			m_EditorCamera.SetViewportSize(m_ViewportSize.x, m_ViewportSize.y);
 
 			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		}
 
-	//	if (m_ViewportFocus)
+		// Update
+		if (m_ViewportFocus)
+			m_EditorCamera.OnUpdate(ts);
 		//	m_CameraController.OnUpdate(ts);
 
+		
+		//Render
 		Renderer2D::ResetStats();
 		m_Framebuffer->Bind();
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		RenderCommand::Clear();
-		
-#if TEST == 1 
-		Hurikan::Renderer2D::BeginScene(m_CameraController.GetCamera());
-		for (size_t y = 0; y < s_MapHeight; y++)
-		{
-			for (size_t x = 0; x < s_MapWidth; x++)
-			{
-				char tileType = s_MapTiles[x + y * s_MapWidth];
-				Ref<SubTexture2D> tile = m_TextureMap[tileType];
-				Hurikan::Renderer2D::DrawQuad({ s_MapWidth - x, y, -0.1f }, { 1.0f,1.0f }, tile);
-			}
-		}
-		Hurikan::Renderer2D::EndScene();
-#elif TEST == 2
+
 		// Update scene
-		m_ActiveScene->OnUpdate(ts);
-#endif
+		m_ActiveScene->OnUpdateEditor(ts,m_EditorCamera);
+
 		m_Framebuffer->Unbind();
 	}
 
@@ -216,15 +211,14 @@ namespace Hurikan {
 			{
 				// Disabling fullscreen would allow the window to be moved to the front of other windows, 
 				// which we can't undo at the moment without finer window depth/z control.
-				//ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);
-
+				//ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen_persistant);1
 				if (ImGui::MenuItem("New", "Ctrl+N"))
 					NewScene();
 
 				if (ImGui::MenuItem("Open...", "Ctrl+O"))
 					OpenScene();
 
-				if (ImGui::MenuItem("Save As...", "Ctrl + Shift + S"))
+				if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
 					SaveSceneAs();
 
 				if (ImGui::MenuItem("Exit")) Application::Get().Close();
@@ -234,8 +228,8 @@ namespace Hurikan {
 			ImGui::EndMenuBar();
 		}
 
-		m_SceneHierarchyPanel.OnImGuiRender();
 
+		m_SceneHierarchyPanel.OnImGuiRender();
 		ImGui::Begin("Stats");
 
 		auto stats = Renderer2D::GetStats();
@@ -252,13 +246,68 @@ namespace Hurikan {
 
 		m_ViewportFocus = ImGui::IsWindowFocused();
 		m_ViewportHovered = ImGui::IsWindowHovered();
-		Application::Get().GetImGuiLayer()->SetBlockEvents(!m_ViewportFocus || !m_ViewportHovered);
+		Application::Get().GetImGuiLayer()->SetBlockEvents(m_ViewportFocus && !m_ViewportHovered);
 
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
-		uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
-		ImGui::Image((void*)(uint64_t)textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+		uint64_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
+		ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+
+		// Gizmos
+		
+		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+		if (selectedEntity && m_GizmoType != -1)
+		{
+			ImGuizmo::SetOrthographic(false);
+			ImGuizmo::SetDrawlist();
+			float windowWidth = (float)ImGui::GetWindowWidth();
+			float windowHeight = (float)ImGui::GetWindowHeight();
+			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+
+			// auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
+			// const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
+			// const glm::mat4& cameraProjection = camera.GetProjection();
+			// glm::mat4 cameraView = glm::inverse(cameraEntity.GetComponent<TransformComponent>().GetTransform());
+
+			// Editor camera
+			const glm::mat4& cameraProjection = m_EditorCamera.GetProjection();
+			glm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
+
+			//Entity transform
+			auto& tc = selectedEntity.GetComponent<TransformComponent>();
+			glm::mat4& transform = tc.GetTransform();
+
+			// Snapping
+			bool snap = Input::IsKeyPressed(Key::LeftControl);
+			float snapValue = 0.5f;
+			switch (m_GizmoType)
+			{
+			case ImGuizmo::OPERATION::ROTATE:
+				snapValue = 45.0f;
+				break;
+			}
+			
+			float snapValues[3]{ snapValue,snapValue, snapValue };
+
+
+			ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection), 
+				(ImGuizmo::OPERATION)m_GizmoType,ImGuizmo::LOCAL,glm::value_ptr(transform),nullptr,snap ? snapValues : nullptr);
+
+			if (ImGuizmo::IsUsing())
+			{
+				glm::vec3 translation, rotation, scale;
+				Math::DecomposeTransform(transform, translation, rotation, scale);
+				
+				glm::vec3 deltaRotation = rotation - tc.Rotation;
+				tc.Translation = translation;
+				tc.Rotation += deltaRotation;
+				tc.Scale = scale;
+			}
+		}
+
+
+
 		ImGui::End();
 		ImGui::PopStyleVar();
 
@@ -268,7 +317,8 @@ namespace Hurikan {
 	void EditorLayer::OnEvent(Hurikan::Event& e)
 	{
 		//Zommin
-		m_CameraController.OnEvent(e);
+		//m_CameraController.OnEvent(e);
+		m_EditorCamera.OnEvent(e);
 
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<KeyPressedEvent>(HU_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
@@ -276,6 +326,7 @@ namespace Hurikan {
 
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
 	{
+	//	HU_CORE_INFO(e.ToString());
 		if (e.GetRepeatCount() > 0)
 			return false;
 
@@ -284,6 +335,7 @@ namespace Hurikan {
 
 		switch (e.GetKeyCode())
 		{
+			//File->Scene
 			case Key::N:
 			{
 				if (controlPressed)
@@ -310,6 +362,20 @@ namespace Hurikan {
 				}
 				break;
 			}
+
+			// Gizmos
+			case Key::Q:
+				m_GizmoType = -1;
+				break;
+			case Key::W:
+				m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+				break;
+			case Key::E:
+				m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+				break;
+			case Key::R:
+				m_GizmoType = ImGuizmo::OPERATION::SCALE;
+				break;
 		}
 	}
 

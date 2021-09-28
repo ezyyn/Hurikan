@@ -1,6 +1,4 @@
 #pragma once
-#include "hupch.h"
-
 #include "Event.h"
 
 namespace Hurikan {

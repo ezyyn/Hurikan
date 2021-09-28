@@ -1,8 +1,8 @@
 #include "hupch.h"
 #include "OrthographicCameraController.h"
 
-#include "Hurikan/Events/KeyCodes.h"
-#include "Hurikan/Events/MouseCodes.h"
+#include "Hurikan/Core/KeyCodes.h"
+#include "Hurikan/Core/MouseCodes.h"
 
 #include "Hurikan/Core/Input.h"
 

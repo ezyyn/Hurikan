@@ -1,10 +1,9 @@
 #pragma once
-#include "OrthographicCamera.h" // TODO: Remove
 #include "Camera.h"
-
-#include "Platform/OpenGL/OpenGLTexture.h"
+#include "Texture.h"
 #include "SubTexture2D.h"
 
+#include "EditorCamera.h"
 
 namespace Hurikan {
 	class Renderer2D
@@ -15,6 +14,8 @@ namespace Hurikan {
 		static void Flush();
 
 		static void BeginScene(const Camera& camera, const glm::mat4& transform);
+		static void BeginScene(const EditorCamera& camera);
+
 		static void EndScene();
 
 		//Primitives
@@ -41,6 +42,7 @@ namespace Hurikan {
 		static Statistics GetStats();
 		static void ResetStats();
 	private:
+		static void StartBatch();
 		static void FlushAndReset();
 	};
 }

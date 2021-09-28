@@ -14,6 +14,7 @@
 
 #include "Hurikan/Core/Application.h"
 
+#include "ImGuizmo.h"
 
 namespace Hurikan {
 

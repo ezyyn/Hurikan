@@ -1,10 +1,8 @@
 #pragma once
-#include "hupch.h"
 
+#include "hupch.h"
 #include "Base.h"
 #include "Window.h"
-
-#include "Hurikan/Core/Timestep.h"
 
 #include "Hurikan/Events/ApplicationEvent.h"
 #include "Hurikan/Core/LayerStack.h"
@@ -40,6 +38,7 @@ namespace Hurikan {
 
 		bool m_Running = true;
 		bool m_Minimized = false;
+
 		LayerStack m_LayerStack;
 		float m_LastFrameTime = 0.0f;
 	private:

@@ -9,10 +9,11 @@
 #include "Hurikan/Core/Timestep.h"
 
 #include "Hurikan/Core/Input.h"
-#include "Hurikan/Events/KeyCodes.h"
+#include "Hurikan/Core/KeyCodes.h"
+#include "Hurikan/Core/MouseCodes.h"
+
 #include "Hurikan/Events/KeyEvent.h"
 #include "Hurikan/Events/MouseEvent.h"
-#include "Hurikan/Events/MouseCodes.h"
 
 #include "Hurikan/ImGui/ImGuiLayer.h"
 

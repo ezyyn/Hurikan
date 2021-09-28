@@ -4,6 +4,8 @@
 
 #include "Panels/SceneHierarchyPanel.h"
 
+#include "Hurikan/Renderer/EditorCamera.h"
+
 namespace Hurikan {
 	class EditorLayer : public Layer
 	{
@@ -24,8 +26,6 @@ namespace Hurikan {
 		void OpenScene();
 		void SaveSceneAs();
 	private:
-		Hurikan::OrthographicCameraController m_CameraController;
-
 		Hurikan::Ref<Texture2D> m_Texture2D;
 		Hurikan::Ref<Texture2D> m_SpriteSheet;
 		Hurikan::Ref<Framebuffer> m_Framebuffer;
@@ -42,7 +42,11 @@ namespace Hurikan {
 
 		bool m_PrimaryCamera = true;
 
+		int m_GizmoType = -1; // no gizmo
+
 		//Panels
 		SceneHierarchyPanel m_SceneHierarchyPanel;
+
+		EditorCamera m_EditorCamera;
 	};
 }
