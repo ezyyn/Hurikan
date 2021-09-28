@@ -20,6 +20,7 @@ IncludeDir["ImGui"] = "Hurikan/vendor/imgui"
 IncludeDir["stb_image"] = "Hurikan/vendor/stb_image"
 IncludeDir["entt"] = "Hurikan/vendor/entt/include"
 IncludeDir["yaml_cpp"] = "Hurikan/vendor/yaml-cpp/include"
+IncludeDir["ImGuizmo"] = "Hurikan/vendor/ImGuizmo"
 
 group "Dependencies"
 	include "Hurikan/vendor/Glad"
@@ -44,14 +45,20 @@ project "Hurikan"
 	files {
 		"%{prj.name}/src/**.h",
 		"%{prj.name}/src/**.cpp",
+
 		"%{prj.name}/vendor/stb_image/**.h",
 		"%{prj.name}/vendor/stb_image/**.cpp",
+
 		"%{prj.name}/vendor/glm/glm/**.hpp",
-		"%{prj.name}/vendor/glm/glm/**.inl"
+		"%{prj.name}/vendor/glm/glm/**.inl",
+
+		"%{prj.name}/vendor/ImGuizmo/ImGuizmo.h",
+		"%{prj.name}/vendor/ImGuizmo/ImGuizmo.cpp"
 	}
 	
 	defines {
-		"_CRT_SECURE_NO_WARNINGS"
+		"_CRT_SECURE_NO_WARNINGS",
+		"GLFW_INCLUDE_NONE"
 	}
 	
 	includedirs {
@@ -63,7 +70,8 @@ project "Hurikan"
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.entt}",
-		"%{IncludeDir.yaml_cpp}"
+		"%{IncludeDir.yaml_cpp}",
+		"%{IncludeDir.ImGuizmo}"
 	}
 	links {
 		"GLFW",
@@ -72,6 +80,9 @@ project "Hurikan"
 		"yaml-cpp",
 		"opengl32.lib"
 	}
+	
+	filter "files:Hurikan/vendor/ImGuizmo/**.cpp"
+	flags { "NoPCH" }
 
 	filter "system:windows"
 		systemversion "latest"
@@ -114,9 +125,10 @@ project "Sandbox"
 		"Hurikan/vendor/spdlog/include",
 		"Hurikan/src",
 		"Hurikan/vendor/imgui",
-		"%{IncludeDir.glm}",
 		"Hurikan/vendor/Glad/include",
-		"%{IncludeDir.entt}"
+		"%{IncludeDir.glm}",
+		"%{IncludeDir.entt}",
+		"%{IncludeDir.ImGuizmo}"
 	}
 	links {
 		"Hurikan"
@@ -162,7 +174,8 @@ project "Storm"
 		"Hurikan/vendor/imgui",
 		"%{IncludeDir.glm}",
 		"Hurikan/vendor/Glad/include",
-		"%{IncludeDir.entt}"
+		"%{IncludeDir.entt}",
+		"%{IncludeDir.ImGuizmo}"
 	}
 	links {
 		"Hurikan"
