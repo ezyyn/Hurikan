@@ -1,8 +1,7 @@
 #include "EditorLayer.h"
 
-#pragma warning(push, 0)
 #include <imgui.h>
-#pragma warning(pop)
+#include <ImGuizmo.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -13,7 +12,6 @@
 
 #include "Hurikan/Math/Math.h"
 
-#include "ImGuizmo.h"
 
 namespace Hurikan {
 	//temp
@@ -59,7 +57,7 @@ namespace Hurikan {
 
 		m_ActiveScene = CreateRef<Scene>();
 
-		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1, 1000);
+		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000);
 #if 0
 		// Entity
 		auto square_g = m_ActiveScene->CreateEntity("Green Square");
@@ -377,6 +375,7 @@ namespace Hurikan {
 				m_GizmoType = ImGuizmo::OPERATION::SCALE;
 				break;
 		}
+		return true;
 	}
 
 	void EditorLayer::NewScene()
