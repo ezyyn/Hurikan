@@ -10,6 +10,12 @@ workspace "Hurikan"
 		"Release",
 		"Dist"
 	}
+
+	flags
+	{
+		"MultiProcessorCompile"
+	}
+
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}";
 
 IncludeDir= {}
@@ -58,7 +64,7 @@ project "Hurikan"
 	
 	defines {
 		"_CRT_SECURE_NO_WARNINGS",
-		"GLFW_INCLUDE_NONE"
+		"GLFW_INCLUDE_NONE",
 	}
 	
 	includedirs {
@@ -88,7 +94,6 @@ project "Hurikan"
 		systemversion "latest"
 		defines {
 			"HU_PLATFORM_WINDOWS",
-			"HU_BUILD_DLL",
 			"GLFW_INCLUDE_NONE"
 		}
 
