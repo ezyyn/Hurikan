@@ -43,6 +43,7 @@ namespace Hurikan {
 		HU_PROFILE_FUNCTION();
 
 		Hurikan::FramebufferSpecification fbSpec;
+		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::Depth };
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;
 
