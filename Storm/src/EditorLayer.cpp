@@ -14,25 +14,6 @@
 
 
 namespace Hurikan {
-	//temp
-	Ref<SubTexture2D> temp_Subtexture;
-	//temp--end
-
-	static const uint32_t s_MapWidth = 24;
-	static const uint32_t s_MapHeight = 10;
-	static const char* s_MapTiles =
-		"WWWWWWWWWWWWWWWWWWWWWWWW"
-		"WWWWWWWWDDDDWWWWWWWWWWWW"
-		"WWWWWWDDDDDDDDWWWWWWWWWW"
-		"WWWDDDDDWWWDDDDDDDWWWWWW"
-		"WWWDDDDDWWWDDDDDDWWWWWWW"
-		"WWWWWWDDDDDDDDDWWWWWWWWW"
-		"WWWWWWWDDDDWWWWWWWWWWWWW"
-		"WWWWWWWWWWWWWWWWWWWWWWWW"
-		"WWWWWWWWWWWWWWWWWWWWWWWW"
-		"WWWWWWWWWWWWWWWWWWWWWWWW"
-		;
-
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer")
 	{
@@ -42,56 +23,50 @@ namespace Hurikan {
 	{
 		HU_PROFILE_FUNCTION();
 
-		Hurikan::FramebufferSpecification fbSpec;
-		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::Depth };
+		FramebufferSpecification fbSpec;
+		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
 		fbSpec.Width = 1280;
 		fbSpec.Height = 720;
-
-		m_Framebuffer = Hurikan::Framebuffer::Create(fbSpec);
-
-		m_Texture2D = Hurikan::Texture2D::Create("assets/textures/c.png");
-
-		m_SpriteSheet = Hurikan::Texture2D::Create("assets/textures/tileset.png");
-
-		m_TextureMap['D'] = Hurikan::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 6,11 }, { 128,128 });
-		m_TextureMap['W'] = Hurikan::SubTexture2D::CreateFromCoords(m_SpriteSheet, { 11,11 }, { 128,128 });
+		m_Framebuffer = Framebuffer::Create(fbSpec);
 
 		m_ActiveScene = CreateRef<Scene>();
 
-		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000);
+		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
+
 #if 0
 		// Entity
-		auto square_g = m_ActiveScene->CreateEntity("Green Square");
-		square_g.AddComponent<SpriteRendererComponent>(glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f });
-		auto square_b = m_ActiveScene->CreateEntity("Blue Square");
-		square_b.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.0f, 0.0f, 1.0f, 1.0f });
+		auto square = m_ActiveScene->CreateEntity("Green Square");
+		square.AddComponent<SpriteRendererComponent>(glm::vec4{ 0.0f, 1.0f, 0.0f, 1.0f });
 
-		m_SquareEntity = square_g;
+		auto redSquare = m_ActiveScene->CreateEntity("Red Square");
+		redSquare.AddComponent<SpriteRendererComponent>(glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f });
+
+		m_SquareEntity = square;
 
 		m_CameraEntity = m_ActiveScene->CreateEntity("Camera A");
 		m_CameraEntity.AddComponent<CameraComponent>();
 
 		m_SecondCamera = m_ActiveScene->CreateEntity("Camera B");
 		auto& cc = m_SecondCamera.AddComponent<CameraComponent>();
-		cc.Primary = false;   
-
+		cc.Primary = false;
 
 		class CameraController : public ScriptableEntity
 		{
 		public:
-			void OnCreate()
+			virtual void OnCreate() override
 			{
 				auto& translation = GetComponent<TransformComponent>().Translation;
 				translation.x = rand() % 10 - 5.0f;
 			}
 
-			void OnDestroy()
+			virtual void OnDestroy() override
 			{
 			}
 
-			void OnUpdate(Timestep ts)
+			virtual void OnUpdate(Timestep ts) override
 			{
 				auto& translation = GetComponent<TransformComponent>().Translation;
+
 				float speed = 5.0f;
 
 				if (Input::IsKeyPressed(Key::A))
@@ -103,7 +78,6 @@ namespace Hurikan {
 				if (Input::IsKeyPressed(Key::S))
 					translation.y -= speed * ts;
 			}
-
 		};
 
 		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
@@ -121,31 +95,49 @@ namespace Hurikan {
 	void EditorLayer::OnUpdate(Timestep& ts)
 	{
 		HU_PROFILE_FUNCTION();
+
+		// Resize
 		if (FramebufferSpecification spec = m_Framebuffer->GetSpecification();
 			m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
 			(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
 		{
 			m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-		//	m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
 			m_EditorCamera.SetViewportSize(m_ViewportSize.x, m_ViewportSize.y);
-
 			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		}
 
 		// Update
 		if (m_ViewportFocus)
-			m_EditorCamera.OnUpdate(ts);
-		//	m_CameraController.OnUpdate(ts);
+		{
+			//m_CameraController.OnUpdate(ts);
+		}
+		m_EditorCamera.OnUpdate(ts);
 
-		
-		//Render
+		// Render
 		Renderer2D::ResetStats();
 		m_Framebuffer->Bind();
 		RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		RenderCommand::Clear();
 
+		m_Framebuffer->ClearColorAttachment(1, -1);
+
 		// Update scene
-		m_ActiveScene->OnUpdateEditor(ts,m_EditorCamera);
+		m_ActiveScene->OnUpdateEditor(ts, m_EditorCamera);
+
+		auto [mx, my] = ImGui::GetMousePos();
+		mx -= m_ViewportBounds[0].x;
+		my -= m_ViewportBounds[0].y;
+		glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
+		my = viewportSize.y - my;
+		int mouseX = (int)mx;
+		int mouseY = (int)my;
+
+		if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
+		{
+			int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
+			m_HoveredEntity = pixelData == -1 ? Entity() : Entity((entt::entity)pixelData, m_ActiveScene.get());
+			HU_CORE_WARN("Pixel data = {0}", pixelData);
+		}
 
 		m_Framebuffer->Unbind();
 	}
@@ -227,10 +219,17 @@ namespace Hurikan {
 			ImGui::EndMenuBar();
 		}
 
-
 		m_SceneHierarchyPanel.OnImGuiRender();
+
 		ImGui::Begin("Stats");
 
+
+		std::string name = "None";
+		if (m_HoveredEntity)
+			name = m_HoveredEntity.GetComponent<TagComponent>().Tag;
+
+		ImGui::Text("Hovered Entity: %s", name.c_str());
+		ImGui::Separator();
 		auto stats = Renderer2D::GetStats();
 		ImGui::Text("Renderer2D Stats:");
 		ImGui::Text("Draw Calls: %d", stats.DrawCalls);
@@ -242,10 +241,15 @@ namespace Hurikan {
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport");
+		auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
+		auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
+		auto viewportOffset = ImGui::GetWindowPos();
+		m_ViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
+		m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
 
 		m_ViewportFocus = ImGui::IsWindowFocused();
 		m_ViewportHovered = ImGui::IsWindowHovered();
-		Application::Get().GetImGuiLayer()->SetBlockEvents(m_ViewportFocus && !m_ViewportHovered);
+		Application::Get().GetImGuiLayer()->SetBlockEvents(!m_ViewportFocus && !m_ViewportHovered);
 
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
@@ -254,16 +258,19 @@ namespace Hurikan {
 		ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
 		// Gizmos
-		
 		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
 		if (selectedEntity && m_GizmoType != -1)
 		{
 			ImGuizmo::SetOrthographic(false);
 			ImGuizmo::SetDrawlist();
+
 			float windowWidth = (float)ImGui::GetWindowWidth();
 			float windowHeight = (float)ImGui::GetWindowHeight();
 			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
 
+			// Camera
+
+			// Runtime camera from entity
 			// auto cameraEntity = m_ActiveScene->GetPrimaryCameraEntity();
 			// const auto& camera = cameraEntity.GetComponent<CameraComponent>().Camera;
 			// const glm::mat4& cameraProjection = camera.GetProjection();
@@ -273,31 +280,28 @@ namespace Hurikan {
 			const glm::mat4& cameraProjection = m_EditorCamera.GetProjection();
 			glm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
 
-			//Entity transform
+			// Entity transform
 			auto& tc = selectedEntity.GetComponent<TransformComponent>();
-			glm::mat4& transform = tc.GetTransform();
+			glm::mat4 transform = tc.GetTransform();
 
 			// Snapping
 			bool snap = Input::IsKeyPressed(Key::LeftControl);
-			float snapValue = 0.5f;
-			switch (m_GizmoType)
-			{
-			case ImGuizmo::OPERATION::ROTATE:
+			float snapValue = 0.5f; // Snap to 0.5m for translation/scale
+			// Snap to 45 degrees for rotation
+			if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
 				snapValue = 45.0f;
-				break;
-			}
-			
-			float snapValues[3]{ snapValue,snapValue, snapValue };
 
+			float snapValues[3] = { snapValue, snapValue, snapValue };
 
-			ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection), 
-				(ImGuizmo::OPERATION)m_GizmoType,ImGuizmo::LOCAL,glm::value_ptr(transform),nullptr,snap ? snapValues : nullptr);
+			ImGuizmo::Manipulate(glm::value_ptr(cameraView), glm::value_ptr(cameraProjection),
+				(ImGuizmo::OPERATION)m_GizmoType, ImGuizmo::LOCAL, glm::value_ptr(transform),
+				nullptr, snap ? snapValues : nullptr);
 
 			if (ImGuizmo::IsUsing())
 			{
 				glm::vec3 translation, rotation, scale;
 				Math::DecomposeTransform(transform, translation, rotation, scale);
-				
+
 				glm::vec3 deltaRotation = rotation - tc.Rotation;
 				tc.Translation = translation;
 				tc.Rotation += deltaRotation;
@@ -306,75 +310,73 @@ namespace Hurikan {
 		}
 
 
-
 		ImGui::End();
 		ImGui::PopStyleVar();
 
 		ImGui::End();
 	}
 
-	void EditorLayer::OnEvent(Hurikan::Event& e)
+	void EditorLayer::OnEvent(Event& e)
 	{
-		//Zommin
-		//m_CameraController.OnEvent(e);
 		m_EditorCamera.OnEvent(e);
 
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<KeyPressedEvent>(HU_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
+		dispatcher.Dispatch<MouseButtonPressedEvent>(HU_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed));
 	}
 
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
 	{
-	//	HU_CORE_INFO(e.ToString());
+		// Shortcuts
 		if (e.GetRepeatCount() > 0)
 			return false;
 
-		bool controlPressed = Input::IsKeyPressed(Key::RightControl) || Input::IsKeyPressed(Key::LeftControl);
-		bool shiftPressed = Input::IsKeyPressed(Key::RightShift) || Input::IsKeyPressed(Key::LeftShift);
-
+		bool control = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
+		bool shift = Input::IsKeyPressed(Key::LeftShift) || Input::IsKeyPressed(Key::RightShift);
 		switch (e.GetKeyCode())
 		{
-			//File->Scene
-			case Key::N:
-			{
-				if (controlPressed)
-				{
-					NewScene();
-				}
-				break;
+		case Key::N:
+		{
+			if (control)
+				NewScene();
+			break;
+		}
+		case Key::O:
+		{
+			if (control)
+				OpenScene();
+			break;
+		}
+		case Key::S:
+		{
+			if (control && shift)
+				SaveSceneAs();
+			break;
+		}
 
-			}
-			case Key::O:
-			{
-				if (controlPressed)
-				{
-					OpenScene();
-				}
-				break;
+		// Gizmos
+		case Key::Q:
+			m_GizmoType = -1;
+			break;
+		case Key::W:
+			m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+			break;
+		case Key::E:
+			m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+			break;
+		case Key::R:
+			m_GizmoType = ImGuizmo::OPERATION::SCALE;
+			break;
+		}
+		return true;
+	}
 
-			}
-			case Key::S:
-			{
-				if (controlPressed && shiftPressed)
-				{
-					SaveSceneAs();
-				}
-				break;
-			}
-
-			// Gizmos
-			case Key::Q:
-				m_GizmoType = -1;
-				break;
-			case Key::W:
-				m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
-				break;
-			case Key::E:
-				m_GizmoType = ImGuizmo::OPERATION::ROTATE;
-				break;
-			case Key::R:
-				m_GizmoType = ImGuizmo::OPERATION::SCALE;
-				break;
+	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
+	{
+		if (e.GetMouseButton() == Mouse::ButtonLeft)
+		{
+			if(m_ViewportHovered && !ImGuizmo::IsOver() && !Input::IsKeyPressed(Key::LeftAlt))
+				m_SceneHierarchyPanel.SetSelectedEntity(m_HoveredEntity);
 		}
 		return true;
 	}
@@ -388,33 +390,25 @@ namespace Hurikan {
 
 	void EditorLayer::OpenScene()
 	{
-		std::string filepath = FileDialogs::OpenFile("Hurikan Scene(*.hurikan)\0*.hurikan\0");
+		std::string filepath = FileDialogs::OpenFile("Hurikan Scene (*.hurikan)\0*.hurikan\0");
 		if (!filepath.empty())
 		{
 			m_ActiveScene = CreateRef<Scene>();
 			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 			m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 
-			SceneSerializer sceneSerializer(m_ActiveScene);
-			sceneSerializer.Deserialize(filepath);
-		}
-		else
-		{
-			HU_CORE_WARN("Could not open the file!");
+			SceneSerializer serializer(m_ActiveScene);
+			serializer.Deserialize(filepath);
 		}
 	}
 
 	void EditorLayer::SaveSceneAs()
 	{
-		std::string filepath = FileDialogs::SaveFile("Hurikan Scene(*.hurikan)\0*.hurikan\0");
-		if (!filepath.empty())
+		std::string filepath = FileDialogs::SaveFile("Hurikan Scene (*.hurikan)\0*.hurikan\0");
+		if (filepath.empty())
 		{
-			SceneSerializer sceneSerializer(m_ActiveScene);
-			sceneSerializer.Serialize(filepath);
-		}
-		else
-		{
-			HU_CORE_WARN("Could not save the file!");
+			SceneSerializer serializer(m_ActiveScene);
+			serializer.Serialize(filepath);
 		}
 	}
 

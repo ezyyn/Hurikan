@@ -5,8 +5,10 @@
 
 namespace Hurikan {
 
-	static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type) {
-		switch (type) {
+	static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type) 
+	{
+		switch (type) 
+		{
 			case ShaderDataType::Float:  return GL_FLOAT;
 			case ShaderDataType::Float2: return GL_FLOAT;
 			case ShaderDataType::Float3: return GL_FLOAT;
@@ -20,11 +22,11 @@ namespace Hurikan {
 			case ShaderDataType::Int3:	 return GL_INT;
 			case ShaderDataType::Int4:	 return GL_INT;
 
-			case ShaderDataType::Bool:return GL_BOOL;
+			case ShaderDataType::Bool:	 return GL_BOOL;
 		}
 
 		HU_CORE_ASSERT(false, "ShaderDataTypeToOpenGLBaseType: Invalid type!")
-			return 0;
+		return 0;
 	}
 
 
@@ -70,23 +72,49 @@ namespace Hurikan {
 	{
 		HU_PROFILE_FUNCTION();
 
-		HU_CORE_ASSERT(vertexBuffer->GetLayout().GetElements().size(),"AddVertexBuffer: VertexBuffer has no layout!")
+		HU_CORE_ASSERT(vertexBuffer->GetLayout().GetElements().size(), "AddVertexBuffer: VertexBuffer has no layout!")
 
-		glBindVertexArray(m_RendererID);
+			glBindVertexArray(m_RendererID);
 		vertexBuffer->Bind();
 
 		uint32_t index = 0;
 		for (const auto& element : vertexBuffer->GetLayout())
 		{
-			glEnableVertexAttribArray(index);
-			glVertexAttribPointer(index, element.GetComponentCount(),
-				ShaderDataTypeToOpenGLBaseType(element.Type),
-				element.Normalized ? GL_TRUE : GL_FALSE,
-				vertexBuffer->GetLayout().GetStride(),
-				(const void*)element.Offset);
-			index++;
-		}
-		m_VertexBuffers.push_back(vertexBuffer);
-	}
+			switch (element.Type)
+			{
+				case ShaderDataType::Float:
+				case ShaderDataType::Float2:
+				case ShaderDataType::Float3:
+				case ShaderDataType::Float4:
+				case ShaderDataType::Mat3:
+				case ShaderDataType::Mat4:
+				{
+					glEnableVertexAttribArray(index);
+					glVertexAttribPointer(index, element.GetComponentCount(),
+						ShaderDataTypeToOpenGLBaseType(element.Type),
+						element.Normalized ? GL_TRUE : GL_FALSE,
+						vertexBuffer->GetLayout().GetStride(),
+						(const void*)element.Offset);
+					index++;
+					break;
+				}
+				case ShaderDataType::Int:
+				case ShaderDataType::Int2:
+				case ShaderDataType::Int3:
+				case ShaderDataType::Int4:
+				case ShaderDataType::Bool:
+				{
+					glEnableVertexAttribArray(index);
+					glVertexAttribIPointer(index, element.GetComponentCount(),
+						ShaderDataTypeToOpenGLBaseType(element.Type),
+						vertexBuffer->GetLayout().GetStride(),
+						(const void*)element.Offset);
+					index++;
+					break;
+				}
 
+			}
+			m_VertexBuffers.push_back(vertexBuffer);
+		}
+	}
 }

@@ -7,13 +7,13 @@
 class GameApplication : public Hurikan::Application
 {
 public:
-	GameApplication() : Application("BomberFriends", 1280, 720)
+	GameApplication(ApplicationCommandLineArgs args) : Application("BomberFriends", args, 1280, 720)
 	{
 		Application::PushLayer(new GameFramework::GameLayer());
 	}
 };
 
-Hurikan::Application* Hurikan::CreateApplication()
+Hurikan::Application* Hurikan::CreateApplication(ApplicationCommandLineArgs args)
 {
-	return new GameApplication();
+	return new GameApplication(args);
 }

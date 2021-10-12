@@ -28,5 +28,6 @@ namespace GameFramework
 		OrthographicCameraController m_CameraController;
 		Player m_Player;
 		GameGrid m_GameGrid;
+		EditorCamera m_EditorCamera;
 	};
 }

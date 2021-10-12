@@ -8,7 +8,7 @@ namespace Hurikan {
 	class Storm : public Application
 	{
 	public:
-		Storm() : Application("Storm Editor", 1600, 900)
+		Storm(ApplicationCommandLineArgs args) : Application("Storm Editor",args, 1600, 900)
 		{
 			PushLayer(new EditorLayer());
 		}
@@ -18,7 +18,7 @@ namespace Hurikan {
 		}
 	};
 
-	Application* Hurikan::CreateApplication() {
-		return new Storm();
+	Application* Hurikan::CreateApplication(ApplicationCommandLineArgs args) {
+		return new Storm(args);
 	}
 }

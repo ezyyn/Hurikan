@@ -9,14 +9,15 @@ namespace Hurikan {
 
 	Application* Application::s_Instance = nullptr;
 
-	Application::Application(const std::string& name = "Hurikan App", uint32_t width /*= 1280*/, uint32_t height /*= 720*/)
+	Application::Application(const std::string& name = "Hurikan App", ApplicationCommandLineArgs args, uint32_t width /*= 1280*/, uint32_t height /*= 720*/)
+		: m_CommandLineArgs(args)
 	{
 		HU_PROFILE_FUNCTION();
 
 		HU_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 
-		m_Window = std::unique_ptr<Window>(Window::Create(WindowProps(name,width,height)));
+		m_Window = Window::Create(WindowProps(name,width,height));
 		m_Window->SetEventCallback(HU_BIND_EVENT_FN(Application::OnEvent));
 		//m_Window->SetVSync(false);
 		

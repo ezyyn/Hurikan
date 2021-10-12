@@ -32,6 +32,8 @@ namespace GameFramework
 		m_CameraController.SetZoomLevel(9);
 		m_CameraController.SetPosition({ 14, 8, 0 });
 
+		m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
+
 		m_Player.LoadBoxProperties(m_GameGrid.GetBoxProperties());
 	}
 
@@ -45,7 +47,7 @@ namespace GameFramework
 		RenderCommand::Clear();
 		Hurikan::Renderer2D::ResetStats();
 
-		Renderer2D::BeginScene(m_CameraController.GetCamera());
+		Renderer2D::BeginScene(m_EditorCamera);
 		
 		m_Player.Draw();
 		m_GameGrid.Draw();

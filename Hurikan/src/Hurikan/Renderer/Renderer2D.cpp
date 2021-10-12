@@ -5,6 +5,8 @@
 #include "Shader.h"
 #include "RenderCommand.h"
 
+#include "UniformBuffer.h"
+
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Hurikan {
@@ -16,6 +18,9 @@ namespace Hurikan {
 		glm::vec2 TexCoord;
 		float TexIndex;
 		float TilingFactor;
+
+		// Editor-only
+		int EntityID;
 	};
 	struct Renderer2D_Data
 	{
@@ -39,6 +44,13 @@ namespace Hurikan {
 		glm::vec4 QuadVertexPosition[4] = {};
 
 		Renderer2D::Statistics Stats;
+
+		struct CameraData
+		{
+			glm::mat4 ViewProjection;
+		};
+		CameraData CameraBuffer;
+		Ref<UniformBuffer> CameraUniformBuffer;
 	};
 	static Renderer2D_Data s_Data;
 
@@ -50,11 +62,12 @@ namespace Hurikan {
 
 		s_Data.QuadVertexBuffer = VertexBuffer::Create(s_Data.MaxVertices * sizeof(QuadVertex));
 		s_Data.QuadVertexBuffer->SetLayout({
-			{ ShaderDataType::Float3, "a_Position" },
-			{ ShaderDataType::Float4, "a_Color" },
-			{ ShaderDataType::Float2, "a_TexCoord" },
-			{ ShaderDataType::Float, "a_TexIndex" },
-			{ ShaderDataType::Float, "a_TilingFactor" },
+			{ ShaderDataType::Float3,	"a_Position"	  },
+			{ ShaderDataType::Float4,	"a_Color"		  },
+			{ ShaderDataType::Float2,	"a_TexCoord"	  },
+			{ ShaderDataType::Float,	"a_TexIndex"	  },
+			{ ShaderDataType::Float,	"a_TilingFactor"  },
+			{ ShaderDataType::Int,		"a_EntityID"	  }
 			});
 		s_Data.QuadVertexArray->AddVertexBuffer(s_Data.QuadVertexBuffer);
 
@@ -89,8 +102,6 @@ namespace Hurikan {
 			samplers[i] = i;
 
 		s_Data.TextureShader = Shader::Create("assets/shaders/Texture.glsl");
-		s_Data.TextureShader->Bind();
-		s_Data.TextureShader->SetIntArray("u_Textures", samplers, s_Data.MaxTextureSlots);
 
 		s_Data.TextureSlots[0] = s_Data.WhiteTexture;
 
@@ -98,6 +109,8 @@ namespace Hurikan {
 		s_Data.QuadVertexPosition[1] = { 0.5f,-0.5f,0.0f,1.0f };
 		s_Data.QuadVertexPosition[2] = { 0.5f, 0.5f,0.0f,1.0f };
 		s_Data.QuadVertexPosition[3] = { -0.5f, 0.5f,0.0f,1.0f };
+
+		s_Data.CameraUniformBuffer = UniformBuffer::Create(sizeof(Renderer2D_Data::CameraData), 0);
 	}
 	void Renderer2D::Shutdown()
 	{
@@ -105,7 +118,6 @@ namespace Hurikan {
 
 	void Renderer2D::FlushAndReset()
 	{
-		HU_CORE_INFO("d");
 		EndScene();
 
 		s_Data.QuadIndexCount = 0;
@@ -117,10 +129,11 @@ namespace Hurikan {
 	{
 		HU_PROFILE_FUNCTION();
 
-		glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
-
-		s_Data.TextureShader->Bind();
-		s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
+		s_Data.CameraBuffer.ViewProjection = camera.GetProjection() * glm::inverse(transform);
+		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer2D_Data::CameraData));
+		// glm::mat4 viewProj = camera.GetProjection() * glm::inverse(transform);
+		// s_Data.TextureShader->Bind();
+		// s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
 
 		StartBatch();
 	}
@@ -129,10 +142,11 @@ namespace Hurikan {
 	{
 		HU_PROFILE_FUNCTION();
 
-		glm::mat4 viewProj = camera.GetViewProjection();
-
-		s_Data.TextureShader->Bind();
-		s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
+		s_Data.CameraBuffer.ViewProjection = camera.GetViewProjection();
+		s_Data.CameraUniformBuffer->SetData(&s_Data.CameraBuffer, sizeof(Renderer2D_Data::CameraData));
+		// glm::mat4 viewProj = camera.GetViewProjection();
+		// s_Data.TextureShader->Bind();
+		// s_Data.TextureShader->SetMat4("u_ViewProjection", viewProj);
 
 		StartBatch();
 	}
@@ -153,13 +167,17 @@ namespace Hurikan {
 	}
 	void Renderer2D::Flush()
 	{
+		if (s_Data.QuadIndexCount == 0)
+			return;
+
+		uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferPtr - (uint8_t*)s_Data.QuadVertexBufferBase);
+		s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
+
 		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
 		{
 			s_Data.TextureSlots[i]->Bind(i);
 		}
-
-		uint32_t dataSize = (uint32_t)((uint8_t*)s_Data.QuadVertexBufferPtr - (uint8_t*)s_Data.QuadVertexBufferBase);
-		s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, dataSize);
+		s_Data.TextureShader->Bind();
 
 		RenderCommand::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexCount);
 		s_Data.Stats.DrawCalls++;
@@ -213,7 +231,7 @@ namespace Hurikan {
 		s_Data.Stats.QuadCount++;
 	}
 
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color)
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const glm::vec4& color, int entityID)
 	{
 		HU_PROFILE_FUNCTION();
 		if (s_Data.QuadIndexCount >= Renderer2D_Data::MaxIndices)
@@ -234,6 +252,7 @@ namespace Hurikan {
 			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
+			s_Data.QuadVertexBufferPtr->EntityID = entityID;
 			s_Data.QuadVertexBufferPtr++;
 		}
 
@@ -242,7 +261,7 @@ namespace Hurikan {
 		s_Data.Stats.QuadCount++;
 	}
 
-	void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor /*= 1.0f*/, const glm::vec4& tintColor /*= glm::vec4(1.0f)*/)
+	void Renderer2D::DrawQuad(const glm::mat4& transform, const Ref<Texture2D>& texture, float tilingFactor /*= 1.0f*/, const glm::vec4& tintColor /*= glm::vec4(1.0f)*/, int entityID)
 	{
 		HU_PROFILE_FUNCTION();
 
@@ -285,6 +304,7 @@ namespace Hurikan {
 			s_Data.QuadVertexBufferPtr->TexCoord = textureCoords[i];
 			s_Data.QuadVertexBufferPtr->TexIndex = textureIndex;
 			s_Data.QuadVertexBufferPtr->TilingFactor = tilingFactor;
+			s_Data.QuadVertexBufferPtr->EntityID = entityID;
 			s_Data.QuadVertexBufferPtr++;
 		}
 		s_Data.QuadIndexCount += 6;
@@ -342,7 +362,6 @@ namespace Hurikan {
 
 		s_Data.Stats.QuadCount++;
 	}
-
 
 	void Renderer2D::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
 	{
@@ -460,6 +479,13 @@ namespace Hurikan {
 
 		s_Data.Stats.QuadCount++;
 	}
+
+	void Renderer2D::DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src, int entityID)
+	{
+		DrawQuad(transform, src.Color, entityID);
+	}
+
+
 	Renderer2D::Statistics Renderer2D::GetStats()
 	{
 		return s_Data.Stats;
