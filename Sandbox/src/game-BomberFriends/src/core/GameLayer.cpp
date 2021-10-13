@@ -17,7 +17,7 @@ void GameLayer::OnDetach()
 
 void GameLayer::OnUpdate(Timestep& ts)
 {
-	//m_CameraController.OnUpdate(ts);
+	m_CameraController.OnUpdate(ts);
 
 	RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
 	RenderCommand::Clear();
