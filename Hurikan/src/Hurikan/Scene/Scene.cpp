@@ -55,38 +55,49 @@ namespace Hurikan
 		{
 			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
 				{
-					// TODO: move to scene::onsceneplay
+					// TODO: Move to Scene::OnScenePlay
 					if (!nsc.Instance)
 					{
 						nsc.Instance = nsc.InstantiateScript();
 						nsc.Instance->m_Entity = Entity{ entity, this };
 						nsc.Instance->OnCreate();
 					}
+
 					nsc.Instance->OnUpdate(ts);
 				});
 		}
 
-		// Remder 2D
-		Camera* main_camera = nullptr;
-		glm::mat4* camera_transform;
+		// Render 2D
+		Camera* mainCamera = nullptr;
+		glm::mat4 cameraTransform;
 		{
 			auto view = m_Registry.view<TransformComponent, CameraComponent>();
-			for(auto entity : view)
+			for (auto entity : view)
 			{
-				auto[transform, camera] = view.get<TransformComponent, CameraComponent>(entity);
+				auto [transform, camera] = view.get<TransformComponent, CameraComponent>(entity);
 
 				if (camera.Primary)
 				{
-					main_camera = &camera.Camera;
-					camera_transform = &transform.GetTransform();
+					mainCamera = &camera.Camera;
+					cameraTransform = transform.GetTransform();
 					break;
 				}
 			}
 		}
 
-		if (main_camera)
+		if (mainCamera)
 		{
-			
+			Renderer2D::BeginScene(*mainCamera, cameraTransform);
+
+			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+			for (auto entity : group)
+			{
+				auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+
+				Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
+			}
+
+			Renderer2D::EndScene();
 		}
 	}
 

@@ -5,6 +5,7 @@
 #include "Hurikan/Renderer/SceneCamera.h"
 
 #include "ScriptableEntity.h"
+#include "Hurikan/Renderer/Texture.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
@@ -43,6 +44,8 @@ namespace Hurikan
 	struct SpriteRendererComponent
 	{
 		glm::vec4 Color{1.0f};
+		Ref<Texture2D> Texture;
+		float TilingFactor = 1.0f;
 
 		SpriteRendererComponent() = default;
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;

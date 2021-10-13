@@ -3,6 +3,7 @@
 #include "Hurikan.h"
 
 #include "Panels/SceneHierarchyPanel.h"
+#include "Panels/ContentBrowserPanel.h"
 
 #include "Hurikan/Renderer/EditorCamera.h"
 
@@ -25,9 +26,17 @@ namespace Hurikan {
 
 		void NewScene();
 		void OpenScene();
+		void OpenScene(const std::filesystem::path& path);
 		void SaveSceneAs();
+
+		void OnScenePlay();
+		void OnSceneStop();
+
+		// UI Panels
+		void UI_Toolbar();
 	private:
 		Hurikan::Ref<Framebuffer> m_Framebuffer;
+
 
 		bool m_ViewportFocus = false, m_ViewportHovered = false;
 
@@ -42,7 +51,17 @@ namespace Hurikan {
 
 		//Panels
 		SceneHierarchyPanel m_SceneHierarchyPanel;
+		ContentBrowserPanel m_ContentBrowserPanel;
 
 		EditorCamera m_EditorCamera;
+
+		// Editor resources
+
+		Ref<Texture2D> m_IconPlay, m_IconStop;
+		enum class SceneState
+		{
+			Edit = 0, Play = 1
+		};
+		SceneState m_SceneState = SceneState::Edit;
 	};
 }

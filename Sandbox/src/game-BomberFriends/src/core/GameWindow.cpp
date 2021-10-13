@@ -3,7 +3,6 @@
 
 namespace GameFramework 
 {
-
 	GameLayer::GameLayer() 
 		: Layer("GameFrameworkLayer"), m_CameraController(1280.0f / 720.0f, false),
 		m_GameGrid(17, 17),
