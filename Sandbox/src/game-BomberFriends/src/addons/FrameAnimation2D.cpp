@@ -17,7 +17,7 @@ namespace Hurikan
 	{
 		while (!m_AnimationPause)
 		{
-			Renderer2D::DrawQuad({ position,0 }, size, m_Textures[m_AnimationIndex]);
+			//Renderer2D::DrawQuad({ position,0 }, size, m_Textures[m_AnimationIndex]);
 		}
 	}
 
