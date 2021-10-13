@@ -38,6 +38,7 @@ project "Hurikan"
 	{
 		"src",
 		"vendor/spdlog/include",
+		"%{IncludeDir.Box2D}",
 		"%{IncludeDir.Glad}",
 		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.GLFW}",
@@ -49,6 +50,7 @@ project "Hurikan"
 		"%{IncludeDir.VulkanSDK}"
 	}
 	links {
+		"Box2D",
 		"GLFW",
 		"Glad",
 		"ImGui",

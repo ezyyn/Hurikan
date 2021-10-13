@@ -6,6 +6,7 @@ VULKAN_SDK = os.getenv("VULKAN_SDK")
 IncludeDir= {}
 IncludeDir["glm"] =						"%{wks.location}/Hurikan/vendor/glm"
 IncludeDir["Glad"] =					"%{wks.location}/Hurikan/vendor/Glad/include"
+IncludeDir["Box2D"] =					"%{wks.location}/Hurikan/vendor/Box2D/include"
 IncludeDir["GLFW"] =					"%{wks.location}/Hurikan/vendor/GLFW/include"
 IncludeDir["ImGui"] =					"%{wks.location}/Hurikan/vendor/imgui"
 IncludeDir["stb_image"] =				"%{wks.location}/Hurikan/vendor/stb_image"

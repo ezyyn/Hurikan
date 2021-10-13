@@ -29,6 +29,7 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}";
 
 group "Dependencies"
 	include "vendor/premake"
+	include "Hurikan/vendor/Box2D"
 	include "Hurikan/vendor/GLFW"
 	include "Hurikan/vendor/Glad"
 	include "Hurikan/vendor/ImGui"

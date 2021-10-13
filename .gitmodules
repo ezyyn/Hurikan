@@ -1,0 +1,3 @@
+[submodule "Hurikan/vendor/Box2D"]
+	path = Hurikan/vendor/Box2D
+	url = https://github.com/RikalSiHurikan/box2d
