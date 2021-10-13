@@ -80,4 +80,13 @@ namespace Hurikan
 			DestroyScript = [](NativeScriptComponent* nsc) { delete nsc->Instance; nsc->Instance = nullptr; };
 		}
 	};
+
+	// Physics
+
+	struct Rigidbody2DComponent
+	{
+		enum class BodyType { Static = 0, Dynamin, Kinematic };
+		BodyType Type = BodyType::Static;
+		bool FixedRotation = false;
+	};
 }

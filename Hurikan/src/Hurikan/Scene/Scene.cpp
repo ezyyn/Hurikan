@@ -8,6 +8,8 @@
 
 #include <glm/glm.hpp>
 
+#include <box2d/b2_world.h>
+
 namespace Hurikan
 {
 	Scene::Scene()
@@ -19,19 +21,32 @@ namespace Hurikan
 	{
 	}
 
-	Entity Scene::CreateEntity(const std::string& name)
+	void Scene::OnViewportResize(uint32_t width, uint32_t height)
 	{
-		Entity entity = { m_Registry.create(), this };
-		entity.AddComponent<TransformComponent>();
-		auto& tag = entity.AddComponent<TagComponent>();
-		tag.Tag = name.empty() ? "Entity" : name;
+		m_ViewportWidth = width;
+		m_ViewportHeight = height;
 
-		return entity;
+		auto view = m_Registry.view<CameraComponent>();
+		for (auto entity : view)
+		{
+			auto& camera_component = view.get<CameraComponent>(entity);
+			if (!camera_component.FixedAspectRatio)
+			{
+				camera_component.Camera.SetViewportSize(width, height);
+			}
+		}
 	}
 
-	void Scene::DestroyEntity(Entity entity)
+	void Scene::OnRuntimeStart()
 	{
-		m_Registry.destroy(entity);
+		m_PhysicsWorld = new b2World({ 0.0f,9.8f });
+		//m_PhysicsWorld->CreateBody()
+	}
+
+	void Scene::OnRuntimeStop()
+	{
+		delete m_PhysicsWorld;
+		m_PhysicsWorld = nullptr;
 	}
 
 	void Scene::OnUpdateEditor(Timestep& ts, EditorCamera& camera)
@@ -101,20 +116,19 @@ namespace Hurikan
 		}
 	}
 
-	void Scene::OnViewportResize(uint32_t width, uint32_t height)
+	Entity Scene::CreateEntity(const std::string& name)
 	{
-		m_ViewportWidth = width;
-		m_ViewportHeight = height;
+		Entity entity = { m_Registry.create(), this };
+		entity.AddComponent<TransformComponent>();
+		auto& tag = entity.AddComponent<TagComponent>();
+		tag.Tag = name.empty() ? "Entity" : name;
 
-		auto view = m_Registry.view<CameraComponent>();
-		for (auto entity : view)
-		{
-			auto& camera_component = view.get<CameraComponent>(entity);
-			if (!camera_component.FixedAspectRatio)
-			{
-				camera_component.Camera.SetViewportSize(width, height);
-			}
-		}
+		return entity;
+	}
+
+	void Scene::DestroyEntity(Entity entity)
+	{
+		m_Registry.destroy(entity);
 	}
 
 	Entity Scene::GetPrimaryCameraEntity()
