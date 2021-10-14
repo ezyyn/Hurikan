@@ -4,8 +4,8 @@
 using namespace Hurikan;
 
 #include "GameGrid.h"
-
-#include "Hurikan/Renderer/OrthographicCameraController.h"
+#include "Player.h"
+#include "GameCamera.h"
 
 class GameLayer : public Layer
 {
@@ -18,6 +18,13 @@ public:
 	void OnImGuiRender();
 	void OnEvent(Event& e);
 private:
-	OrthographicCameraController m_CameraController;
+	uint32_t m_Width;
+	uint32_t m_Height;
+
+	Ref<Scene> m_Scene;
+
+	// Scene objects
+	Player m_Player;
 	GameGrid m_GameGrid;
+	GameCamera m_GameCamera;
 };
