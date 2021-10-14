@@ -155,7 +155,6 @@ namespace Hurikan {
 		{
 			int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
 			m_HoveredEntity = pixelData == -1 ? Entity() : Entity((entt::entity)pixelData, m_ActiveScene.get());
-			HU_CORE_WARN("Pixel data = {0}", pixelData);
 		}
 
 		m_Framebuffer->Unbind();
