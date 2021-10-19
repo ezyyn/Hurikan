@@ -6,24 +6,24 @@
 
 void Player::Init(Ref<Scene> scene)
 {
-	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame1"), 10);
-	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame2"), 10);
-	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame3"), 10);
-	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame4"), 10);
-	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame5"), 10);
-	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame6"), 10);
-	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame7"), 10);
-	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame8"), 10);
-	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame9"), 10);
-	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame10"), 10);
-	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame11"), 10);
-	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame12"), 10);
-	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame13"), 10);
-	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame14"), 10);
-	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame15"), 10);
-	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame16"), 10);
-	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame17"), 10);
-	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame18"), 10);
+	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame1"),0);
+	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame2"),0);
+	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame3"),0);
+	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame4"),0);
+	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame5"),0);
+	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame6"),0);
+	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame7"),0);
+	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame8"),0);
+	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame9"),0);
+	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame10"),0);
+	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame11"),0);
+	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame12"),0);
+	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame13"),0);
+	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame14"),0);
+	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame15"),0);
+	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame16"),0);
+	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame17"),0);
+	m_BombAnimation.AddFrame(TextureLoader::Get()->Load("Bomb-Frame18"),0);
 
 	// Scene
 	m_Scene = scene;
@@ -53,6 +53,8 @@ void Player::Init(Ref<Scene> scene)
 const int maxCount = 5;
 bool B_pressed = false;
 
+std::vector<Entity> bombs;
+
 void Player::OnUpdate(Timestep& ts)
 {
 	// Bomb Placement
@@ -62,11 +64,34 @@ void Player::OnUpdate(Timestep& ts)
 	{
 		B_pressed = false; // One frame per type
 
-		HU_INFO("BombEntity" + std::to_string(count));
+		if (count == 0)
+			return;
+
+		for (auto bomb_entity : bombs)
+		{
+			if (glm::round(translation.x) == bomb_entity.GetComponent<TransformComponent>().Translation.x
+				&& glm::round(translation.y) == bomb_entity.GetComponent<TransformComponent>().Translation.y)
+			{
+				// Cannot create another bomb entity if already exists on the position
+				return;
+			}
+		}
+
 		auto& e = m_Scene->CreateEntity("BombEntity");
 		Bomb bomb(e, m_BombAnimation);
+		bombs.push_back(e);
 		e.GetComponent<TransformComponent>().Translation = { glm::round(translation.x), glm::round(translation.y), translation.z };
 		count--;
+	}
+
+	for (size_t i = 0; i < bombs.size(); i++)
+	{
+		if (!bombs[i].GetComponent<AnimationComponent>().IsPlaying) 
+		{
+			count++;
+			m_Scene->DestroyEntity(bombs[i]);
+			bombs.erase(bombs.begin() + i);
+		}
 	}
 }
 

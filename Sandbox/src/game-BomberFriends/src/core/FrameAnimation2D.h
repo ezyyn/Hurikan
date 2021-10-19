@@ -27,7 +27,7 @@ namespace Hurikan
 	private:
 		bool m_AnimationPlaying = false;
 
-		float currentFrameTime = 0;
+		float m_CurrentFrameTime = 0;
 		uint32_t m_AnimationIndex = 0;
 		std::vector<Frame> m_Frames = {};
 	};

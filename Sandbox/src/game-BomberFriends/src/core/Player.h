@@ -12,7 +12,6 @@ class PlayerController : public ScriptableEntity
 private:
 	virtual void PlayerController::OnCreate() override
 	{
-		//GetComponent<TransformComponent>().Translation.z = -0.1f;
 	}
 
 	virtual void PlayerController::OnDestroy() override

@@ -11,19 +11,16 @@ GameLayer::GameLayer(uint32_t width, uint32_t height) : m_Width(width), m_Height
 {
 }
 
+
 void GameLayer::OnAttach()
 {
 	m_Scene = CreateRef<Scene>();
 
 	TextureLoader::Init(); 
 
-	// ORDER !!!!!!! no more
-	//auto& test = m_Scene->CreateEntity("ddd");
-	//test.AddComponent<SpriteRendererComponent>(glm::vec4{ 1.0f, 1.0f, 1.0f, 1.0f });
-
 	auto& camera = m_Scene->CreateEntity("GameCameraEntity");
 	m_GameCamera.Init(camera, m_Width, m_Height);
-
+	
 	m_GameGrid.Init(m_Scene); // must be first due to reverse draw order
 	m_Player.Init(m_Scene); 
 
@@ -43,15 +40,6 @@ void GameLayer::OnUpdate(Timestep& ts)
 
 	m_Player.OnUpdate(ts);
 	m_Scene->OnUpdateRuntime(ts);
-#if 0
-
-	Renderer2D::BeginScene(m_CameraController.GetCamera());
-	Renderer2D::DrawQuad( { 0, 0 }, {1,1}, { 1.0f, 0.0f, 0.0f, 1.0f });
-
-	m_GameGrid.Update(ts);
-
-	Renderer2D::EndScene();
-#endif
 }
 
 int frames = 0; // To 60
@@ -95,14 +83,12 @@ void GameLayer::OnEvent(Event& e)
 bool GameLayer::OnKeyPressed(KeyPressedEvent& e)
 {
 	m_Player.OnKeyPressed(e);
-	
 	return false;
 }
 
 bool GameLayer::OnKeyReleased(KeyReleasedEvent& e)
 {
 	m_Player.OnKeyReleased(e);
-
 	return false;
 }
 

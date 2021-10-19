@@ -33,6 +33,7 @@ namespace Hurikan
 		Entity GetPrimaryCameraEntity();
 
 		Entity GetEntityByTag(const std::string& _tag);
+		Entity GetEntityByUUID(UUID uuid);
 	private:
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);

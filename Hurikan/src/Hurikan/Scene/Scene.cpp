@@ -254,6 +254,18 @@ namespace Hurikan
 		return {};
 	}
 
+	Hurikan::Entity Scene::GetEntityByUUID(UUID uuid)
+	{
+		auto view = m_Registry.view<IDComponent>();
+		for (auto entity : view)
+		{
+			const auto& id = view.get<IDComponent>(entity).ID;
+			if (id == uuid)
+				return Entity{ entity, this };
+		}
+		return {};
+	}
+
 	template<typename T>
 	void Scene::OnComponentAdded(Entity entity, T& component)
 	{

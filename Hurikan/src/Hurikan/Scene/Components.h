@@ -73,6 +73,8 @@ namespace Hurikan
 		};
 		std::vector<FrameData> Animation;
 
+		bool IsPlaying = false;
+
 		AnimationComponent() = default;
 		AnimationComponent(const AnimationComponent&) = default;
 	};

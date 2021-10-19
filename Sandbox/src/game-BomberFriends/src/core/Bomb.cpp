@@ -11,6 +11,7 @@ Bomb::Bomb(Entity& entity, FrameAnimation2D bomb_anim) : m_BombEntity(entity)
 
 	m_BombEntity.AddComponent<SpriteRendererComponent>();
 	m_BombEntity.AddComponent<AnimationComponent>().Animation = parsed;
+	m_BombEntity.GetComponent<AnimationComponent>().IsPlaying = true;
 	m_BombEntity.AddComponent<NativeScriptComponent>().Bind<BombScript>();
 }
 

@@ -11,10 +11,13 @@ class BombScript : public ScriptableEntity
 protected:
 	virtual void OnCreate() override
 	{
-		for (auto& frame : GetComponent<AnimationComponent>().Animation)
+		auto& animation_c = GetComponent<AnimationComponent>();
+
+		for (auto& frame : animation_c.Animation)
 		{
 			Animation.AddFrame(frame.Texture, frame.Delay);
 		}
+		animation_c.IsPlaying = true;
 		Animation.Play();
 	}
 
@@ -27,7 +30,10 @@ protected:
 		Frame* currentFrame = Animation.CurrentFrame();
 		if (currentFrame == nullptr)
 		{
+			auto& animation_c = GetComponent<AnimationComponent>();
+
 			GetComponent<SpriteRendererComponent>().Color = { 1.0f,1.0f, 1.0f, 0.0f };
+			animation_c.IsPlaying = false;
 			return;
 		}
 		GetComponent<SpriteRendererComponent>().Texture = currentFrame->Texture;
@@ -35,7 +41,7 @@ protected:
 
 		Animation.Update(ts);
 	}
-
+private:
 	FrameAnimation2D Animation;
 };
 
@@ -45,8 +51,8 @@ public:
 	Bomb(Entity& entity, FrameAnimation2D bomb_anim);
 
 	Entity& GetEntity() { return m_BombEntity; }
-
-	bool Exploded = false;
 private:
+
+	float Duration = 2; // In seconds
 	Entity m_BombEntity;
 };
