@@ -17,14 +17,16 @@ project "Sandbox"
 	}
 	includedirs 
 	{
+		"%{IncludeDir.Box2D}",
 		"%{wks.location}/Hurikan/vendor/spdlog/include",
 		"%{wks.location}/Hurikan/src",
 		"%{wks.location}/Hurikan/vendor/imgui",
 		"%{IncludeDir.glm}",
-		"%{IncludeDir.entt}",
+		"%{IncludeDir.entt}"
 	}
 	links 
 	{
+		"Box2D",
 		"Hurikan"
 	}
 

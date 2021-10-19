@@ -9,11 +9,16 @@ class GameCameraController : public ScriptableEntity
 protected:
 	virtual void OnCreate() override 
 	{
-		auto& translation = GetComponent<TransformComponent>().Translation;
+		//auto& translation = GetComponent<TransformComponent>().Translation;
+		//translation.z = 12;
 
-		GetComponent<CameraComponent>().Camera.SetOrthographicSize(18);
-		//translation.x = 14;
-		//translation.y = 8;
+		//camera.SetPerspectiveVerticalFOV(-30.0f);
+		//camera.SetPerspectiveNearClip(0.1f);
+		//camera.SetPerspectiveFarClip(1000.0f);
+
+		auto& camera = GetComponent<CameraComponent>().Camera;
+		camera.SetProjectionType(SceneCamera::ProjectionType::Orthographic);
+		camera.SetOrthographicSize(18);
 	}
 
 	virtual void OnDestroy() override 
@@ -22,22 +27,21 @@ protected:
 
 	virtual void OnUpdate(Timestep ts) override 
 	{
-		/*
+		return;
 		auto& translation = GetComponent<TransformComponent>().Translation;
 
-		float speed = 5.0f;
+		static float speed = 2.0f;
 
 		if (Input::IsKeyPressed(Key::A))
-			translation.x -= speed * ts;
-		if (Input::IsKeyPressed(Key::D))
 			translation.x += speed * ts;
+		if (Input::IsKeyPressed(Key::D))
+			translation.x -= speed * ts;
 		if (Input::IsKeyPressed(Key::W))
-			translation.y += speed * ts;
-		if (Input::IsKeyPressed(Key::S))
 			translation.y -= speed * ts;
-		*/
+		if (Input::IsKeyPressed(Key::S))
+			translation.y += speed * ts;
+		
 	}
-private:
 };
 
 class GameCamera

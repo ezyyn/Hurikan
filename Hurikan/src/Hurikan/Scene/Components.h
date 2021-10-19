@@ -1,17 +1,25 @@
 #pragma once
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+
+#include "Hurikan/Core/UUID.h"
 
 #include "Hurikan/Renderer/SceneCamera.h"
-
-#include "ScriptableEntity.h"
 #include "Hurikan/Renderer/Texture.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace Hurikan
 {
+	struct IDComponent
+	{
+		UUID ID;
+
+		IDComponent() = default;
+		IDComponent(const IDComponent&) = default;
+	};
+
 	struct TagComponent
 	{
 		std::string Tag;
@@ -56,6 +64,19 @@ namespace Hurikan
 		operator const glm::vec4& () const { return Color; }
 	};
 
+	struct AnimationComponent
+	{
+		struct FrameData
+		{
+			Ref<Texture2D> Texture;
+			float Delay;
+		};
+		std::vector<FrameData> Animation;
+
+		AnimationComponent() = default;
+		AnimationComponent(const AnimationComponent&) = default;
+	};
+
 	struct CameraComponent
 	{
 		SceneCamera Camera;
@@ -66,6 +87,7 @@ namespace Hurikan
 		CameraComponent(const CameraComponent&) = default;
 	};
 
+	class ScriptableEntity; // <- Forward Declaration
 	struct NativeScriptComponent
 	{
 		ScriptableEntity* Instance = nullptr;
@@ -88,6 +110,7 @@ namespace Hurikan
 		enum class BodyType { Static = 0, Dynamic, Kinematic };
 		BodyType Type = BodyType::Static;
 		bool FixedRotation = false;
+		bool Gravity = true;
 
 		// Storage for runtime
 		void* RuntimeBody = nullptr;
@@ -111,5 +134,22 @@ namespace Hurikan
 
 		BoxCollider2DComponent() = default;
 		BoxCollider2DComponent(const BoxCollider2DComponent&) = default;
+	};
+
+	struct CircleCollider2DComponent
+	{
+		glm::vec2 Offset = { 0.0f, 0.0f };
+		float Radius = 0.5f;
+
+		float Density = 1.0f;
+		float Friction = 0.5f;
+		float Restitution = 0.0f;
+		float RestitutionThreshold = 0.5f;
+
+		// Storage for runtime
+		void* RuntimeFixture = nullptr;
+
+		CircleCollider2DComponent() = default;
+		CircleCollider2DComponent(const CircleCollider2DComponent&) = default;
 	};
 }

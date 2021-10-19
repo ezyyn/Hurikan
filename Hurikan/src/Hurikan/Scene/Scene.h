@@ -1,6 +1,7 @@
 #pragma once
 #include "entt.hpp"
 
+#include "Hurikan/Core/UUID.h"
 #include "Hurikan/Core/Timestep.h"
 
 #include "Hurikan/Renderer/EditorCamera.h"
@@ -18,6 +19,7 @@ namespace Hurikan
 		~Scene();
 
 		Entity CreateEntity(const std::string& name = std::string());
+		Entity CreateEntitywithUUID(UUID uuid, const std::string& name = std::string());
 		void DestroyEntity(Entity entity);
 
 		void OnRuntimeStart();
@@ -29,6 +31,8 @@ namespace Hurikan
 		void OnViewportResize(uint32_t width, uint32_t height);
 
 		Entity GetPrimaryCameraEntity();
+
+		Entity GetEntityByTag(const std::string& _tag);
 	private:
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);

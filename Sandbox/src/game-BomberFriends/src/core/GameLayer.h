@@ -17,6 +17,9 @@ public:
 	void OnUpdate(Timestep& ts);
 	void OnImGuiRender();
 	void OnEvent(Event& e);
+
+	bool OnKeyPressed(KeyPressedEvent& e);
+	bool OnKeyReleased(KeyReleasedEvent& e);
 private:
 	uint32_t m_Width;
 	uint32_t m_Height;

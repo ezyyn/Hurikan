@@ -1,21 +1,18 @@
 #include <Hurikan.h>
 
-#include "GameLayer.h"
-
 #include "Hurikan/Core/EntryPoint.h"
 
-class Storm : public Hurikan::Application
+#include "GameLayer.h"
+
+class GameApplication : public Hurikan::Application
 {
 public:
-	Storm(Hurikan::ApplicationCommandLineArgs args) : Application("Bomber Friends", args, 1280, 720)
+	GameApplication(Hurikan::ApplicationCommandLineArgs args) : Hurikan::Application("Bomber Man", args, 1600, 900)
 	{
-		PushLayer(new GameLayer(1280, 720));
-	}
-	~Storm()
-	{
+		PushLayer(new GameLayer(1600, 900));
 	}
 };
 
 Hurikan::Application* Hurikan::CreateApplication(Hurikan::ApplicationCommandLineArgs args) {
-	return new Storm(args);
+	return new GameApplication(args);
 }

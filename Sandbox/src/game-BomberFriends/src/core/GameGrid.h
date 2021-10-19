@@ -18,6 +18,7 @@ public:
 	void Init(Ref<Scene> scene);
 	void Update(Hurikan::Timestep& ts);
 
+	SceneEntities& GetSceneEntities() { return m_SceneEntities; }
 private:
 	Ref<Scene> m_Scene;
 
@@ -26,6 +27,8 @@ private:
 	Ref<Texture2D> m_SpriteSheet;
 	Ref<Texture2D> m_WallTile;
 	Ref<Texture2D> m_BackgroundTile;
+
+	Ref<Texture2D> m_Bomb;
 
 	uint32_t m_Rows, m_Columns;
 

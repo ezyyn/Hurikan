@@ -2,6 +2,7 @@
 #include "Scene.h"
 
 #include "Components.h"
+#include "ScriptableEntity.h"
 #include "Entity.h"
 
 #include "Hurikan/Renderer/Renderer2D.h"
@@ -13,6 +14,7 @@
 #include "box2d/b2_body.h"
 #include "box2d/b2_fixture.h"
 #include "box2d/b2_polygon_shape.h"
+#include "box2d/b2_circle_shape.h"
 
 namespace Hurikan
 {
@@ -40,7 +42,13 @@ namespace Hurikan
 
 	Entity Scene::CreateEntity(const std::string& name)
 	{
+		return CreateEntitywithUUID(UUID(), name);
+	}
+
+	Hurikan::Entity Scene::CreateEntitywithUUID(UUID uuid, const std::string& name /*= std::string()*/)
+	{
 		Entity entity = { m_Registry.create(), this };
+		entity.AddComponent<IDComponent>(uuid);
 		entity.AddComponent<TransformComponent>();
 		auto& tag = entity.AddComponent<TagComponent>();
 		tag.Tag = name.empty() ? "Entity" : name;
@@ -70,6 +78,9 @@ namespace Hurikan
 
 			b2Body* body = m_PhysicsWorld->CreateBody(&bodyDef);
 			body->SetFixedRotation(rb2d.FixedRotation);
+			if (!rb2d.Gravity)
+				body->SetGravityScale(0.0f);
+
 			rb2d.RuntimeBody = body;
 
 			if (entity.HasComponent<BoxCollider2DComponent>())
@@ -85,6 +96,23 @@ namespace Hurikan
 				fixtureDef.friction = bc2d.Friction;
 				fixtureDef.restitution = bc2d.Restitution;
 				fixtureDef.restitutionThreshold = bc2d.RestitutionThreshold;
+				body->CreateFixture(&fixtureDef);
+			}
+
+			if (entity.HasComponent<CircleCollider2DComponent>())
+			{
+				auto& cc2d = entity.GetComponent<CircleCollider2DComponent>();
+
+				b2CircleShape circleShape;
+				circleShape.m_radius = cc2d.Radius;
+				circleShape.m_p = { cc2d.Offset.x * cc2d.Radius, cc2d.Offset.y * cc2d.Radius };
+
+				b2FixtureDef fixtureDef;
+				fixtureDef.shape = &circleShape;
+				fixtureDef.density = cc2d.Density;
+				fixtureDef.friction = cc2d.Friction;
+				fixtureDef.restitution = cc2d.Restitution;
+				fixtureDef.restitutionThreshold = cc2d.RestitutionThreshold;
 				body->CreateFixture(&fixtureDef);
 			}
 		}
@@ -159,11 +187,11 @@ namespace Hurikan
 			Renderer2D::BeginScene(*mainCamera, cameraTransform);
 
 			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-			for (auto entity : group)
+			for (int i = group.size() - 1; i >= 0; i--)
 			{
-				auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
+				auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(group[i]);
 
-				Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)entity);
+				Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)group[i]);
 			}
 
 			Renderer2D::EndScene();
@@ -214,6 +242,18 @@ namespace Hurikan
 		return {};
 	}
 
+	Hurikan::Entity Scene::GetEntityByTag(const std::string& _tag)
+	{
+		auto view = m_Registry.view<TagComponent>();
+		for (auto entity : view)
+		{
+			const auto& tag = view.get<TagComponent>(entity).Tag;
+			if (tag == _tag)
+				return Entity{ entity, this };
+		}
+		return {};
+	}
+
 	template<typename T>
 	void Scene::OnComponentAdded(Entity entity, T& component)
 	{
@@ -254,6 +294,18 @@ namespace Hurikan
 
 	template<>
 	void Scene::OnComponentAdded<BoxCollider2DComponent>(Entity entity, BoxCollider2DComponent& component)
+	{
+	}
+	template<>
+	void Scene::OnComponentAdded<CircleCollider2DComponent>(Entity entity, CircleCollider2DComponent& component)
+	{
+	}
+	template<>
+	void Scene::OnComponentAdded<AnimationComponent>(Entity entity, AnimationComponent& component)
+	{
+	}
+	template<>
+	void Scene::OnComponentAdded<IDComponent>(Entity entity, IDComponent& component)
 	{
 	}
 }
