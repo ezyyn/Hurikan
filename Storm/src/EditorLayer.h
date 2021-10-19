@@ -37,7 +37,6 @@ namespace Hurikan {
 	private:
 		Hurikan::Ref<Framebuffer> m_Framebuffer;
 
-
 		bool m_ViewportFocus = false, m_ViewportHovered = false;
 
 		Entity m_HoveredEntity;

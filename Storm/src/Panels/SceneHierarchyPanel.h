@@ -11,20 +11,17 @@ namespace Hurikan
 	{
 	public:
 		SceneHierarchyPanel() = default;
-		SceneHierarchyPanel(const Ref<Scene>& context);
+		SceneHierarchyPanel(const Ref<Scene>& scene);
 
-		void SetContext(const Ref<Scene>& context);
+		void SetContext(const Ref<Scene>& scene);
 
 		void OnImGuiRender();
 
 		Entity GetSelectedEntity() const { return m_SelectionContext; }
 		void SetSelectedEntity(Entity entity);
 	private:
-		void DrawEntityNode(Entity& entity);
+		void DrawEntityNode(Entity entity);
 		void DrawComponents(Entity entity);
-
-		template<typename T,typename UIFunction>
-		void DrawComponent(Entity entity, const std::string& name, UIFunction function);
 	private:
 		Ref<Scene> m_Context;
 		Entity m_SelectionContext;

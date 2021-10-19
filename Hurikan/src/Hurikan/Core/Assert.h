@@ -16,8 +16,8 @@
 #define HU_INTERNAL_ASSERT_GET_MACRO(...) HU_EXPAND_MACRO( HU_INTERNAL_ASSERT_GET_MACRO_NAME(__VA_ARGS__, HU_INTERNAL_ASSERT_WITH_MSG, HU_INTERNAL_ASSERT_NO_MSG) )
 
 // Currently accepts at least the condition and one additional parameter (the message) being optional
-#define HU_ASSERT(...) HU_EXPAND_MACRO( HU_INTERNAL_ASSERT_GET_MACRO(__VA_ARGS__)(_, __VA_ARGS__) )
-#define HU_CORE_ASSERT(...) HU_EXPAND_MACRO( HU_INTERNAL_ASSERT_GET_MACRO(__VA_ARGS__)(_CORE_, __VA_ARGS__) )
+//#define HU_ASSERT(...) HU_EXPAND_MACRO( HU_INTERNAL_ASSERT_GET_MACRO(__VA_ARGS__)(_, __VA_ARGS__) )
+//#define HU_CORE_ASSERT(...) HU_EXPAND_MACRO( HU_INTERNAL_ASSERT_GET_MACRO(__VA_ARGS__)(_CORE_, __VA_ARGS__) )
 #else
 #define HU_ASSERT(...)
 #define HU_CORE_ASSERT(...)

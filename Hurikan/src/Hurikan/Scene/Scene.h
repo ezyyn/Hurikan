@@ -23,8 +23,8 @@ namespace Hurikan
 		void OnRuntimeStart();
 		void OnRuntimeStop();
 
-		void OnUpdateEditor(Timestep& ts,EditorCamera& camera);
-		void OnUpdateRuntime(Timestep& ts);
+		void OnUpdateEditor(Timestep ts,EditorCamera& camera);
+		void OnUpdateRuntime(Timestep ts);
 
 		void OnViewportResize(uint32_t width, uint32_t height);
 
