@@ -5,8 +5,8 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
 
-namespace Hurikan {
-
+namespace Hurikan 
+{
 	class Log
 	{
 	private:
@@ -19,8 +19,6 @@ namespace Hurikan {
 		inline static Ref<spdlog::logger>& GetClientLogger() { return s_ClientLogger; }
 	};
 
-//Additional macros
-#define HU_EXECUTE_ONCE(func)
 //Client log macros
 #define HU_ERROR(...) ::Hurikan::Log::GetClientLogger()->error(__VA_ARGS__);
 #define HU_WARN(...) ::Hurikan::Log::GetClientLogger()->warn(__VA_ARGS__);

@@ -4,25 +4,40 @@
 
 #include "TextureLoader.h"
 
+#include <HazelAudio/src/HazelAudio.h>
+
+#include "CustomComponents.h"
+
 #define COLUMNS 17
 #define ROWS 17
 
-GameLayer::GameLayer(uint32_t width, uint32_t height) : m_Width(width), m_Height(height), m_GameGrid(ROWS, COLUMNS)
-{
-}
+// TEMP:
+extern std::string assetsFilePath = "src/game-BomberFriends/assets/";
 
+GameLayer::GameLayer(uint32_t width, uint32_t height) : m_Width(width), m_Height(height) {}
 
 void GameLayer::OnAttach()
 {
+	Hazel::Audio::Init();
+	TextureLoader::Init();
+
+	auto theme = Hazel::AudioSource::LoadFromFile(assetsFilePath + "audio/level_theme.ogg", false);
+	theme.SetGain(0.1f);
+	theme.SetLoop(true);
+	Hazel::Audio::Play(theme);
+
 	m_Scene = CreateRef<Scene>();
 
-	TextureLoader::Init(); 
+	m_GameGrid = CreateRef<GameGrid>(ROWS, COLUMNS);
 
 	auto& camera = m_Scene->CreateEntity("GameCameraEntity");
+	
+	camera.AddCustomComponent<EntityTypeComponent>(EntityType::CAMERA);
+
 	m_GameCamera.Init(camera, m_Width, m_Height);
 	
-	m_GameGrid.Init(m_Scene); // must be first due to reverse draw order
-	m_Player.Init(m_Scene); 
+	m_GameGrid->Init(m_Scene);
+	m_Player.Init(m_Scene, m_GameGrid); 
 
 	m_Scene->OnRuntimeStart();
 }
@@ -38,8 +53,8 @@ void GameLayer::OnUpdate(Timestep& ts)
 	RenderCommand::Clear();
 	Renderer2D::ResetStats();
 
-	m_Player.OnUpdate(ts);
 	m_Scene->OnUpdateRuntime(ts);
+	m_Player.OnUpdate(ts);
 }
 
 int frames = 0; // To 60
@@ -76,7 +91,7 @@ void GameLayer::OnImGuiRender()
 void GameLayer::OnEvent(Event& e)
 {
 	EventDispatcher dispatcher(e);
-	dispatcher.Dispatch<KeyPressedEvent>(HU_BIND_EVENT_FN (GameLayer::OnKeyPressed));
+	dispatcher.Dispatch<KeyPressedEvent>(HU_BIND_EVENT_FN(GameLayer::OnKeyPressed));
 	dispatcher.Dispatch<KeyReleasedEvent>(HU_BIND_EVENT_FN(GameLayer::OnKeyReleased));
 }
 

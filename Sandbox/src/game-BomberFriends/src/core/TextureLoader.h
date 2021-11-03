@@ -13,7 +13,10 @@ public:
 private:
 	TextureLoader() 
 	{
-		m_Map["Player"] = Texture2D::Create("src/game-BomberFriends/assets/textures/player_animation/facingdown/1.png");
+		m_Map["PlayerDown"] = Texture2D::Create("src/game-BomberFriends/assets/textures/player_animation/facingdown/1.png");
+		m_Map["PlayerDown1"] = Texture2D::Create("src/game-BomberFriends/assets/textures/player_animation/facingdown/step1.png");
+		m_Map["PlayerDown2"] = Texture2D::Create("src/game-BomberFriends/assets/textures/player_animation/facingdown/step2.png");
+
 		m_Map["Bomb-Frame1"] = Texture2D::Create("src/game-BomberFriends/assets/textures/bomb_animation/1.png");
 		m_Map["Bomb-Frame2"] = Texture2D::Create("src/game-BomberFriends/assets/textures/bomb_animation/2.png");
 		m_Map["Bomb-Frame3"] = Texture2D::Create("src/game-BomberFriends/assets/textures/bomb_animation/3.png");
@@ -33,8 +36,6 @@ private:
 		m_Map["Bomb-Frame17"] = Texture2D::Create("src/game-BomberFriends/assets/textures/bomb_animation/17.png");
 		m_Map["Bomb-Frame18"] = Texture2D::Create("src/game-BomberFriends/assets/textures/bomb_animation/18.png");
 	}
-
-
 	std::unordered_map<std::string, Ref<Texture2D>> m_Map;
 
 	static TextureLoader* s_Instance;

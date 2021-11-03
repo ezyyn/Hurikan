@@ -4,6 +4,7 @@
 
 #include "Hurikan/Renderer/SceneCamera.h"
 #include "Hurikan/Renderer/Texture.h"
+#include "Hurikan/Renderer/SubTexture2D.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
@@ -52,31 +53,17 @@ namespace Hurikan
 	struct SpriteRendererComponent
 	{
 		glm::vec4 Color{1.0f};
-		Ref<Texture2D> Texture;
+		Ref<Texture2D> Texture = nullptr;
+		Ref<SubTexture2D> SubTexture = nullptr;
 		float TilingFactor = 1.0f;
 
 		SpriteRendererComponent() = default;
 		SpriteRendererComponent(const SpriteRendererComponent&) = default;
 		SpriteRendererComponent(const glm::vec4& color) : Color(color) {}
-		
+		SpriteRendererComponent(const Ref<SubTexture2D>& subtexture) : SubTexture(subtexture) {}
 
 		operator glm::vec4& () { return Color; }
 		operator const glm::vec4& () const { return Color; }
-	};
-
-	struct AnimationComponent
-	{
-		struct FrameData
-		{
-			Ref<Texture2D> Texture;
-			float Delay;
-		};
-		std::vector<FrameData> Animation;
-
-		bool IsPlaying = false;
-
-		AnimationComponent() = default;
-		AnimationComponent(const AnimationComponent&) = default;
 	};
 
 	struct CameraComponent
@@ -104,7 +91,6 @@ namespace Hurikan
 			DestroyScript = [](NativeScriptComponent* nsc) { delete nsc->Instance; nsc->Instance = nullptr; };
 		}
 	};
-
 	// Physics
 
 	struct Rigidbody2DComponent
@@ -113,6 +99,7 @@ namespace Hurikan
 		BodyType Type = BodyType::Static;
 		bool FixedRotation = false;
 		bool Gravity = true;
+		bool CollisionTriggerOnly = false;
 
 		// Storage for runtime
 		void* RuntimeBody = nullptr;
@@ -130,6 +117,7 @@ namespace Hurikan
 		float Friction = 0.5f;
 		float Restitution = 0.0f;
 		float RestitutionThreshold = 0.5f;
+		bool Trigger = false;
 
 		// Storage for runtime
 		void* RuntimeFixture = nullptr;
@@ -147,6 +135,7 @@ namespace Hurikan
 		float Friction = 0.5f;
 		float Restitution = 0.0f;
 		float RestitutionThreshold = 0.5f;
+		bool Trigger = false;
 
 		// Storage for runtime
 		void* RuntimeFixture = nullptr;

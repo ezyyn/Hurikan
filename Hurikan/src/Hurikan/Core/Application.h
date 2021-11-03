@@ -44,7 +44,6 @@ namespace Hurikan {
 
 		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
 
-
 		inline Window& GetWindow() { return *m_Window; }
 	private:
 		bool OnWindowClose(WindowCloseEvent& _event);

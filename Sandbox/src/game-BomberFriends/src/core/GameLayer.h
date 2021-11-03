@@ -1,11 +1,11 @@
 #pragma once
 
+#include "../gameobjects/GameGrid.h"
+#include "../gameobjects/Player.h"
+#include "../gameobjects/GameCamera.h"
+
 #include <Hurikan.h>
 using namespace Hurikan;
-
-#include "GameGrid.h"
-#include "Player.h"
-#include "GameCamera.h"
 
 class GameLayer : public Layer
 {
@@ -14,9 +14,9 @@ public:
 public:
 	void OnAttach() override;
 	void OnDetach() override;
-	void OnUpdate(Timestep& ts);
-	void OnImGuiRender();
-	void OnEvent(Event& e);
+	void OnUpdate(Timestep& ts) override;
+	void OnImGuiRender() override;
+	void OnEvent(Event& e) override;
 
 	bool OnKeyPressed(KeyPressedEvent& e);
 	bool OnKeyReleased(KeyReleasedEvent& e);
@@ -28,6 +28,6 @@ private:
 
 	// Scene objects
 	Player m_Player;
-	GameGrid m_GameGrid;
+	Ref<GameGrid> m_GameGrid;
 	GameCamera m_GameCamera;
 };

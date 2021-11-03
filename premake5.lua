@@ -6,7 +6,7 @@ include "Dependencies.lua"
 
 workspace "Hurikan"
 	architecture "x86_64"
-	startproject "Storm"
+	startproject "Sandbox"
 
 	configurations
 	{
@@ -34,6 +34,7 @@ group "Dependencies"
 	include "Hurikan/vendor/Glad"
 	include "Hurikan/vendor/ImGui"
 	include "Hurikan/vendor/yaml-cpp"
+	include "Hurikan/vendor/HazelAudio"
 group ""
 
 include "Hurikan"

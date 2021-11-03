@@ -14,6 +14,11 @@ namespace Hurikan
 		{
 			return m_Entity.GetComponent<T>();
 		}
+		template<typename T>
+		bool HasComponent()
+		{
+			return m_Entity.HasComponent<T>();
+		}
 	protected:
 		virtual void OnCreate() {}
 		virtual void OnDestroy() {} // TODO: implement Scene::OnStopScene to prevent memory leak

@@ -14,6 +14,8 @@ IncludeDir["entt"] =					"%{wks.location}/Hurikan/vendor/entt/include"
 IncludeDir["yaml_cpp"] =				"%{wks.location}/Hurikan/vendor/yaml-cpp/include"
 IncludeDir["ImGuizmo"] =				"%{wks.location}/Hurikan/vendor/ImGuizmo"
 
+IncludeDir["HazelAudio"] =				"%{wks.location}/Hurikan/vendor/HazelAudio"
+
 IncludeDir["shaderc"] =					"%{wks.location}/Hurikan/vendor/shaderc/include"
 IncludeDir["SPIRV_Cross"] =				"%{wks.location}/Hurikan/vendor/SPIRV-Cross"
 IncludeDir["VulkanSDK"] =				"%{VULKAN_SDK}/Include"

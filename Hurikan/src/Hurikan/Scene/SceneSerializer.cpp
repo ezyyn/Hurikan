@@ -294,7 +294,7 @@ namespace Hurikan
 
 				HU_CORE_TRACE("Deserialized entity with ID = {0}, name = {1}", uuid, name);
 
-				Entity deserializedEntity = m_Scene->CreateEntitywithUUID(uuid, name);
+				Entity deserializedEntity = m_Scene->CreateEntitywithUUID(uuid, name); // TODO: Add deserializated draw order
 
 				auto transformComponent = entity["TransformComponent"];
 				if (transformComponent)

@@ -9,13 +9,6 @@
 
 #include <glm/glm.hpp>
 
-// Box2D
-#include "box2d/b2_world.h"
-#include "box2d/b2_body.h"
-#include "box2d/b2_fixture.h"
-#include "box2d/b2_polygon_shape.h"
-#include "box2d/b2_circle_shape.h"
-
 namespace Hurikan
 {
 
@@ -45,18 +38,28 @@ namespace Hurikan
 		return CreateEntitywithUUID(UUID(), name);
 	}
 
-	Hurikan::Entity Scene::CreateEntitywithUUID(UUID uuid, const std::string& name /*= std::string()*/)
+	Entity Scene::CreateEntitywithUUID(UUID uuid, const std::string& name /*= std::string()*/)
 	{
 		Entity entity = { m_Registry.create(), this };
 		entity.AddComponent<IDComponent>(uuid);
 		entity.AddComponent<TransformComponent>();
 		auto& tag = entity.AddComponent<TagComponent>();
 		tag.Tag = name.empty() ? "Entity" : name;
+
 		return entity;
 	}
 
 	void Scene::DestroyEntity(Entity entity)
 	{
+		for (int i = 0; i < m_DrawOrder.size(); i++)
+		{
+			if (entity == m_DrawOrder[i].second)
+			{
+				m_DrawOrder.erase(m_DrawOrder.begin() + i);
+			}
+		}
+		DestroyBody(entity);
+
 		m_Registry.destroy(entity);
 	}
 
@@ -68,53 +71,7 @@ namespace Hurikan
 		for (auto e : view)
 		{
 			Entity entity = { e, this };
-			auto& transform = entity.GetComponent<TransformComponent>();
-			auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
-
-			b2BodyDef bodyDef;
-			bodyDef.type = Rigidbody2DTypeToBox2DBody(rb2d.Type);
-			bodyDef.position.Set(transform.Translation.x, transform.Translation.y);
-			bodyDef.angle = transform.Rotation.z;
-
-			b2Body* body = m_PhysicsWorld->CreateBody(&bodyDef);
-			body->SetFixedRotation(rb2d.FixedRotation);
-			if (!rb2d.Gravity)
-				body->SetGravityScale(0.0f);
-
-			rb2d.RuntimeBody = body;
-
-			if (entity.HasComponent<BoxCollider2DComponent>())
-			{
-				auto& bc2d = entity.GetComponent<BoxCollider2DComponent>();
-
-				b2PolygonShape boxShape;
-				boxShape.SetAsBox(bc2d.Size.x * transform.Scale.x, bc2d.Size.y * transform.Scale.y);
-
-				b2FixtureDef fixtureDef;
-				fixtureDef.shape = &boxShape;
-				fixtureDef.density = bc2d.Density;
-				fixtureDef.friction = bc2d.Friction;
-				fixtureDef.restitution = bc2d.Restitution;
-				fixtureDef.restitutionThreshold = bc2d.RestitutionThreshold;
-				body->CreateFixture(&fixtureDef);
-			}
-
-			if (entity.HasComponent<CircleCollider2DComponent>())
-			{
-				auto& cc2d = entity.GetComponent<CircleCollider2DComponent>();
-
-				b2CircleShape circleShape;
-				circleShape.m_radius = cc2d.Radius;
-				circleShape.m_p = { cc2d.Offset.x * cc2d.Radius, cc2d.Offset.y * cc2d.Radius };
-
-				b2FixtureDef fixtureDef;
-				fixtureDef.shape = &circleShape;
-				fixtureDef.density = cc2d.Density;
-				fixtureDef.friction = cc2d.Friction;
-				fixtureDef.restitution = cc2d.Restitution;
-				fixtureDef.restitutionThreshold = cc2d.RestitutionThreshold;
-				body->CreateFixture(&fixtureDef);
-			}
+			CreateBody(entity);
 		}
 	}
 
@@ -122,6 +79,29 @@ namespace Hurikan
 	{
 		delete m_PhysicsWorld;
 		m_PhysicsWorld = nullptr;
+	}
+
+	void Scene::UpdatePhysics(Timestep ts)
+	{
+		// Physics
+		const int32_t velocityIterations = 6;
+		const int32_t positionIterations = 2;
+		m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);
+
+		// Retrieve transform from Box2D
+		auto view = m_Registry.view<Rigidbody2DComponent>();
+		for (auto e : view)
+		{
+			Entity entity = { e, this };
+			auto& transform = entity.GetComponent<TransformComponent>();
+			auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
+
+			b2Body* body = (b2Body*)rb2d.RuntimeBody;
+			const auto& position = body->GetPosition();
+			transform.Translation.x = position.x;
+			transform.Translation.y = position.y;
+			transform.Rotation.z = body->GetAngle();
+		}
 	}
 
 	void Scene::OnUpdateRuntime(Timestep ts)
@@ -142,27 +122,7 @@ namespace Hurikan
 				});
 		}
 
-		// Physics
-		{
-			const int32_t velocityIterations = 6;
-			const int32_t positionIterations = 2;
-			m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);
-
-			// Retrieve transform from Box2D
-			auto view = m_Registry.view<Rigidbody2DComponent>();
-			for (auto e : view)
-			{
-				Entity entity = { e, this };
-				auto& transform = entity.GetComponent<TransformComponent>();
-				auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
-
-				b2Body* body = (b2Body*)rb2d.RuntimeBody;
-				const auto& position = body->GetPosition();
-				transform.Translation.x = position.x;
-				transform.Translation.y = position.y;
-				transform.Rotation.z = body->GetAngle();
-			}
-		}
+		UpdatePhysics(ts);
 
 		// Render 2D
 		Camera* mainCamera = nullptr;
@@ -186,12 +146,26 @@ namespace Hurikan
 		{
 			Renderer2D::BeginScene(*mainCamera, cameraTransform);
 
-			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-			for (int i = group.size() - 1; i >= 0; i--)
+			if (m_DrawOrder.empty())
 			{
-				auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(group[i]);
+				auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+				for (int i = group.size() - 1; i >= 0; i--)
+				{
+					auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(group[i]);
 
-				Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)group[i]);
+					Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)group[i]);
+				}
+			}
+			else {
+				for (int j = 0; j < m_DrawOrder.size(); j++)
+				{
+					if (m_DrawOrder[j].second.HasComponent<SpriteRendererComponent>()) {
+						auto& transform = m_DrawOrder[j].second.GetComponent<TransformComponent>().GetTransform();
+						auto& sprite = m_DrawOrder[j].second.GetComponent<SpriteRendererComponent>();
+
+						Renderer2D::DrawSprite(transform, sprite, m_DrawOrder[j].second);
+					}
+				}
 			}
 
 			Renderer2D::EndScene();
@@ -266,6 +240,108 @@ namespace Hurikan
 		return {};
 	}
 
+	void Scene::ManuallyInstantiateScript(Entity entity)
+	{
+		auto& nsc = entity.GetComponent<NativeScriptComponent>();
+		if (!nsc.Instance)
+		{
+			nsc.Instance = nsc.InstantiateScript();
+			nsc.Instance->m_Entity = entity;
+			nsc.Instance->OnCreate();
+		}
+	}
+
+	bool compare(const std::pair<int, Entity>& i, const  std::pair<int, Entity>& j)
+	{
+		return (i.first < j.first);
+	}
+
+	Entity Scene::CreateEntityWithDrawOrder(int order, const std::string& name /*= std::string()*/) // Ascending order
+	{
+		Entity entity = CreateEntity(name);
+		m_DrawOrder.push_back({ order, entity });
+		std::sort(m_DrawOrder.begin(), m_DrawOrder.end(),compare);
+		return entity;
+	}
+
+	void Scene::ChangeDrawIndex(int index, Entity entity)
+	{
+		for (auto& e : m_DrawOrder)
+		{
+			if (e.second == entity)
+			{
+				e.first = index;
+				break;
+			}
+		}
+	}
+
+	void Scene::CreateBody(Entity entity)
+	{
+		auto& transform = entity.GetComponent<TransformComponent>();
+		auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
+
+		b2BodyDef bodyDef;
+		bodyDef.type = Rigidbody2DTypeToBox2DBody(rb2d.Type);
+		bodyDef.position.Set(transform.Translation.x, transform.Translation.y);
+		bodyDef.angle = transform.Rotation.z;
+		
+		bodyDef.userData.pointer = (uintptr_t)(new Entity(entity));
+
+		b2Body* body = m_PhysicsWorld->CreateBody(&bodyDef);
+		body->SetFixedRotation(rb2d.FixedRotation);
+		body->SetEnabled(!rb2d.CollisionTriggerOnly);
+		if (!rb2d.Gravity)
+			body->SetGravityScale(0.0f);
+
+		rb2d.RuntimeBody = body;
+
+		if (entity.HasComponent<BoxCollider2DComponent>())
+		{
+			auto& bc2d = entity.GetComponent<BoxCollider2DComponent>();
+
+			b2PolygonShape boxShape;
+			boxShape.SetAsBox(bc2d.Size.x * transform.Scale.x, bc2d.Size.y * transform.Scale.y);
+
+			b2FixtureDef fixtureDef;
+			fixtureDef.shape = &boxShape;
+			fixtureDef.density = bc2d.Density;
+			fixtureDef.friction = bc2d.Friction;
+			fixtureDef.restitution = bc2d.Restitution;
+			fixtureDef.restitutionThreshold = bc2d.RestitutionThreshold;
+			fixtureDef.isSensor = bc2d.Trigger;
+			body->CreateFixture(&fixtureDef);
+		}
+
+		if (entity.HasComponent<CircleCollider2DComponent>())
+		{
+			auto& cc2d = entity.GetComponent<CircleCollider2DComponent>();
+
+			b2CircleShape circleShape;
+			circleShape.m_radius = cc2d.Radius;
+			circleShape.m_p = { cc2d.Offset.x * cc2d.Radius, cc2d.Offset.y * cc2d.Radius };
+
+			b2FixtureDef fixtureDef;
+			fixtureDef.shape = &circleShape;
+			fixtureDef.density = cc2d.Density;
+			fixtureDef.friction = cc2d.Friction;
+			fixtureDef.restitution = cc2d.Restitution;
+			fixtureDef.restitutionThreshold = cc2d.RestitutionThreshold;
+			fixtureDef.isSensor = cc2d.Trigger;
+			body->CreateFixture(&fixtureDef);
+		}
+	}
+
+	void Scene::SetContactListener(b2ContactListener* listener)
+	{
+		m_PhysicsWorld->SetContactListener(listener);
+	}
+
+	void Scene::DestroyBody(Entity entity)
+	{
+		m_PhysicsWorld->DestroyBody((b2Body*)entity.GetComponent<Rigidbody2DComponent>().RuntimeBody);
+	}
+
 	template<typename T>
 	void Scene::OnComponentAdded(Entity entity, T& component)
 	{
@@ -310,10 +386,6 @@ namespace Hurikan
 	}
 	template<>
 	void Scene::OnComponentAdded<CircleCollider2DComponent>(Entity entity, CircleCollider2DComponent& component)
-	{
-	}
-	template<>
-	void Scene::OnComponentAdded<AnimationComponent>(Entity entity, AnimationComponent& component)
 	{
 	}
 	template<>
