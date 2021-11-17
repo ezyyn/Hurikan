@@ -23,6 +23,12 @@ namespace Hurikan
 			return m_Scene->m_Registry.all_of<T>(m_EntityHandle);
 		}
 
+		template<typename T>
+		bool HasNativeScript()
+		{
+			return m_Scene->m_Registry.all_of<T>(m_EntityHandle);
+		}
+
 		template<typename T, typename... Args>
 		T& AddComponent(Args&&... args)
 		{
@@ -43,8 +49,19 @@ namespace Hurikan
 		template<typename T>
 		T& GetComponent()
 		{
-			HU_CORE_ASSERT(HasComponent<T>(), "Entity does not have component!");
+			HU_CORE_ASSERT(HasComponent<T>(), "Entity does not have component! {0}");
 			return m_Scene->m_Registry.get<T>(m_EntityHandle);
+		}
+
+		// Experimental, promising
+		template<typename T>
+		T* GetNativeScript()
+		{
+			HU_CORE_ASSERT(HasComponent<NativeScriptComponent>(), "Entity does not have NSC! {0}");
+			if (m_Scene->m_Registry.get<NativeScriptComponent>(m_EntityHandle).Instance == nullptr)
+				m_Scene->InstantiateScript(Entity(m_EntityHandle, m_Scene));
+
+			return (T*)m_Scene->m_Registry.get<NativeScriptComponent>(m_EntityHandle).Instance;
 		}
 
 		template<typename T>
@@ -52,12 +69,6 @@ namespace Hurikan
 		{
 			HU_CORE_ASSERT(HasComponent<T>(), "Entity does not have component!");
 			m_Scene->m_Registry.remove<T>(m_EntityHandle);
-		}
-
-		// Experimental
-		uintptr_t pointer()
-		{
-			return (uintptr_t&)Entity{ m_EntityHandle, m_Scene };
 		}
 
 		operator bool() const { return m_EntityHandle != entt::null; }

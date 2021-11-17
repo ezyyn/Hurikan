@@ -46,7 +46,7 @@ namespace Hurikan
 		Entity GetEntityByUUID(UUID uuid);
 
 		// TODO: Find better way to do this
-		void ManuallyInstantiateScript(Entity entity);
+		void InstantiateScript(Entity entity);
 		Entity CreateEntityWithDrawOrder(int order, const std::string & name = std::string());
 		void ChangeDrawIndex(int index, Entity entity);
 		void DestroyBody(Entity entity);

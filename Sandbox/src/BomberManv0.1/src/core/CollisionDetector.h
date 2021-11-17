@@ -17,6 +17,19 @@ public:
 
 	void BeginContact(b2Contact* contact) override
 	{
+		b2Fixture* fixtureA = contact->GetFixtureA();
+		b2Fixture* fixtureB = contact->GetFixtureB();
+
+		b2Body* colliderA = fixtureA->GetBody();
+		b2Body* colliderB = fixtureB->GetBody();
+
+		Entity* ptrA = (Entity*)colliderA->GetUserData().pointer;
+		Entity* ptrB = (Entity*)colliderB->GetUserData().pointer;
+
+		if (ptrA->GetComponent<EntityTypeComponent>().Type == EntityType::TILE_EMPTY)
+		{
+		//	HU_INFO("{0}, {1}", ptrA->GetComponent<TransformComponent>().Translation.x, ptrA->GetComponent<TransformComponent>().Translation.y);
+		}
 	}
 
 

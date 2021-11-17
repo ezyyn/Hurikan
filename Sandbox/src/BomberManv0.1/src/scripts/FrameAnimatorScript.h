@@ -3,21 +3,28 @@
 #include <Hurikan.h>
 using namespace Hurikan;
 
-struct BlockAnimation;
+#include "../core/GameComponents.h"
 
-class FrameAnimator : public ScriptableEntity
+class FrameAnimator
 {
 public:
-	void Add(const BlockAnimation& ba);
+	FrameAnimator(Entity target);
+	~FrameAnimator() = default;
+
+	void Add(const AnimationBlock& ba);
 	void Switch(const std::string& tag);
 
-	BlockAnimation& GetActiveAnimation();
-	BlockAnimation& FrameAnimator::GetAnimationByTag(const std::string& tag);
-protected:
-	void OnCreate() override;
-	void OnDestroy() override;
-	void OnUpdate(Timestep ts) override;
+	AnimationBlock& GetActiveAnimation();
+	AnimationBlock FrameAnimator::GetAnimationByTag(const std::string& tag);
+	bool IsAnyPlaying();
+
+	void Stop();
+	void OnUpdate(Timestep ts);
 private:
-	Ref<Texture2D> m_SpriteSheet;
-	glm::vec2 m_SingleSpriteSize;
+	Ref<Texture2D> m_SpriteSheet = nullptr;
+	glm::vec2 m_SingleSpriteSize = {0.0f, 0.0f};
+
+	std::vector<AnimationBlock> m_Blocks;
+	AnimationBlock m_EmptyBA;
+	Entity m_TargetEntity;
 };

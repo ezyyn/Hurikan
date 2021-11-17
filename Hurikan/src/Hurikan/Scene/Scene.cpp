@@ -58,7 +58,9 @@ namespace Hurikan
 				m_DrawOrder.erase(m_DrawOrder.begin() + i);
 			}
 		}
-		DestroyBody(entity);
+
+		if(entity.HasComponent<Rigidbody2DComponent>())
+			DestroyBody(entity);
 
 		m_Registry.destroy(entity);
 	}
@@ -117,6 +119,7 @@ namespace Hurikan
 						nsc.Instance->m_Entity = Entity{ entity, this };
 						nsc.Instance->OnCreate();
 					}
+
 
 					nsc.Instance->OnUpdate(ts);
 				});
@@ -240,15 +243,12 @@ namespace Hurikan
 		return {};
 	}
 
-	void Scene::ManuallyInstantiateScript(Entity entity)
+	void Scene::InstantiateScript(Entity entity)
 	{
 		auto& nsc = entity.GetComponent<NativeScriptComponent>();
-		if (!nsc.Instance)
-		{
-			nsc.Instance = nsc.InstantiateScript();
-			nsc.Instance->m_Entity = entity;
-			nsc.Instance->OnCreate();
-		}
+		nsc.Instance = nsc.InstantiateScript();
+		nsc.Instance->m_Entity = entity;
+		nsc.Instance->OnCreate();
 	}
 
 	bool compare(const std::pair<int, Entity>& i, const  std::pair<int, Entity>& j)

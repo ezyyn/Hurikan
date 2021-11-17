@@ -80,7 +80,7 @@ const int maxCount = 5;
 bool B_pressed = false;
 bool S_pressed = false;
 
-void Player::OnUpdate(Timestep& ts)
+void Player::OnUpdate(Timestep ts)
 {
 	auto& controller = m_PlayerEntity.GetComponent<PlayerController>();
 	auto& pac = m_PlayerEntity.GetComponent<PlayerAnimationComponent>();
@@ -220,11 +220,6 @@ void Player::OnUpdate(Timestep& ts)
 		}
 	}
 #endif
-}
-
-void Player::OnUpdate(Timestep ts)
-{
-
 }
 
 bool d = true;

@@ -15,7 +15,7 @@ public:
 
 	Entity& GetEntity() { return m_PlayerEntity; }
 
-	void OnUpdate(Timestep& ts);
+	void OnUpdate(Timestep ts);
 	bool OnKeyPressed(KeyPressedEvent& e);
 	bool OnKeyReleased(KeyReleasedEvent& e);
 

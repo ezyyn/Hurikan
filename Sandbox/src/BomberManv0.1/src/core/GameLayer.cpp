@@ -21,7 +21,6 @@ void GameLayer::OnAttach()
 	auto& ent = m_InGameScene->CreateEntityWithDrawOrder(2, "Test");
 	ent.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f)).SubTexture = subtexture;
 #endif
-
 	m_GameCamera.Init(m_InGameScene, m_Width, m_Height);
 	m_GameGrid->Init(m_InGameScene, ROWS, COLUMNS);
 	m_Player->Init(m_InGameScene, m_GameGrid);
@@ -42,6 +41,9 @@ void GameLayer::OnUpdate(Timestep& ts)
 	Renderer2D::ResetStats();
 
 	m_Player->OnUpdate(ts);
+	m_GameGrid->OnUpdate(ts);
+
+	// Rendering
 	m_InGameScene->OnUpdateRuntime(ts);
 }
 

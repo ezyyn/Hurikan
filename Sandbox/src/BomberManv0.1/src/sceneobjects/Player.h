@@ -31,15 +31,29 @@ private:
 	Ref<Texture2D> m_PlayerTexture;
 	Ref<Texture2D> m_BombAnimationSpriteSheet;
 
-	BlockAnimation m_BombTickingAnimation;
-	BlockAnimation m_SpreadExplosionAnimation;
+	// Player Animations
+	AnimationBlock m_PlayerLeftAnimation;
+	AnimationBlock m_PlayerBreathingAnimation;
+	AnimationBlock m_PlayerUpAnimation;
+	AnimationBlock m_PlayerDownAnimation;
+
+	// Bomb Animations
+	AnimationBlock m_BombTickingAnimation;
+	AnimationBlock m_SpreadExplosionAnimation;
+
+	// TODO: SPREAD ANIMATION IMPROVE!
+	AnimationBlock m_BombSpreadCenterAnimation;
+	AnimationBlock m_BombSpreadWingAnimation;
+	AnimationBlock m_BombSpreadEndWingAnimation;
 
 	Entity m_PlayerEntity;
 
 	PlayerStats m_PlayerStats;
 
 	std::vector<Bomb> m_PlacedBombs = {};
+	std::vector<Entity> m_DestroyedBoxes = {};
 
 	Ref<GameGrid> m_GameGrid;
 	friend class GameGrid;
+	friend class Bomb;
 };

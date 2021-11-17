@@ -2,22 +2,31 @@
 
 #include "../core/GameComponents.h"
 
-void FrameAnimator::OnCreate()
+FrameAnimator::FrameAnimator(Entity target) : m_TargetEntity(target)
 {
-	HU_CORE_ASSERT(HasComponent<SpriteRendererComponent>(), "Entity has no SpriteRendererComponent!");
-	HU_CORE_ASSERT(HasComponent<AnimationComponent>(), "Entity has no AnimationComponent!");
+	HU_CORE_ASSERT(m_TargetEntity.HasComponent<SpriteRendererComponent>(), "Entity has no SpriteRendererComponent!");
 }
 
-void FrameAnimator::OnDestroy()
+bool FrameAnimator::IsAnyPlaying()
 {
+	for (auto& block : m_Blocks)
+	{
+		if (block.Active)
+			return true;
+	}
+	return false;
+}
+
+void FrameAnimator::Stop()
+{
+	GetActiveAnimation().Active = false;
 }
 
 void FrameAnimator::OnUpdate(Timestep ts)
 {
-	auto& src = GetComponent<SpriteRendererComponent>();
-	auto& ac = GetComponent<AnimationComponent>();
+	auto& src = m_TargetEntity.GetComponent<SpriteRendererComponent>();
 
-	for (auto& block : ac.Blocks)
+	for (auto& block : m_Blocks)
 	{
 		if (block.Active)
 		{
@@ -26,12 +35,9 @@ void FrameAnimator::OnUpdate(Timestep ts)
 		}
 	}
 }
-
-void FrameAnimator::Add(const BlockAnimation& ba)
+void FrameAnimator::Add(const AnimationBlock& ba)
 {
-	auto& ac = GetComponent<AnimationComponent>();
-
-	for (auto& block : ac.Blocks)
+	for (auto& block : m_Blocks)
 	{
 		if (block.Tag == ba.Tag)
 		{
@@ -40,42 +46,36 @@ void FrameAnimator::Add(const BlockAnimation& ba)
 			return;
 		}
 	}
-
-	ac.Blocks.push_back(ba);
+	
+	m_Blocks.push_back(ba);
 }
 
 void FrameAnimator::Switch(const std::string& tag)
 {
-	auto& ac = GetComponent<AnimationComponent>();
-
-	for (auto& block : ac.Blocks)
+	for (auto& block : m_Blocks)
 	{
 		block.Active = strcmp(block.Tag.c_str(), tag.c_str()) == 0;
 	}
 }
 
-BlockAnimation& FrameAnimator::GetActiveAnimation()
+AnimationBlock& FrameAnimator::GetActiveAnimation()
 {
-	auto& ac = GetComponent<AnimationComponent>();
-
-	for (auto& block : ac.Blocks)
+	for (auto& block : m_Blocks)
 	{
 		if (block.Active)
 			return block;
 	}
-	HU_WARN("FrameAnimator does not have any active animations!");
-	return BlockAnimation{};
+	// past here frameAnimator does not have any active animations! retuning empty blockanim
+	return m_EmptyBA;
 }
 
-BlockAnimation& FrameAnimator::GetAnimationByTag(const std::string& tag)
+AnimationBlock FrameAnimator::GetAnimationByTag(const std::string& tag)
 {
-	auto& ac = GetComponent<AnimationComponent>();
-
-	for (auto& block : ac.Blocks)
+	for (auto& block : m_Blocks)
 	{
 		if (block.Tag == tag)
 			return block;
 	}
 	HU_CORE_ASSERT(false, "");
-	return BlockAnimation{};
+	return AnimationBlock();
 }
