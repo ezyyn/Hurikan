@@ -12,7 +12,9 @@ bool FrameAnimator::IsAnyPlaying()
 	for (auto& block : m_Blocks)
 	{
 		if (block.Active)
+		{
 			return true;
+		}
 	}
 	return false;
 }
@@ -22,7 +24,7 @@ void FrameAnimator::Stop()
 	GetActiveAnimation().Active = false;
 }
 
-void FrameAnimator::OnUpdate(Timestep ts)
+bool FrameAnimator::OnUpdate(Timestep ts)
 {
 	auto& src = m_TargetEntity.GetComponent<SpriteRendererComponent>();
 
@@ -31,9 +33,11 @@ void FrameAnimator::OnUpdate(Timestep ts)
 		if (block.Active)
 		{
 			block.OnUpdate(src, ts);
-			break;
+			return block.Active;
 		}
 	}
+	// No active was found so returning false
+	return false;
 }
 void FrameAnimator::Add(const AnimationBlock& ba)
 {
@@ -65,7 +69,7 @@ AnimationBlock& FrameAnimator::GetActiveAnimation()
 		if (block.Active)
 			return block;
 	}
-	// past here frameAnimator does not have any active animations! retuning empty blockanim
+	// past here frameAnimator does not have any active animations! retuning empty animblock
 	return m_EmptyBA;
 }
 

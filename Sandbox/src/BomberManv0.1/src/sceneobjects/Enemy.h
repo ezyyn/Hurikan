@@ -25,11 +25,11 @@ class Enemy
 {
 public:
 	Enemy() = default;
-	void Init(Ref<Scene> scene, Ref<Player> player);
+	void Init(Scene* scene, Player* player);
 	void OnUpdate(Timestep ts);
 
 private:
-	Ref<Scene> m_GameScene;
-	Ref<Player> m_Player;
+	Scene* m_GameScene;
+	Player* m_Player;
 	Entity m_EnemyEntity;
 };

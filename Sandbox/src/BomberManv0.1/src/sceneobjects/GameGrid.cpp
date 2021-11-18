@@ -3,9 +3,12 @@
 #include "../core/GameComponents.h"
 #include "../scripts/FrameAnimatorScript.h"
 
-void GameGrid::Init(Scene* scene, uint32_t rows, uint32_t columns)
+#include "Player.h"
+
+void GameGrid::Init(Scene* scene, Player* player, uint32_t rows, uint32_t columns)
 {
-	m_GameScene = scene;
+	g_GameScene = scene;
+	g_Player = player;
 
 	m_Rows = rows;
 	m_Columns = columns;
@@ -27,7 +30,7 @@ void GameGrid::Init(Scene* scene, uint32_t rows, uint32_t columns)
 		wallBreakAnimation.SpriteSheet = m_SpriteSheet;
 
 		std::array<glm::vec2, 5> positions;
-		std::array<float, 5> delays = { 100.0f, 100.0f,100.0f, 100.0f,100.0f };
+		std::array<float, 5> delays = { 100.0f, 100.0f, 100.0f, 100.0f, 10.0f };
 
 		positions[0] = { 3,6 };
 		positions[1] = { 4,6 };
@@ -169,20 +172,24 @@ void GameGrid::ForEach_1(const std::function<bool(Entity)>& func)
 		}
 	}
 }
-
 void GameGrid::OnUpdate(Timestep ts)
 {
-	ForEach_1([&ts](Entity gridentity) 
+	// TODO: think where this should take place
+	for(auto& placed_bomb : g_Player->m_PlacedBombs)
 	{
-		if (gridentity.HasComponent<FrameAnimator>())
+		for (size_t i = 0; i < placed_bomb.m_Destroyed.size(); i++)
 		{
-			auto& fa = gridentity.GetComponent<FrameAnimator>();
-			if(fa.IsAnyPlaying())
-				fa.OnUpdate(ts);
+			auto& fa = placed_bomb.m_Destroyed[i].GetComponent<FrameAnimator>();
+			if (fa.IsAnyPlaying())
+			{
+				if (!fa.OnUpdate(ts))
+				{
+					DestroyGridEntity(placed_bomb.m_Destroyed[i]);
+					placed_bomb.m_Destroyed.erase(placed_bomb.m_Destroyed.begin() + i);
+				}
+			}
 		}
-
-		return false;
-	});
+	}
 }
 
 void GameGrid::DestroyGridEntity(Entity entity)
@@ -193,7 +200,7 @@ void GameGrid::DestroyGridEntity(Entity entity)
 
 	if (entity.HasComponent<Rigidbody2DComponent>())
 	{
-		m_GameScene->DestroyBody(entity);
+		g_GameScene->DestroyBody(entity);
 		entity.RemoveComponent<Rigidbody2DComponent>();
 
 		if (entity.HasComponent<BoxCollider2DComponent>())
@@ -202,7 +209,7 @@ void GameGrid::DestroyGridEntity(Entity entity)
 		entity.AddComponent<Rigidbody2DComponent>().CollisionTriggerOnly;
 		entity.AddComponent<BoxCollider2DComponent>().Trigger = true;
 
-		m_GameScene->CreateBody(entity);
+		g_GameScene->CreateBody(entity);
 	}
 }
 

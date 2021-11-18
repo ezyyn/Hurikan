@@ -53,9 +53,9 @@ private:
 	void DestroyItSelf();
 	void Explode();
 private:
-	Scene* m_GameScene;
-	Player* m_Player;
-
+	Scene* g_GameScene;
+	Player* g_Player;
+private:
 	BombProperties m_Properties;
 
 	std::vector<Entity> m_LeftWing;

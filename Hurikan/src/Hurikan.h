@@ -41,6 +41,3 @@
 #include "Hurikan/Scene/ScriptableEntity.h"
 #include "Hurikan/Scene/Components.h"
 //------------------------------------
-
-
-

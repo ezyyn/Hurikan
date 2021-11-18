@@ -7,7 +7,7 @@
 
 void Player::Init(Scene* scene, GameGrid* gamegrid)
 {
-	m_GameScene = scene;
+	g_GameScene = scene;
 	m_GameGrid = gamegrid;
 
 	m_BombAnimationSpriteSheet = Texture2D::Create("src/game-BomberFriends/assets/textures/bomb_animation/ba_128x128.png");
@@ -16,7 +16,7 @@ void Player::Init(Scene* scene, GameGrid* gamegrid)
 
 	// Player Init
 	m_PlayerTexture = Texture2D::Create("src/game-BomberFriends/assets/textures/player_animation/facingdown/1.png");
-	m_PlayerEntity = m_GameScene->CreateEntityWithDrawOrder(4, "PlayerEntity");
+	m_PlayerEntity = g_GameScene->CreateEntityWithDrawOrder(4, "PlayerEntity");
 	m_PlayerEntity.AddCustomComponent<EntityTypeComponent>().Type = EntityType::PLAYER;
 	m_PlayerEntity.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f));
 	auto& frameanimator = (FrameAnimator&)m_PlayerEntity.AddCustomComponent<FrameAnimator>(m_PlayerEntity);
@@ -104,8 +104,8 @@ void Player::Init(Scene* scene, GameGrid* gamegrid)
 	frameanimator.Add(m_PlayerUpAnimation);
 	frameanimator.Add(m_PlayerDownAnimation);
 
-	/////////////////////////////////////////////////////////////////////
-	////////////////////     Player Physics     ////////////////////////
+	///////////////////////////////////////////////////////////////////
+	////////////////////     Player Physics     ///////////////////////
 	///////////////////////////////////////////////////////////////////
 
 	auto& rb2d = m_PlayerEntity.AddComponent<Rigidbody2DComponent>();
@@ -256,24 +256,8 @@ void Player::OnUpdate(Timestep ts)
 	{
 		if (m_PlacedBombs[i].Tick(ts)) // If true bomb has exploded and vanished
 		{
-			for (auto& entity : m_PlacedBombs[i].m_Destroyed)
-			{
-				m_DestroyedBoxes.push_back(entity);
-			}
 			m_PlacedBombs.erase(m_PlacedBombs.begin() + i);
 			m_PlayerStats.PlacedBombs--;
-		}
-	}
-
-	for (size_t i = 0; i < m_DestroyedBoxes.size(); i++)
-	{
-		auto& fa = m_DestroyedBoxes[i].GetComponent<FrameAnimator>();
-		//fa.OnUpdate(ts);
-
-		if (!fa.IsAnyPlaying())
-		{
-			m_GameGrid->DestroyGridEntity(m_DestroyedBoxes[i]);
-			m_DestroyedBoxes.erase(m_DestroyedBoxes.begin() + i);
 		}
 	}
 }
@@ -320,9 +304,6 @@ bool Player::CanCreateAnother()
 KeyCode lastKey = NO_KEY_TYPED;
 bool Player::OnKeyPressed(KeyPressedEvent& e)
 {
-	// TODO: find better way to check this
-	static bool scaleNegate = true;
-
 	switch (e.GetKeyCode())
 	{
 		case Key::B:

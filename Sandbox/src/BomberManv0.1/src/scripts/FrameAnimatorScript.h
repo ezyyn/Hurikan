@@ -19,7 +19,7 @@ public:
 	bool IsAnyPlaying();
 
 	void Stop();
-	void OnUpdate(Timestep ts);
+	bool OnUpdate(Timestep ts);
 private:
 	Ref<Texture2D> m_SpriteSheet = nullptr;
 	glm::vec2 m_SingleSpriteSize = {0.0f, 0.0f};

@@ -27,8 +27,8 @@ private:
 	void PlaceBomb();
 	bool CanCreateAnother();
 private:
-	Scene* m_GameScene;
-
+	Scene* g_GameScene;
+private:
 	Ref<Texture2D> m_PlayerTexture;
 	Ref<Texture2D> m_BombAnimationSpriteSheet;
 
@@ -52,7 +52,6 @@ private:
 	PlayerStats m_PlayerStats;
 
 	std::vector<Bomb> m_PlacedBombs = {};
-	std::vector<Entity> m_DestroyedBoxes = {};
 
 	GameGrid* m_GameGrid;
 	friend class GameGrid;

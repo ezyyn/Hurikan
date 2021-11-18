@@ -5,6 +5,22 @@
 
 #include <imgui.h>
 
+#define MEMTRACK
+#ifdef MEMTRACK
+size_t usage;
+void* operator new(size_t size)
+{
+	usage += size;
+	return malloc(size);
+}
+
+void operator delete(void* memory, size_t size)
+{
+	usage -= size;
+	free(memory);
+}
+#endif
+
 GameLayer::GameLayer(uint32_t width, uint32_t height) : m_Width(width), m_Height(height)
 {
 }
@@ -18,9 +34,9 @@ void GameLayer::OnAttach()
 	ent.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f)).SubTexture = subtexture;
 #endif
 	m_GameCamera.Init(&m_InGameScene, m_Width, m_Height);
-	m_GameGrid.Init(&m_InGameScene, ROWS, COLUMNS);
+	m_GameGrid.Init(&m_InGameScene, &m_Player, ROWS, COLUMNS);
 	m_Player.Init(&m_InGameScene, &m_GameGrid);
-
+	
 	m_InGameScene.OnRuntimeStart();
 	m_CollisionDetector.Init(&m_InGameScene);
 	m_InGameScene.SetContactListener((b2ContactListener*)&m_CollisionDetector);
@@ -52,6 +68,10 @@ void GameLayer::OnImGuiRender()
 	ImGui::Text("Quads: %d", stats.QuadCount);
 	ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
 	ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
+#ifdef MEMTRACK
+	ImGui::Separator();
+	ImGui::Text("Current memory usage: %d bytes", usage);
+#endif
 	ImGui::End();
 }
 
