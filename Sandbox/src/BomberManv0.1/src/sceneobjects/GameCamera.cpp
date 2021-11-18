@@ -1,6 +1,6 @@
 #include "GameCamera.h"
 
-void GameCamera::Init(Ref<Scene> scene, uint32_t width, uint32_t height)
+void GameCamera::Init(Scene* scene, uint32_t width, uint32_t height)
 {
 	m_GameCameraEntity = scene->CreateEntity("GameCamera");
 

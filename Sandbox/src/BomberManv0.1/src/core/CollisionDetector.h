@@ -10,7 +10,7 @@ class CollissionDetector : b2ContactListener
 {
 public:
 
-	void Init(Ref<Scene> scene)
+	void Init(Scene* scene)
 	{
 		m_GameScene = scene;
 	}
@@ -71,5 +71,5 @@ public:
 	{
 	}
 private:
-	Ref<Scene> m_GameScene;
+	Scene* m_GameScene;
 };

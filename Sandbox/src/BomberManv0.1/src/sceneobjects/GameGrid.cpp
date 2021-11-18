@@ -3,7 +3,7 @@
 #include "../core/GameComponents.h"
 #include "../scripts/FrameAnimatorScript.h"
 
-void GameGrid::Init(Ref<Scene> scene, uint32_t rows, uint32_t columns)
+void GameGrid::Init(Scene* scene, uint32_t rows, uint32_t columns)
 {
 	m_GameScene = scene;
 
@@ -52,17 +52,17 @@ void GameGrid::Init(Ref<Scene> scene, uint32_t rows, uint32_t columns)
 	m_MapSkeleton += "#################"; // 17 x 17
 	m_MapSkeleton += "#------BBB------#";
 	m_MapSkeleton += "#-#-#-#-#-#-#-#-#";
-	m_MapSkeleton += "#---------------#";
+	m_MapSkeleton += "#----BBBB-------#";
 	m_MapSkeleton += "#-#-#-#-#-#-#-#-#";
 	m_MapSkeleton += "#--------B------#";
 	m_MapSkeleton += "#-#-#-#-#-#B#-#-#";
-	m_MapSkeleton += "#----------BB---#";
+	m_MapSkeleton += "#---BBBBB--BB---#";
 	m_MapSkeleton += "#-#-#-#-#-#B#-#-#";
 	m_MapSkeleton += "#------BBBB-----#";
 	m_MapSkeleton += "#-#-#-#-#-#-#-#-#";
 	m_MapSkeleton += "#---------------#";
 	m_MapSkeleton += "#-#-#-#-#-#-#-#-#";
-	m_MapSkeleton += "#---------------#";
+	m_MapSkeleton += "#------BBBBBB---#";
 	m_MapSkeleton += "#-#-#-#-#-#-#-#-#";
 	m_MapSkeleton += "#P--------------#";
 	m_MapSkeleton += "#################";
@@ -205,3 +205,4 @@ void GameGrid::DestroyGridEntity(Entity entity)
 		m_GameScene->CreateBody(entity);
 	}
 }
+

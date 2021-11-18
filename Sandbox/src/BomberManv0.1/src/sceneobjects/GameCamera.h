@@ -48,7 +48,7 @@ class GameCamera
 public:
 	GameCamera() = default;
 
-	void Init(Ref<Scene> scene, uint32_t width, uint32_t height);
+	void Init(Scene* scene, uint32_t width, uint32_t height);
 private:
 	Entity m_GameCameraEntity;
 };

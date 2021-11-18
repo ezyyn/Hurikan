@@ -29,7 +29,7 @@ struct BombProperties
 	// Spread Explosion
 	uint32_t Reach = 1;
 
-	std::unordered_map<std::string, std::vector<Entity>> SpreadEntities;
+	std::vector<std::vector<Entity>> SpreadEntities;
 };
 
 class Bomb
@@ -53,7 +53,7 @@ private:
 	void DestroyItSelf();
 	void Explode();
 private:
-	Ref<Scene> m_GameScene;
+	Scene* m_GameScene;
 	Player* m_Player;
 
 	BombProperties m_Properties;
@@ -64,15 +64,15 @@ private:
 	std::vector<Entity> m_DownWing;
 
 	Entity m_Entity;
-
+	std::vector<Entity> m_GridEntityPlaceHolders; // <- u know what it is
 	bool m_ChainExplosion = false;
 
+private:
 	// Maybe add to entity itself:
 	const glm::vec3& translation() 
 	{
 		return m_Entity.GetComponent<TransformComponent>().Translation;
 	}
-private:
-	void initSpread(Entity entity);
-	void WingInitialization(int index, std::vector<Entity> wing)
+	void WingInitialization(uint32_t y, uint32_t distance, bool condition, float rotationZ, std::vector<Entity>& wing);
+	void AddAnimations(std::vector<Entity> wing);
 };

@@ -17,7 +17,8 @@ class Player
 {
 public:
 	Player() = default;
-	void Init(Ref<Scene> scene, Ref<GameGrid> gamegrid);
+	~Player() = default;
+	void Init(Scene* scene, GameGrid* gamegrid);
 	void OnUpdate(Timestep ts);
 
 	bool OnKeyPressed(KeyPressedEvent& e);
@@ -26,7 +27,7 @@ private:
 	void PlaceBomb();
 	bool CanCreateAnother();
 private:
-	Ref<Scene> m_GameScene;
+	Scene* m_GameScene;
 
 	Ref<Texture2D> m_PlayerTexture;
 	Ref<Texture2D> m_BombAnimationSpriteSheet;
@@ -53,7 +54,7 @@ private:
 	std::vector<Bomb> m_PlacedBombs = {};
 	std::vector<Entity> m_DestroyedBoxes = {};
 
-	Ref<GameGrid> m_GameGrid;
+	GameGrid* m_GameGrid;
 	friend class GameGrid;
 	friend class Bomb;
 };

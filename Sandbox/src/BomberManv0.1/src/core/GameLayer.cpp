@@ -11,23 +11,19 @@ GameLayer::GameLayer(uint32_t width, uint32_t height) : m_Width(width), m_Height
 
 void GameLayer::OnAttach()
 {	
-	m_InGameScene = CreateRef<Scene>();
-	m_GameGrid = CreateRef<GameGrid>();
-	m_Player = CreateRef<Player>();
-
 #if 0
 	Ref<SubTexture2D> subtexture = SubTexture2D::CreateFromCoords(spritesheet
 		, { 1,1 }, {64, 64});
 	auto& ent = m_InGameScene->CreateEntityWithDrawOrder(2, "Test");
 	ent.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f)).SubTexture = subtexture;
 #endif
-	m_GameCamera.Init(m_InGameScene, m_Width, m_Height);
-	m_GameGrid->Init(m_InGameScene, ROWS, COLUMNS);
-	m_Player->Init(m_InGameScene, m_GameGrid);
+	m_GameCamera.Init(&m_InGameScene, m_Width, m_Height);
+	m_GameGrid.Init(&m_InGameScene, ROWS, COLUMNS);
+	m_Player.Init(&m_InGameScene, &m_GameGrid);
 
-	m_InGameScene->OnRuntimeStart();
-	m_CollisionDetector.Init(m_InGameScene);
-	m_InGameScene->SetContactListener((b2ContactListener*)&m_CollisionDetector);
+	m_InGameScene.OnRuntimeStart();
+	m_CollisionDetector.Init(&m_InGameScene);
+	m_InGameScene.SetContactListener((b2ContactListener*)&m_CollisionDetector);
 }
 
 void GameLayer::OnDetach()
@@ -40,11 +36,11 @@ void GameLayer::OnUpdate(Timestep& ts)
 	RenderCommand::Clear();
 	Renderer2D::ResetStats();
 
-	m_Player->OnUpdate(ts);
-	m_GameGrid->OnUpdate(ts);
-
+	m_Player.OnUpdate(ts);
+	m_GameGrid.OnUpdate(ts);
+	
 	// Rendering
-	m_InGameScene->OnUpdateRuntime(ts);
+	m_InGameScene.OnUpdateRuntime(ts);
 }
 
 void GameLayer::OnImGuiRender()
@@ -68,14 +64,14 @@ void GameLayer::OnEvent(Event& e)
 
 bool GameLayer::OnKeyPressed(KeyPressedEvent& e)
 {
-	m_Player->OnKeyPressed(e);
+	m_Player.OnKeyPressed(e);
 
 	return false;
 }
 
 bool GameLayer::OnKeyReleased(KeyReleasedEvent& e)
 {
-	m_Player->OnKeyReleased(e);
+	m_Player.OnKeyReleased(e);
 
 	return false;
 }

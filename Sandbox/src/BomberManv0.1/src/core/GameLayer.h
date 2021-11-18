@@ -23,10 +23,10 @@ public:
 	bool OnKeyPressed(KeyPressedEvent& e);
 	bool OnKeyReleased(KeyReleasedEvent& e);
 private:
-	Ref<Scene> m_InGameScene;
+	Scene m_InGameScene;
 
-	Ref<GameGrid> m_GameGrid;
-	Ref<Player> m_Player;
+	GameGrid m_GameGrid;
+	Player m_Player;
 	CollissionDetector m_CollisionDetector;
 	GameCamera m_GameCamera;
 

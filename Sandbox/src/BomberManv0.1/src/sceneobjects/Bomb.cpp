@@ -18,6 +18,20 @@ void Bomb::Init(BombProperties props, Player* player)
 	m_Entity.GetComponent<TransformComponent>().Translation.x = glm::round(m_Player->m_PlayerEntity.GetComponent<TransformComponent>().Translation.x);
 	m_Entity.GetComponent<TransformComponent>().Translation.y = glm::round(m_Player->m_PlayerEntity.GetComponent<TransformComponent>().Translation.y);
 
+	// TODO: FIX OVERLAPPING (optional)
+	/*
+	player->m_GameGrid->ForEach_1([&m_Entity = m_Entity, &m_GridEntityPlaceHolders = m_GridEntityPlaceHolders](Entity gridEntity) 
+	{
+		if (m_Entity.GetComponent<TransformComponent>().Translation == gridEntity.GetComponent<TransformComponent>().Translation)
+		{
+		//	gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::BOMB;
+			m_GridEntityPlaceHolders.push_back(gridEntity);
+			return true;
+		}
+		return false;
+	});
+	*/
+
 	// Setting up category to which entity belongs
 	m_Entity.AddCustomComponent<EntityTypeComponent>().Type = EntityType::BOMB;
 
@@ -38,12 +52,76 @@ void Bomb::Init(BombProperties props, Player* player)
 	m_Properties.State = BombState::TICKING;
 }
 
-void Bomb::initSpread(Entity spread)
+void Bomb::WingInitialization(uint32_t y, uint32_t distance, bool condition, float rotationZ, std::vector<Entity>& wing)
 {
-	spread.GetComponent<TransformComponent>().Translation = this->translation();
+	if (condition)
+	{
+		// Grid Entity
+		Entity gridEntity = m_Player->m_GameGrid->m_GameGrid[y][distance];
 
-	spread.AddComponent<SpriteRendererComponent>(glm::vec4(0.0f));
-	spread.AddCustomComponent<EntityTypeComponent>().Type = EntityType::BOMB_SPREAD_EXPLOSION;
+		// Getting GridEntity coordinates so it can create new entity 
+		// And eventually adding it to the wing #vector
+		auto& grid_translation = gridEntity.GetComponent<TransformComponent>().Translation;
+
+		// Checking the of the GridEntity
+		switch (gridEntity.GetComponent<EntityTypeComponent>().Type)
+		{
+			// Stops expanding due to collision with a wall
+
+			//case EntityType::BOMB: return;
+			case EntityType::TILE_WALL: return;
+
+			// Breakable
+			// Stops expanding due to collision with a box
+			case EntityType::TILE_BOX:
+			{
+				// Adding it to another separated #m_Destroyed vector
+				// Every GridEntity in this vector will be destroyed ( Not the ECS entity )
+				m_Destroyed.push_back(gridEntity);
+
+				// When single destoyable wall ( box ) will be destroyed by two bomb at once,
+				// the second bomb will not add spread explosion entity because, it will not be
+				// yet destroyed( marked as TILE_EMPTY ) 
+				// This line is necessary and prevents this bug
+				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::TILE_EMPTY;
+				return;
+			}
+			// Expands the explosion
+			case EntityType::TILE_EMPTY:
+			{
+				Entity spread = m_GameScene->CreateEntityWithDrawOrder(3, "WingEntity");
+				// TODO: overlapping
+				/*gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::BOMB_SPREAD_EXPLOSION;
+				m_GridEntityPlaceHolders.push_back(gridEntity);*/
+
+				spread.AddComponent<SpriteRendererComponent>(glm::vec4(0.0f));
+				spread.AddCustomComponent<EntityTypeComponent>().Type = EntityType::BOMB_SPREAD_EXPLOSION;
+			
+				spread.GetComponent<TransformComponent>().Translation = grid_translation;
+				spread.GetComponent<TransformComponent>().Rotation.z = glm::radians(rotationZ);
+				wing.push_back(spread);
+				break;
+			}
+			case EntityType::BOMB:
+				HU_INFO("WHAT");
+		}
+	}
+}
+
+void Bomb::AddAnimations(std::vector<Entity> wing)
+{
+	for (size_t i = 0; i < wing.size(); i++)
+	{
+		auto& fa = wing[i].AddCustomComponent<FrameAnimator>(wing[i]);
+		if (i == wing.size() - 1)
+		{
+			fa.Add(m_Player->m_BombSpreadEndWingAnimation);
+			fa.Switch("BombEndWingExplosion");
+			break;
+		}
+		fa.Add(m_Player->m_BombSpreadWingAnimation);
+		fa.Switch("BombWingExplosion");
+	}
 }
 
 void Bomb::Deploy()
@@ -58,204 +136,38 @@ void Bomb::Deploy()
 			// Searhing for the same coordinates as chosen GridEntity so 
 
 			Entity gridentity = m_Player->m_GameGrid->m_GameGrid[y][x];
-
 			auto& trans = gridentity.GetComponent<TransformComponent>().Translation;
 			// Condition below is searching for the same entity translation coordinates as the bomb.
 			// So it can properly know where spread wings should be
 			if (trans == this->translation()) 
 			{ 
-				// Every wing has its own vector, ergo for loop and switch
-				// This for loop is needed so the bomb can have longer wings, ergo wider explosions
+				for (uint32_t j = 0; j < m_Properties.Reach; j++)
+				{
+					int index = x - (j + 1);
+					WingInitialization(y, index, index >= 1, 90.0f, m_LeftWing);
+				}
+				AddAnimations(m_LeftWing);
 
-				// Left wing
-				// #m_Properties.Reach is just a variable indicating the power of the placed bomb
-				// Pre-checking if there can be another entity with explosion animation
-				for (uint32_t j = 0; j < m_Properties.Reach; j++) 
+				for (uint32_t j = 0; j < m_Properties.Reach; j++)
 				{
-					// #l_index is a distance  
-					int l_index = x - (j + 1);
-					if (l_index >= 1)
-					{
-						// Grid Entity
-						Entity left = m_Player->m_GameGrid->m_GameGrid[y][l_index];
-						// Getting GridEntity coordinates so it can create new entity 
-						// And eventually adding it to the wing #vector
-						auto& trans_l = left.GetComponent<TransformComponent>().Translation;
+					int index = y - (j + 1);
+					WingInitialization(index, x, index >= 1, 0.0f, m_UpWing);
+				}
+				AddAnimations(m_UpWing);
 
-						// Checking the of the GridEntity
-						switch (left.GetComponent<EntityTypeComponent>().Type)
-						{
-							// Breakable
-							case EntityType::TILE_BOX:
-							{
-								// Adding it to another separated #m_Destroyed vector
-								// Every GridEntity in this vector will be destroyed ( Not the ECS entity )
-								m_Destroyed.push_back(left);
+				for (uint32_t j = 0; j < m_Properties.Reach; j++)
+				{
+					int index = x + (j + 1);
+					WingInitialization(y, index, index < m_Player->m_GameGrid->GetColumns(), 270.0f, m_RightWing);
+				}
+				AddAnimations(m_RightWing);
 
-								// When single destoyable wall ( box ) will be destroyed by two bomb at once,
-								// the second bomb will not add spread explosion entity because, it will not be
-								// yet destroyed( marked as TILE_EMPTY ) 
-								// This line is necessary and prevents this bug
-								left.GetComponent<EntityTypeComponent>().Type = EntityType::TILE_EMPTY;
-								goto LEFT_BREAKOUT;
-								break;
-							}
-							case EntityType::TILE_WALL: // THERE IS AN OBSTACLE SO STOP WITH EXPANDING
-								goto LEFT_BREAKOUT;
-								break;
-							case EntityType::TILE_EMPTY:
-								{
-									Entity spread = m_GameScene->CreateEntityWithDrawOrder(3, "LeftWingEntity");
-									initSpread(spread);
-									spread.GetComponent<TransformComponent>().Translation = trans_l;
-									m_LeftWing.push_back(spread);
-								}
-								break;
-						}
-					}
-				}
-			LEFT_BREAKOUT:
-				for (size_t i = 0; i < m_LeftWing.size(); i++)
+				for (uint32_t j = 0; j < m_Properties.Reach; j++)
 				{
-					m_LeftWing[i].GetComponent<TransformComponent>().Rotation.z = glm::radians(90.0f);
-					auto& fa = m_LeftWing[i].AddCustomComponent<FrameAnimator>(m_LeftWing[i]);
-					if (i == m_LeftWing.size() - 1)
-					{
-						fa.Add(m_Player->m_BombSpreadEndWingAnimation);
-						fa.Switch("BombEndWingExplosion");
-						break;
-					}
-					fa.Add(m_Player->m_BombSpreadWingAnimation);
-					fa.Switch("BombWingExplosion");
+					int index = y + (j + 1);
+					WingInitialization(index, x, index < m_Player->m_GameGrid->GetRows(), 180.0f, m_DownWing);
 				}
-				// UP
-				for (uint32_t j = 0; j < m_Properties.Reach; j++) // every single wing
-				{
-					int u_index = y - (j + 1); 
-					if (u_index >= 1)
-					{
-						Entity up = m_Player->m_GameGrid->m_GameGrid[u_index][x];
-						switch (up.GetComponent<EntityTypeComponent>().Type)
-						{
-							case EntityType::TILE_BOX:
-							{
-								m_Destroyed.push_back(up);
-								up.GetComponent<EntityTypeComponent>().Type = EntityType::TILE_EMPTY;
-							}
-							case EntityType::TILE_WALL:
-								goto UP_BREAKOUT; 
-								break;
-							case EntityType::TILE_EMPTY:
-								{
-									Entity spread = m_GameScene->CreateEntityWithDrawOrder(3, "UpWingEntity");
-									initSpread(spread);
-									spread.GetComponent<TransformComponent>().Translation = up.GetComponent<TransformComponent>().Translation;
-									m_UpWing.push_back(spread);
-								}
-								break;
-						}
-					}
-				}
-
-			UP_BREAKOUT:
-				for (size_t i = 0; i < m_UpWing.size(); i++)
-				{
-					auto& fa = m_UpWing[i].AddCustomComponent<FrameAnimator>(m_UpWing[i]);
-					if (i == m_UpWing.size() - 1)
-					{
-						fa.Add(m_Player->m_BombSpreadEndWingAnimation);
-						fa.Switch("BombEndWingExplosion");
-						break;
-					}
-					fa.Add(m_Player->m_BombSpreadWingAnimation);
-					fa.Switch("BombWingExplosion");
-				}
-
-				// RIGHT 
-				for (uint32_t j = 0; j < m_Properties.Reach; j++) // every single wing
-				{
-					int r_index = x + (j + 1); 
-					if (r_index < m_Player->m_GameGrid->GetColumns())
-					{
-						Entity right = m_Player->m_GameGrid->m_GameGrid[y][r_index];
-						switch (right.GetComponent<EntityTypeComponent>().Type)
-						{
-						case EntityType::TILE_BOX:
-						{
-							m_Destroyed.push_back(right);
-							right.GetComponent<EntityTypeComponent>().Type = EntityType::TILE_EMPTY;
-						}
-						case EntityType::TILE_WALL:
-							goto RIGHT_BREAKOUT;
-							break;
-						case EntityType::TILE_EMPTY:
-							{
-								Entity spread = m_GameScene->CreateEntityWithDrawOrder(3, "RightWingEntity");
-								initSpread(spread);
-								spread.GetComponent<TransformComponent>().Translation = right.GetComponent<TransformComponent>().Translation;
-								m_RightWing.push_back(spread);
-							}
-							break;
-						}
-					}
-				}
-			RIGHT_BREAKOUT:
-				for (size_t i = 0; i < m_RightWing.size(); i++)
-				{
-					m_RightWing[i].GetComponent<TransformComponent>().Rotation.z = glm::radians(270.0f);
-					auto& fa = m_RightWing[i].AddCustomComponent<FrameAnimator>(m_RightWing[i]);
-					if (i == m_RightWing.size() - 1)
-					{
-						fa.Add(m_Player->m_BombSpreadEndWingAnimation);
-						fa.Switch("BombEndWingExplosion");
-						break;
-					}
-					fa.Add(m_Player->m_BombSpreadWingAnimation);
-					fa.Switch("BombWingExplosion");
-				}
-				// DOWN
-				for (uint32_t j = 0; j < m_Properties.Reach; j++) // every single wing
-				{
-					int d_index = y + (j + 1); 
-					if (d_index < m_Player->m_GameGrid->GetRows())
-					{
-						Entity down = m_Player->m_GameGrid->m_GameGrid[d_index][x];
-						switch (down.GetComponent<EntityTypeComponent>().Type)
-						{	
-						case EntityType::TILE_BOX:
-						{
-							m_Destroyed.push_back(down);
-							down.GetComponent<EntityTypeComponent>().Type = EntityType::TILE_EMPTY;
-						}
-						case EntityType::TILE_WALL:
-							goto DOWN_BREAKOUT;
-							break;
-						case EntityType::TILE_EMPTY:
-							{
-								Entity spread = m_GameScene->CreateEntityWithDrawOrder(3, "DownWingEntity");
-								initSpread(spread);
-								spread.GetComponent<TransformComponent>().Translation = down.GetComponent<TransformComponent>().Translation;
-								m_DownWing.push_back(spread);
-							}
-
-							break;
-						}
-					}
-				}
-			DOWN_BREAKOUT:
-				for (size_t i = 0; i < m_DownWing.size(); i++)
-				{
-					m_DownWing[i].GetComponent<TransformComponent>().Rotation.z = glm::radians(180.0f);
-					auto& fa = m_DownWing[i].AddCustomComponent<FrameAnimator>(m_DownWing[i]);
-					if (i == m_DownWing.size() - 1)
-					{
-						fa.Add(m_Player->m_BombSpreadEndWingAnimation);
-						fa.Switch("BombEndWingExplosion");
-						break;
-					}
-					fa.Add(m_Player->m_BombSpreadWingAnimation);
-					fa.Switch("BombWingExplosion");
-				}
+				AddAnimations(m_DownWing);
 			}
 		}
 	}
@@ -270,13 +182,12 @@ void Bomb::Deploy()
 	fa.Add(m_Player->m_BombSpreadCenterAnimation);
 	fa.Switch("BombCenterExplosion");
 
-	m_Properties.SpreadEntities["CenterEntity"] = std::vector<Entity>{ center };
-	m_Properties.SpreadEntities["LeftWing"] = m_LeftWing;
-	m_Properties.SpreadEntities["UpWing"] = m_UpWing;
-	m_Properties.SpreadEntities["RightWing"] = m_RightWing;
-	m_Properties.SpreadEntities["DownWing"] = m_DownWing;
-
-
+	m_Properties.SpreadEntities.reserve(5);
+	m_Properties.SpreadEntities.emplace_back(std::vector<Entity>{ center });
+	m_Properties.SpreadEntities.emplace_back(m_LeftWing);
+	m_Properties.SpreadEntities.emplace_back(m_UpWing);
+	m_Properties.SpreadEntities.emplace_back(m_RightWing);
+	m_Properties.SpreadEntities.emplace_back(m_DownWing);
 }
 
 bool Bomb::Tick(Timestep ts)
@@ -298,13 +209,24 @@ bool Bomb::Tick(Timestep ts)
 		{
 			for (auto& wings : m_Properties.SpreadEntities) // Spread // BASIC BOMB MECHANIC IMPLEMENTED ( ??? ) ROOM FOR TESTING
 			{
-				for (auto& entity : wings.second /* VECTOR */)
+				for (auto& entity : wings/* VECTOR */)
 				{
 					if (other.m_Properties.State != BombState::EXPLOSION &&
 						other.GetBombEntity().GetComponent<TransformComponent>().Translation == entity.GetComponent<TransformComponent>().Translation)
 					{
-						// TODO: Fix animations overlapping each other
-						entity.GetComponent<SpriteRendererComponent>().Color = glm::vec4(0.0f);
+						/* TODO: overlapping textures 
+						for (auto& other_wings : other.m_Properties.SpreadEntities)
+						{
+							for (auto& other_wing_entity : other_wings)
+							{
+								if (entity.GetComponent<TransformComponent>().Translation
+									== other_wing_entity.GetComponent<TransformComponent>().Translation)
+								{
+									other_wing_entity.GetComponent<SpriteRendererComponent>().Color = glm::vec4(0.0f);
+								}
+							}
+						}
+						*/ 
 						other.Explode();
 					}
 				}
@@ -316,7 +238,7 @@ bool Bomb::Tick(Timestep ts)
 		// Setting alpha value to 1 
 		for (auto& wings : m_Properties.SpreadEntities) 
 		{
-			for (auto& entity : wings.second /* VECTOR */)
+			for (auto& entity : wings)
 			{
 				entity.GetComponent<SpriteRendererComponent>().Color = glm::vec4(1.0f);
 			}
@@ -332,18 +254,16 @@ bool Bomb::Tick(Timestep ts)
 	{
 		for (auto& wings : m_Properties.SpreadEntities) // Explosion
 		{
-			for (auto& entity : wings.second /* VECTOR */)
+			for (auto& entity : wings)
 			{
 				auto& frameanimator = entity.GetComponent<FrameAnimator>();
 				frameanimator.OnUpdate(ts);
-			}
-			for (auto& entity : wings.second /* VECTOR */)
-			{
-				auto& frameanimator = entity.GetComponent<FrameAnimator>();
+
 				if (!frameanimator.IsAnyPlaying())
 				{
+					// Animation finally complete and can be safely removed
 					DestroyItSelf();
-					return true; // Animation finally complete and can be safely removed
+					return true; 
 				}
 			}
 		}
@@ -354,18 +274,26 @@ bool Bomb::Tick(Timestep ts)
 void Bomb::DestroyItSelf()
 {
 	// Destroys all entities related to bomb
-
 	m_GameScene->DestroyEntity(m_Entity);
 
+	for (auto& entity : m_GridEntityPlaceHolders)
+	{
+		m_Player->m_GameGrid->DestroyGridEntity(entity);
+	}
 	for (auto& wings : m_Properties.SpreadEntities) 
 	{
-		for (auto& entity : wings.second)
+		for (auto& entity : wings)
 		{
 			m_GameScene->DestroyEntity(entity);
 		}
 	}
 
+	// Freeing up the memory
+	m_Player = nullptr;
+	m_GridEntityPlaceHolders.clear();
+	m_GridEntityPlaceHolders.shrink_to_fit();
 	m_Properties.SpreadEntities.clear();
+	m_Properties.SpreadEntities.shrink_to_fit();
 }
 
 void Bomb::Explode()

@@ -5,7 +5,7 @@
 #include "../scripts/PlayerScript.h"
 #include "../scripts/FrameAnimatorScript.h"
 
-void Player::Init(Ref<Scene> scene, Ref<GameGrid> gamegrid)
+void Player::Init(Scene* scene, GameGrid* gamegrid)
 {
 	m_GameScene = scene;
 	m_GameGrid = gamegrid;
