@@ -52,7 +52,7 @@ void Bomb::Init(BombProperties props, Player* player)
 	m_Properties.State = BombState::TICKING;
 }
 
-void Bomb::WingInitialization(uint32_t y, uint32_t distance, bool condition, float rotationZ, std::vector<Entity>& wing)
+bool Bomb::WingInitialization(uint32_t y, uint32_t distance, bool condition, float rotationZ, std::vector<Entity>& wing)
 {
 	if (condition)
 	{
@@ -67,9 +67,7 @@ void Bomb::WingInitialization(uint32_t y, uint32_t distance, bool condition, flo
 		switch (gridEntity.GetComponent<EntityTypeComponent>().Type)
 		{
 			// Stops expanding due to collision with a wall
-
-			//case EntityType::BOMB: return;
-			case EntityType::TILE_WALL: return;
+			case EntityType::TILE_WALL: return true;
 
 			// Breakable
 			// Stops expanding due to collision with a box
@@ -79,12 +77,12 @@ void Bomb::WingInitialization(uint32_t y, uint32_t distance, bool condition, flo
 				// Every GridEntity in this vector will be destroyed ( Not the ECS entity )
 				m_Destroyed.push_back(gridEntity);
 
-				// When single destoyable wall ( box ) will be destroyed by two bomb at once,
-				// the second bomb will not add spread explosion entity because, it will not be
+				// When single destoyable wall ( box ) is going to be destroyed by two bomb at once,
+				// the second bomb will not add spread explosion entity because, it is not be
 				// yet destroyed( marked as TILE_EMPTY ) 
 				// This line is necessary and prevents this bug
 				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::TILE_EMPTY;
-				return;
+				return true;
 			}
 			// Expands the explosion
 			case EntityType::TILE_EMPTY:
@@ -100,12 +98,14 @@ void Bomb::WingInitialization(uint32_t y, uint32_t distance, bool condition, flo
 				spread.GetComponent<TransformComponent>().Translation = grid_translation;
 				spread.GetComponent<TransformComponent>().Rotation.z = glm::radians(rotationZ);
 				wing.push_back(spread);
-				break;
+				return false;
 			}
 			case EntityType::BOMB:
 				HU_INFO("WHAT");
 		}
+		return false;
 	}
+	return true;
 }
 
 void Bomb::AddAnimations(std::vector<Entity> wing)
@@ -144,28 +144,32 @@ void Bomb::Deploy()
 				for (uint32_t j = 0; j < m_Properties.Reach; j++)
 				{
 					int index = x - (j + 1);
-					WingInitialization(y, index, index >= 1, 90.0f, m_LeftWing);
+					if (WingInitialization(y, index, index >= 1, 90.0f, m_LeftWing))
+						break;
 				}
 				AddAnimations(m_LeftWing);
 
 				for (uint32_t j = 0; j < m_Properties.Reach; j++)
 				{
 					int index = y - (j + 1);
-					WingInitialization(index, x, index >= 1, 0.0f, m_UpWing);
+					if (WingInitialization(index, x, index >= 1, 0.0f, m_UpWing)) 
+						break;
 				}
 				AddAnimations(m_UpWing);
 
 				for (uint32_t j = 0; j < m_Properties.Reach; j++)
 				{
 					int index = x + (j + 1);
-					WingInitialization(y, index, index < m_Player->m_GameGrid->GetColumns(), 270.0f, m_RightWing);
+					if (WingInitialization(y, index, index < m_Player->m_GameGrid->GetColumns(), 270.0f, m_RightWing)) 
+						break;
 				}
 				AddAnimations(m_RightWing);
 
 				for (uint32_t j = 0; j < m_Properties.Reach; j++)
 				{
 					int index = y + (j + 1);
-					WingInitialization(index, x, index < m_Player->m_GameGrid->GetRows(), 180.0f, m_DownWing);
+					if (WingInitialization(index, x, index < m_Player->m_GameGrid->GetRows(), 180.0f, m_DownWing)) 
+						break;
 				}
 				AddAnimations(m_DownWing);
 			}

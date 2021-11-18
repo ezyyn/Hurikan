@@ -287,7 +287,7 @@ void Player::PlaceBomb()
 
 		props.Type = BombType::CLASSIC;
 		props.ExplosionTime = 1.0f;
-		props.Reach = 1;
+		props.Reach = 5;
 		props.State = BombState::TICKING;
 
 		Bomb bomb;

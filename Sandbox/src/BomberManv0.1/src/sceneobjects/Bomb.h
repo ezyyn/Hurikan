@@ -73,6 +73,6 @@ private:
 	{
 		return m_Entity.GetComponent<TransformComponent>().Translation;
 	}
-	void WingInitialization(uint32_t y, uint32_t distance, bool condition, float rotationZ, std::vector<Entity>& wing);
+	bool WingInitialization(uint32_t y, uint32_t distance, bool condition, float rotationZ, std::vector<Entity>& wing);
 	void AddAnimations(std::vector<Entity> wing);
 };

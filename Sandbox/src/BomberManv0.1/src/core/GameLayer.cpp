@@ -39,7 +39,7 @@ void GameLayer::OnUpdate(Timestep& ts)
 	m_Player.OnUpdate(ts);
 	m_GameGrid.OnUpdate(ts);
 	
-	// Rendering
+	// Rendering and updating physics
 	m_InGameScene.OnUpdateRuntime(ts);
 }
 
