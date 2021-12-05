@@ -1,21 +1,16 @@
-#include <Hurikan.h>
-using namespace Hurikan;
+#include "GameApplication.h"
 
-#include "Hurikan/Core/EntryPoint.h"
+#include <Hurikan/Core/EntryPoint.h>
 
-#include "GameLayer.h"
+#include "../core/GameLayer.h"
 
-class GameApplication : public Hurikan::Application
+GameApplication::GameApplication(Hurikan::ApplicationCommandLineArgs args) : Hurikan::Application("Bomber Man", args, 1600, 900)
 {
-public:
-	GameApplication(ApplicationCommandLineArgs args) : Application("Bomber Man", args, 1600, 900)
-	{
-		PushLayer(new GameLayer(1600, 900));
-	}
-private:
+	m_GameLayer = new GameLayer(this);
+	PushLayer(m_GameLayer);
+}
 
-};
-
-Hurikan::Application* Hurikan::CreateApplication(Hurikan::ApplicationCommandLineArgs args) {
+Hurikan::Application* Hurikan::CreateApplication(ApplicationCommandLineArgs args)
+{
 	return new GameApplication(args);
 }

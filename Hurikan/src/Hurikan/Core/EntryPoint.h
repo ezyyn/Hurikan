@@ -8,6 +8,22 @@
 
 extern Hurikan::Application* Hurikan::CreateApplication(ApplicationCommandLineArgs args);
 
+#define MEMTRACK
+#ifdef MEMTRACK
+extern size_t usage = 0;
+void* operator new(size_t size)
+{
+	usage += size;
+	return malloc(size);
+}
+
+void operator delete(void* memory, size_t size)
+{
+	usage -= size;
+	free(memory);
+}
+#endif
+
 int main(int argc, char** argv) {
 	Hurikan::Log::Init();
 
@@ -20,6 +36,9 @@ int main(int argc, char** argv) {
 
 	HU_PROFILE_BEGIN_SESSION("Shutdown", "HurikanProfile-Shutdown.json");
 	delete app;
+
+	HU_CORE_WARN("Memory leak: {0}",usage)
+
 	HU_PROFILE_END_SESSION();
 }
 

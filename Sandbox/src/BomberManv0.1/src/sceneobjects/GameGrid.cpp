@@ -13,14 +13,14 @@ void GameGrid::Init(Scene* scene, Player* player, uint32_t rows, uint32_t column
 	m_Rows = rows;
 	m_Columns = columns;
 
-	m_SpriteSheet = Texture2D::Create("src/game-BomberFriends/assets/textures/tileset_16x16.png");
-	Ref<Texture2D> m_BackgroundTile = Texture2D::Create("src/game-BomberFriends/assets/textures/background.png");
+	m_SpriteSheet = Texture2D::Create("assets/textures/tileset_16x16.png");
+	Ref<Texture2D> m_BackgroundTile = Texture2D::Create("assets/textures/background.png");
 	Ref<SubTexture2D> m_WallTile = SubTexture2D::CreateFromCoords(m_SpriteSheet, { 0, 0 }, { 16, 16 });
 	Ref<SubTexture2D> m_BoxTile = SubTexture2D::CreateFromCoords(m_SpriteSheet, { 1, 0 }, { 16, 16 });
 
 	Entity backgroundEntity = scene->CreateEntityWithDrawOrder(0, "Gamegrid-Background");
 	backgroundEntity.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f)).Texture = m_BackgroundTile;
-	backgroundEntity.GetComponent<TransformComponent>().Scale = { 17.0f, 17.0f, 1.0f };
+	backgroundEntity.GetComponent<TransformComponent>().Scale = { 17.0f, 17.0f, 0.0f };
 	backgroundEntity.GetComponent<SpriteRendererComponent>().TilingFactor = 17;
 
 	AnimationBlock wallBreakAnimation;
@@ -63,7 +63,7 @@ void GameGrid::Init(Scene* scene, Player* player, uint32_t rows, uint32_t column
 	m_MapSkeleton += "#-#-#-#-#-#B#-#-#";
 	m_MapSkeleton += "#------BBBB-----#";
 	m_MapSkeleton += "#-#-#-#-#-#-#-#-#";
-	m_MapSkeleton += "#---------------#";
+	m_MapSkeleton += "#---------M-----#";
 	m_MapSkeleton += "#-#-#-#-#-#-#-#-#";
 	m_MapSkeleton += "#------BBBBBB---#";
 	m_MapSkeleton += "#-#-#-#-#-#-#-#-#";
@@ -116,27 +116,26 @@ void GameGrid::Init(Scene* scene, Player* player, uint32_t rows, uint32_t column
 				gridEntity.GetComponent<SpriteRendererComponent>().Color = glm::vec4(1.0f);
 				gridEntity.GetComponent<SpriteRendererComponent>().SubTexture = m_WallTile;
 				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::TILE_WALL;
+				gridEntity.GetComponent<BoxCollider2DComponent>().IsSensor = false;
 				break;
 			case 'B': // LOOT BOX 
 				gridEntity.GetComponent<TagComponent>().Tag = "Box";
 				gridEntity.GetComponent<SpriteRendererComponent>().Color = glm::vec4(1.0f);
 				gridEntity.GetComponent<SpriteRendererComponent>().SubTexture = m_BoxTile;
 				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::TILE_BOX;
+				gridEntity.GetComponent<BoxCollider2DComponent>().IsSensor = false;
 				gridEntity.AddCustomComponent<FrameAnimator>(gridEntity).Add(wallBreakAnimation);
 				break;
 			case 'P': // PLAYER SPAWN POINT
-				gridEntity.GetComponent<Rigidbody2DComponent>().CollisionTriggerOnly;
-				gridEntity.GetComponent<BoxCollider2DComponent>().Trigger = true;
+				gridEntity.GetComponent<BoxCollider2DComponent>().IsSensor = true;
 				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::TILE_PSP;
 				break;
 			case 'M': // MONSTER SPAWN POINT
-				gridEntity.GetComponent<Rigidbody2DComponent>().CollisionTriggerOnly;
-				gridEntity.GetComponent<BoxCollider2DComponent>().Trigger = true;
+				gridEntity.GetComponent<BoxCollider2DComponent>().IsSensor = true;
 				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::TILE_MSP;
 				break;
 			case '-': // EMPTY
-				gridEntity.GetComponent<Rigidbody2DComponent>().CollisionTriggerOnly;
-				gridEntity.GetComponent<BoxCollider2DComponent>().Trigger = true;
+				gridEntity.GetComponent<BoxCollider2DComponent>().IsSensor = true;
 				break;
 			default:
 				HU_CORE_ASSERT(false, "Invalid tile!");
@@ -206,8 +205,8 @@ void GameGrid::DestroyGridEntity(Entity entity)
 		if (entity.HasComponent<BoxCollider2DComponent>())
 			entity.RemoveComponent<BoxCollider2DComponent>();
 
-		entity.AddComponent<Rigidbody2DComponent>().CollisionTriggerOnly;
-		entity.AddComponent<BoxCollider2DComponent>().Trigger = true;
+		entity.AddComponent<Rigidbody2DComponent>().Gravity = false;
+		entity.AddComponent<BoxCollider2DComponent>().IsSensor = true;
 
 		g_GameScene->CreateBody(entity);
 	}

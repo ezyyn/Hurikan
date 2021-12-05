@@ -67,22 +67,32 @@ namespace Hurikan {
 		m_Data.Title = props.Title;
 		m_Data.Width = props.Width;
 		m_Data.Height = props.Height;
-		
 
 		HU_CORE_INFO("Creating window {0} {1} {2}", props.Title, props.Width, props.Height);
 
-
-		if (!s_GLFWInitialized) {
+		if (!s_GLFWInitialized) 
+		{
 			HU_PROFILE_SCOPE("glfwInit");
 			int success = glfwInit();
 			HU_CORE_ASSERT(success, "Could not initialize GLFW!");
 			glfwSetErrorCallback(GLFWErrorCallback);
 			s_GLFWInitialized = true;
 		}
+
 		{
 			HU_PROFILE_SCOPE("Window Creation");
+			glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+			if (props.FullScreen)
+			{
+				GLFWmonitor* primary = glfwGetPrimaryMonitor();
+				const GLFWvidmode* mode = glfwGetVideoMode(primary);
 
-			m_Window = glfwCreateWindow(props.Width, props.Height, props.Title.c_str(), nullptr, nullptr);
+				m_Window = glfwCreateWindow(mode->width, mode->height, props.Title.c_str(), primary, nullptr);
+			}
+			else
+			{
+				m_Window = glfwCreateWindow(props.Width, props.Height, props.Title.c_str(), nullptr, nullptr);
+			}
 		}
 		m_Context = new OpenGLContext(m_Window);
 		m_Context->Init();

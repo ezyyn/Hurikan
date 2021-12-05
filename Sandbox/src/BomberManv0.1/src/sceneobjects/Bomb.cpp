@@ -18,9 +18,7 @@ void Bomb::Init(BombProperties props, Player* player)
 	m_Entity.GetComponent<TransformComponent>().Translation.x = glm::round(g_Player->m_PlayerEntity.GetComponent<TransformComponent>().Translation.x);
 	m_Entity.GetComponent<TransformComponent>().Translation.y = glm::round(g_Player->m_PlayerEntity.GetComponent<TransformComponent>().Translation.y);
 
-	// TODO: FIX OVERLAPPING (optional)
-	
-	player->m_GameGrid->ForEach_1([&m_Entity = m_Entity, &m_GridEntityPlaceHolders = m_GridEntityPlaceHolders](Entity gridEntity) 
+	player->g_GameGrid->ForEach_1([&m_Entity = m_Entity, &m_GridEntityPlaceHolders = m_GridEntityPlaceHolders](Entity gridEntity) 
 	{
 		if (m_Entity.GetComponent<TransformComponent>().Translation == gridEntity.GetComponent<TransformComponent>().Translation)
 		{
@@ -30,7 +28,6 @@ void Bomb::Init(BombProperties props, Player* player)
 		}
 		return false;
 	});
-	
 
 	// Setting up category to which entity belongs
 	m_Entity.AddCustomComponent<EntityTypeComponent>().Type = EntityType::BOMB;
@@ -42,7 +39,7 @@ void Bomb::Init(BombProperties props, Player* player)
 	m_Entity.AddComponent<Rigidbody2DComponent>();
 	// Trigger is true so player can more on the bomb
 	// If player steps out of the bomb, ergo not colliding with it,player will no longer can step on the bomb (see #CollisionDetector.h)
-	m_Entity.AddComponent<BoxCollider2DComponent>().Trigger = true;
+	m_Entity.AddComponent<BoxCollider2DComponent>().IsSensor = true;
 	// Manually creating b2Body in Scene.h due to runtime // TODO: do something with it 
 	g_GameScene->CreateBody(m_Entity);
 	// Setting up animations for the entity
@@ -57,7 +54,7 @@ bool Bomb::WingInitialization(uint32_t y, uint32_t distance, bool condition, flo
 	if (condition)
 	{
 		// Grid Entity
-		Entity gridEntity = g_Player->m_GameGrid->m_GameGrid[y][distance];
+		Entity gridEntity = g_Player->g_GameGrid->m_GameGrid[y][distance];
 
 		// Getting GridEntity coordinates so it can create new entity 
 		// And eventually adding it to the wing #vector
@@ -89,15 +86,25 @@ bool Bomb::WingInitialization(uint32_t y, uint32_t distance, bool condition, flo
 			case EntityType::TILE_EMPTY:
 			{
 				Entity spread = g_GameScene->CreateEntityWithDrawOrder(3, "WingEntity");
-				// TODO: overlapping
-				/*gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::BOMB_SPREAD_EXPLOSION;
-				m_GridEntityPlaceHolders.push_back(gridEntity);*/
 
 				spread.AddComponent<SpriteRendererComponent>(glm::vec4(0.0f));
 				spread.AddCustomComponent<EntityTypeComponent>().Type = EntityType::BOMB_SPREAD_EXPLOSION;
 			
 				spread.GetComponent<TransformComponent>().Translation = grid_translation;
+
+				HU_INFO("x: {0}, y: {1}", spread.GetComponent<TransformComponent>().Translation.x, 
+					spread.GetComponent<TransformComponent>().Translation.y);
+
 				spread.GetComponent<TransformComponent>().Rotation.z = glm::radians(rotationZ);
+				
+				// TODO: Create RelationshipComponent 
+				//spread.AddComponent<Bomb>(this); 
+
+				spread.AddComponent<Rigidbody2DComponent>().Gravity = false;
+				spread.AddComponent<BoxCollider2DComponent>().IsSensor = true;
+				//spread.GetComponent<Rigidbody2DComponent>().Enabled = false;
+				g_GameScene->CreateBody(spread);
+
 				wing.push_back(spread);
 				return false;
 			}
@@ -129,27 +136,27 @@ void Bomb::Deploy()
 	// Iterating through the whole GameGrid
 	// Except borders to prevent array exception
 	// Basic Game Mechanic
-	for (uint32_t y = 1; y < g_Player->m_GameGrid->GetColumns() - 1; y++)
+	for (uint32_t y = 1; y < g_Player->g_GameGrid->GetColumns() - 1; y++)
 	{
-		for (uint32_t x = 1; x < g_Player->m_GameGrid->GetRows() - 1; x++)
+		for (uint32_t x = 1; x < g_Player->g_GameGrid->GetRows() - 1; x++)
 		{
 			// Searhing for the same coordinates as chosen GridEntity so 
 
-			Entity gridentity = g_Player->m_GameGrid->m_GameGrid[y][x];
+			Entity gridentity = g_Player->g_GameGrid->m_GameGrid[y][x];
 			auto& trans = gridentity.GetComponent<TransformComponent>().Translation;
 			// Condition below is searching for the same entity translation coordinates as the bomb.
 			// So it can properly know where spread wings should be
 			if (trans == this->translation()) 
 			{ 
+				HU_INFO("Left Wing");
 				for (uint32_t j = 0; j < m_Properties.Reach; j++)
 				{
 					int index = x - (j + 1);
 					if (WingInitialization(y, index, index >= 1, 90.0f, m_LeftWing))
 						break;
 				}
-
 				AddAnimations(m_LeftWing);
-
+				HU_INFO("Up Wing");
 				for (uint32_t j = 0; j < m_Properties.Reach; j++)
 				{
 					int index = y - (j + 1);
@@ -157,19 +164,20 @@ void Bomb::Deploy()
 						break;
 				}
 				AddAnimations(m_UpWing);
-
+				HU_INFO("Right Wing");
 				for (uint32_t j = 0; j < m_Properties.Reach; j++)
 				{
 					int index = x + (j + 1);
-					if (WingInitialization(y, index, index < g_Player->m_GameGrid->GetColumns(), 270.0f, m_RightWing)) 
+					if (WingInitialization(y, index, index < g_Player->g_GameGrid->GetColumns(), 270.0f, m_RightWing)) 
 						break;
 				}
 				AddAnimations(m_RightWing);
+				HU_INFO("Down Wing");
 
 				for (uint32_t j = 0; j < m_Properties.Reach; j++)
 				{
 					int index = y + (j + 1);
-					if (WingInitialization(index, x, index < g_Player->m_GameGrid->GetRows(), 180.0f, m_DownWing)) 
+					if (WingInitialization(index, x, index < g_Player->g_GameGrid->GetRows(), 180.0f, m_DownWing)) 
 						break;
 				}
 				AddAnimations(m_DownWing);
@@ -183,6 +191,10 @@ void Bomb::Deploy()
 
 	center.AddComponent<SpriteRendererComponent>(glm::vec4(0.0f));
 	center.AddCustomComponent<EntityTypeComponent>().Type = EntityType::BOMB_SPREAD_EXPLOSION;
+	center.AddComponent<Rigidbody2DComponent>().Gravity = false;
+	center.AddComponent<BoxCollider2DComponent>().IsSensor = true;
+	g_GameScene->CreateBody(center);
+
 
 	auto& fa = center.AddCustomComponent<FrameAnimator>(center);
 	fa.Add(g_Player->m_BombSpreadCenterAnimation);
@@ -226,6 +238,28 @@ bool Bomb::Tick(Timestep ts)
 			}
 		}
 
+		// Player collision with explosion
+		for (auto& wings : m_Properties.SpreadEntities)
+		{
+			for (auto& spread : wings)
+			{
+				auto& position = spread.GetComponent<TransformComponent>().Translation;
+				
+				float deltaX = glm::abs(g_Player->position().x - position.x);
+				float deltaY = glm::abs(g_Player->position().y - position.y);
+
+				if (deltaX < 1.0f && deltaY < 1.0f && g_Player->stats().Health > 0)
+				{
+					// Bomb explosion => insta-dead
+					g_Player->OnFatalHit();
+					g_Player->stats().Health = 0;
+					goto BREAKOUT;
+				}
+			}
+		}
+	BREAKOUT:
+
+		// Bomb exploded -> vanishes
 		m_Entity.GetComponent<SpriteRendererComponent>().Color = glm::vec4(0.0f);
 
 		// Setting alpha value to 1 
@@ -234,10 +268,13 @@ bool Bomb::Tick(Timestep ts)
 			for (auto& entity : wings)
 			{
 				entity.GetComponent<SpriteRendererComponent>().Color = glm::vec4(1.0f);
+				b2Body* rb = (b2Body*)entity.GetComponent<Rigidbody2DComponent>().RuntimeBody;
+				//rb->GetFixtureList()[0].SetSensor(false);
+				//spread.AddComponent<BoxCollider2DComponent>().IsSensor = false;
 			}
 		}
-		// Destroying boxes in the way
-		// Playing vanishing wall break animation
+		// Destroyes boxes in the way
+		// Plays wall break animation
 		for (auto& tobedestroyed : m_Destroyed) 
 		{
 			tobedestroyed.GetComponent<FrameAnimator>().Switch("WallBreakAnimation");
@@ -272,7 +309,7 @@ void Bomb::DestroyItSelf()
 
 	for (auto& entity : m_GridEntityPlaceHolders)
 	{
-		g_Player->m_GameGrid->DestroyGridEntity(entity);
+		g_Player->g_GameGrid->DestroyGridEntity(entity);
 	}
 	for (auto& wings : m_Properties.SpreadEntities) 
 	{

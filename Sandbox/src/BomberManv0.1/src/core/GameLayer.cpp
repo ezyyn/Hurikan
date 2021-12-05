@@ -5,62 +5,51 @@
 
 #include <imgui.h>
 
-#define MEMTRACK
-#ifdef MEMTRACK
-size_t usage;
-void* operator new(size_t size)
+#include "../core/AudioManager.h"
+#include "../text/GameText.h"
+
+extern size_t usage;
+
+GameLayer::GameLayer(GameApplication* app)
 {
-	usage += size;
-	return malloc(size);
+	g_App = app;
 }
 
-void operator delete(void* memory, size_t size)
-{
-	usage -= size;
-	free(memory);
-}
-#endif
-
-GameLayer::GameLayer(uint32_t width, uint32_t height) : m_Width(width), m_Height(height)
-{
-}
-
+// TODO: TNT maybe ? 
+// TODO: FULL SCREEN
 void GameLayer::OnAttach()
-{	
-#if 0
-	Ref<SubTexture2D> subtexture = SubTexture2D::CreateFromCoords(spritesheet
-		, { 1,1 }, {64, 64});
-	auto& ent = m_InGameScene->CreateEntityWithDrawOrder(2, "Test");
-	ent.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f)).SubTexture = subtexture;
-#endif
-	m_GameCamera.Init(&m_InGameScene, m_Width, m_Height);
-	m_GameGrid.Init(&m_InGameScene, &m_Player, ROWS, COLUMNS);
-	m_Player.Init(&m_InGameScene, &m_GameGrid);
-	
-	m_InGameScene.OnRuntimeStart();
-	m_CollisionDetector.Init(&m_InGameScene);
-	m_InGameScene.SetContactListener((b2ContactListener*)&m_CollisionDetector);
+{
+	// Text 
+	GameText::Init();
+	AudioManager::Init();
+
+	m_GameMenu.Init(g_App->GetWindow().GetWidth(), g_App->GetWindow().GetHeight());
+
+	// Audio stuff
+	//AudioManager::Play(AudioType::LEVEL_THEME);
 }
 
 void GameLayer::OnDetach()
 {
 }
-
 void GameLayer::OnUpdate(Timestep& ts)
 {
-	RenderCommand::SetClearColor({ 0.2f,0.2f,0.2f,1.0f });
+	RenderCommand::SetClearColor(glm::vec4(0.1f, 0.1f, 0.1f, 1.0f));
 	RenderCommand::Clear();
 	Renderer2D::ResetStats();
 
-	m_Player.OnUpdate(ts);
-	m_GameGrid.OnUpdate(ts);
-	
-	// Rendering and updating physics
-	m_InGameScene.OnUpdateRuntime(ts);
+	m_GameMenu.OnUpdate(ts);
+
+	if (m_GameMenu.Closed())
+		g_App->Close();
 }
+// Player movement slide float
+extern float pms = 0.2f;
 
 void GameLayer::OnImGuiRender()
 {
+	// ImGui is causing textures to flicker ??? TODO: Investigate
+#if 0
 	auto stats = Renderer2D::GetStats();
 	ImGui::Begin("Stats");
 	ImGui::Text("Renderer2D Stats:");
@@ -68,11 +57,15 @@ void GameLayer::OnImGuiRender()
 	ImGui::Text("Quads: %d", stats.QuadCount);
 	ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
 	ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
+	ImGui::Separator();
+	ImGui::DragFloat("drag", &pms, 0.05f, 0.1f, 1.0f);
+	//ImGui::Text("Player Health: %d", m_GameManager.m_Player.stats().Health);
 #ifdef MEMTRACK
 	ImGui::Separator();
 	ImGui::Text("Current memory usage: %d bytes", usage);
 #endif
 	ImGui::End();
+#endif 
 }
 
 void GameLayer::OnEvent(Event& e)
@@ -84,15 +77,13 @@ void GameLayer::OnEvent(Event& e)
 
 bool GameLayer::OnKeyPressed(KeyPressedEvent& e)
 {
-	m_Player.OnKeyPressed(e);
-
+	m_GameMenu.OnKeyPressed(e); 
 	return false;
 }
 
 bool GameLayer::OnKeyReleased(KeyReleasedEvent& e)
 {
-	m_Player.OnKeyReleased(e);
-
+	m_GameMenu.OnKeyReleased(e);
 	return false;
 }
 

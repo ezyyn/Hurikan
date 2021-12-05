@@ -2,13 +2,15 @@
 
 #include <Hurikan.h>
 using namespace Hurikan;
-enum class EntityType
 
+// TODO: Move to different files
+
+enum class EntityType
 {
 	CAMERA, PLAYER, BACKGROUND,
 	BOMB, BOMB_SPREAD_EXPLOSION,
 	TILE_EMPTY, TILE_TO_BE_EMPTY,
-	TILE_WALL, TILE_BOX, TILE_PSP, TILE_MSP, TILE_OCCUPIED_BOMB,
+	TILE_WALL, TILE_BOX, TILE_PSP, TILE_MSP,
 	ENEMY
 };
 
@@ -24,6 +26,7 @@ struct EntityTypeComponent
 struct FrameData
 {
 	Ref<SubTexture2D> Subtexture;
+	glm::vec4 Color = glm::vec4(1.0f);
 	float Delay;
 };
 
@@ -51,10 +54,18 @@ struct AnimationBlock
 	AnimationBlock(const AnimationBlock&) = default;
 	AnimationBlock(const std::vector<FrameData>& animation, const std::string& tag) : Animation(animation), Tag(tag) {}
 private:
-	bool nextFrameStop = false;
+
+	bool firstFrame = true;
 
 	void OnUpdate(SpriteRendererComponent& src, Timestep ts)
 	{
+		if (firstFrame)
+		{
+			firstFrame = false;
+			src.SubTexture = Animation[Index].Subtexture;
+			src.Color = Animation[Index].Color;
+		}
+
 		if (Animation.empty())
 			return;
 
@@ -66,22 +77,24 @@ private:
 		if (m_CurrentFrameTime >= Animation[Index].Delay / 1000) // <- definetely change
 		{
 			m_CurrentFrameTime = 0.0f;
-			if (nextFrameStop)
+			if (m_NextFrameStop)
 			{
-				nextFrameStop = false;
+				m_NextFrameStop = false;
 				Index = 0;
 			}
 			else {
 				Index++;
 			}
 			//Index = (Index + 1) % Animation.size();
+			src.SubTexture = Animation[Index].Subtexture;
+			src.Color = Animation[Index].Color;
 		}
 
 		if (Index == Animation.size() - 1)
 		{
 			if (Repeat)
 			{
-				nextFrameStop = true;
+				m_NextFrameStop = true;
 			}
 			else
 			{
@@ -91,11 +104,13 @@ private:
 			}
 		}
 
-		src.SubTexture = Animation[Index].Subtexture;
 	}
 private:
+	bool m_NextFrameStop = false;
 	float m_CurrentFrameTime = 0.0f;
 
 	friend class FrameAnimator;
 };
+
+
 

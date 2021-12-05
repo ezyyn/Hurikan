@@ -57,9 +57,7 @@ void FrameAnimator::Add(const AnimationBlock& ba)
 void FrameAnimator::Switch(const std::string& tag)
 {
 	for (auto& block : m_Blocks)
-	{
 		block.Active = strcmp(block.Tag.c_str(), tag.c_str()) == 0;
-	}
 }
 
 AnimationBlock& FrameAnimator::GetActiveAnimation()
@@ -69,8 +67,9 @@ AnimationBlock& FrameAnimator::GetActiveAnimation()
 		if (block.Active)
 			return block;
 	}
+
 	// past here frameAnimator does not have any active animations! retuning empty animblock
-	return m_EmptyBA;
+	return AnimationBlock();
 }
 
 AnimationBlock FrameAnimator::GetAnimationByTag(const std::string& tag)

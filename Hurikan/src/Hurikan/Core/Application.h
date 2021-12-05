@@ -38,7 +38,6 @@ namespace Hurikan {
 		void Run();
 		void Close();
 
-
 		void PushLayer(Layer* layer);
 		void PushOverLay(Layer* overlayer);
 

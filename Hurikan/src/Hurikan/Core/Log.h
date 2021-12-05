@@ -24,6 +24,7 @@ namespace Hurikan
 #define HU_WARN(...) ::Hurikan::Log::GetClientLogger()->warn(__VA_ARGS__);
 #define HU_TRACE(...) ::Hurikan::Log::GetClientLogger()->trace(__VA_ARGS__);
 #define HU_INFO(...) ::Hurikan::Log::GetClientLogger()->info(__VA_ARGS__);
+#define HU_INFO(...) ::Hurikan::Log::GetClientLogger()->info(__VA_ARGS__);
 #define HU_FATAL(...) ::Hurikan::Log::GetClientLogger()->critical(__VA_ARGS__);
 //Core log macros
 #define HU_CORE_ERROR(...) ::Hurikan::Log::GetCoreLogger()->error(__VA_ARGS__);

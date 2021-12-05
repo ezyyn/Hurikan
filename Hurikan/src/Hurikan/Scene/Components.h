@@ -1,4 +1,5 @@
 #pragma once
+//#include <vector>
 
 #include "Hurikan/Core/UUID.h"
 
@@ -20,6 +21,27 @@ namespace Hurikan
 		IDComponent() = default;
 		IDComponent(const IDComponent&) = default;
 	};
+
+	// Basic implementation of parent/children hierarchy system
+	//struct RelationshipComponent
+	//{
+	//	Entity Parent;
+	//	std::vector<Entity> Children;
+	//
+	//	void Add(Entity entity)
+	//	{
+	//		Children.push_back(entity);
+	//	}
+	//	void Remove(Entity entity)
+	//	{
+	//		std::vector<Entity>::iterator position = std::find(Children.begin(), Children.end(), 8);
+	//		if (position != Children.end()) // == myVector.end() means the element was not found
+	//			Children.erase(position);
+	//	}
+	//
+	//	RelationshipComponent() = default;
+	//	RelationshipComponent(const RelationshipComponent&) = default;
+	//};
 
 	struct TagComponent
 	{
@@ -99,12 +121,12 @@ namespace Hurikan
 		BodyType Type = BodyType::Static;
 		bool FixedRotation = false;
 		bool Gravity = true;
-		bool CollisionTriggerOnly = false;
+		bool Enabled = true;  // TODO: possible rename
 
 		// Storage for runtime
 		void* RuntimeBody = nullptr;
 
-		Rigidbody2DComponent() = default;
+		Rigidbody2DComponent() = delete;
 		Rigidbody2DComponent(const Rigidbody2DComponent&) = default;
 	};
 
@@ -117,7 +139,9 @@ namespace Hurikan
 		float Friction = 0.5f;
 		float Restitution = 0.0f;
 		float RestitutionThreshold = 0.5f;
-		bool Trigger = false;
+		bool  IsSensor = false;
+		int CategoryBits = 0;
+		int MaskBits = 0;
 
 		// Storage for runtime
 		void* RuntimeFixture = nullptr;
@@ -135,7 +159,9 @@ namespace Hurikan
 		float Friction = 0.5f;
 		float Restitution = 0.0f;
 		float RestitutionThreshold = 0.5f;
-		bool Trigger = false;
+		bool  IsSensor = true;
+		int CategoryBits;
+		int MaskBits;
 
 		// Storage for runtime
 		void* RuntimeFixture = nullptr;

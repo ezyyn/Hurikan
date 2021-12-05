@@ -134,13 +134,13 @@ namespace Hurikan {
 	};
 }
 #ifdef HU_PROFILE 
-#define HU_PROFILE_BEGIN_SESSION(name, filepath) ::Hurikan::Instrumentor::Get().BeginSession(name,filepath)
-#define HU_PROFILE_END_SESSION() ::Hurikan::Instrumentor::Get().EndSession()
-#define HU_PROFILE_SCOPE(name) ::Hurikan::InstrumentationTimer timer##__LINE__(name);
-#define HU_PROFILE_FUNCTION() HU_PROFILE_SCOPE(__FUNCSIG__)
+	#define HU_PROFILE_BEGIN_SESSION(name, filepath) ::Hurikan::Instrumentor::Get().BeginSession(name,filepath)
+	#define HU_PROFILE_END_SESSION() ::Hurikan::Instrumentor::Get().EndSession()
+	#define HU_PROFILE_SCOPE(name) ::Hurikan::InstrumentationTimer timer##__LINE__(name);
+	#define HU_PROFILE_FUNCTION() HU_PROFILE_SCOPE(__FUNCSIG__)
 #else
-#define HU_PROFILE_BEGIN_SESSION(name, filepath)
-#define HU_PROFILE_END_SESSION()
-#define HU_PROFILE_SCOPE(name)
-#define HU_PROFILE_FUNCTION()
+	#define HU_PROFILE_BEGIN_SESSION(name, filepath)
+	#define HU_PROFILE_END_SESSION()
+	#define HU_PROFILE_SCOPE(name)
+	#define HU_PROFILE_FUNCTION()
 #endif

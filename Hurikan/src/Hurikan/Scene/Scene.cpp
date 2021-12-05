@@ -11,7 +11,6 @@
 
 namespace Hurikan
 {
-
 	static b2BodyType Rigidbody2DTypeToBox2DBody(Rigidbody2DComponent::BodyType bodyType)
 	{
 		switch (bodyType)
@@ -31,26 +30,28 @@ namespace Hurikan
 
 	Scene::~Scene()
 	{
+		delete m_PhysicsWorld;
+		m_PhysicsWorld = nullptr;
 	}
 
 	Entity Scene::CreateEntity(const std::string& name)
 	{
 		return CreateEntitywithUUID(UUID(), name);
 	}
-
 	Entity Scene::CreateEntitywithUUID(UUID uuid, const std::string& name /*= std::string()*/)
 	{
 		Entity entity = { m_Registry.create(), this };
 		entity.AddComponent<IDComponent>(uuid);
 		entity.AddComponent<TransformComponent>();
+	//	entity.AddComponent<RelationshipComponent>().Parent = entity; // TODO: should apply only on parentless entities
 		auto& tag = entity.AddComponent<TagComponent>();
 		tag.Tag = name.empty() ? "Entity" : name;
-
 		return entity;
 	}
 
 	void Scene::DestroyEntity(Entity entity)
 	{
+		// Removes it from draw order
 		for (int i = 0; i < m_DrawOrder.size(); i++)
 		{
 			if (entity == m_DrawOrder[i].second)
@@ -58,8 +59,15 @@ namespace Hurikan
 				m_DrawOrder.erase(m_DrawOrder.begin() + i);
 			}
 		}
-
-		if(entity.HasComponent<Rigidbody2DComponent>())
+		// If entity has any children attached to it, remove them as well
+		//for (auto& child : entity.GetChildren())
+		//{
+		//	if (child.HasComponent<Rigidbody2DComponent>())
+		//		DestroyBody(child);
+		//	m_Registry.destroy(child);
+		//}
+		// Destroys RigidBody in b2World too
+		if (entity.HasComponent<Rigidbody2DComponent>())
 			DestroyBody(entity);
 
 		m_Registry.destroy(entity);
@@ -111,18 +119,17 @@ namespace Hurikan
 		// Update scripts
 		{
 			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
+			{
+				// TODO: Move to Scene::OnScenePlay
+				if (!nsc.Instance)
 				{
-					// TODO: Move to Scene::OnScenePlay
-					if (!nsc.Instance)
-					{
-						nsc.Instance = nsc.InstantiateScript();
-						nsc.Instance->m_Entity = Entity{ entity, this };
-						nsc.Instance->OnCreate();
-					}
+					nsc.Instance = nsc.InstantiateScript();
+					nsc.Instance->m_Entity = Entity{ entity, this };
+					nsc.Instance->OnCreate();
+				}
 
-
-					nsc.Instance->OnUpdate(ts);
-				});
+				nsc.Instance->OnUpdate(ts);
+			});
 		}
 
 		UpdatePhysics(ts);
@@ -286,15 +293,14 @@ namespace Hurikan
 		bodyDef.position.Set(transform.Translation.x, transform.Translation.y);
 		bodyDef.angle = transform.Rotation.z;
 		
+		// TODO: fix memory leak
 		bodyDef.userData.pointer = (uintptr_t)(new Entity(entity));
 
 		b2Body* body = m_PhysicsWorld->CreateBody(&bodyDef);
 		body->SetFixedRotation(rb2d.FixedRotation);
-		body->SetEnabled(!rb2d.CollisionTriggerOnly);
+		body->SetEnabled(rb2d.Enabled);
 		if (!rb2d.Gravity)
 			body->SetGravityScale(0.0f);
-
-		rb2d.RuntimeBody = body;
 
 		if (entity.HasComponent<BoxCollider2DComponent>())
 		{
@@ -309,8 +315,10 @@ namespace Hurikan
 			fixtureDef.friction = bc2d.Friction;
 			fixtureDef.restitution = bc2d.Restitution;
 			fixtureDef.restitutionThreshold = bc2d.RestitutionThreshold;
-			fixtureDef.isSensor = bc2d.Trigger;
-			body->CreateFixture(&fixtureDef);
+			fixtureDef.isSensor = bc2d.IsSensor;
+			//fixtureDef.filter.categoryBits = bc2d.CategoryBits; // <- Is that category
+			//fixtureDef.filter.maskBits = bc2d.MaskBits;		// <- Collides with other categories
+			body->CreateFixture(&fixtureDef); 
 		}
 
 		if (entity.HasComponent<CircleCollider2DComponent>())
@@ -327,9 +335,13 @@ namespace Hurikan
 			fixtureDef.friction = cc2d.Friction;
 			fixtureDef.restitution = cc2d.Restitution;
 			fixtureDef.restitutionThreshold = cc2d.RestitutionThreshold;
-			fixtureDef.isSensor = cc2d.Trigger;
+			fixtureDef.isSensor = cc2d.IsSensor;
+			//fixtureDef.filter.categoryBits = cc2d.CategoryBits; // <- Is that category
+			//fixtureDef.filter.maskBits = cc2d.MaskBits;		// <- Collides with other categories
 			body->CreateFixture(&fixtureDef);
 		}
+
+		rb2d.RuntimeBody = body;
 	}
 
 	void Scene::SetContactListener(b2ContactListener* listener)
@@ -339,6 +351,8 @@ namespace Hurikan
 
 	void Scene::DestroyBody(Entity entity)
 	{
+		b2Body* rb = (b2Body*)entity.GetComponent<Rigidbody2DComponent>().RuntimeBody;
+
 		m_PhysicsWorld->DestroyBody((b2Body*)entity.GetComponent<Rigidbody2DComponent>().RuntimeBody);
 	}
 

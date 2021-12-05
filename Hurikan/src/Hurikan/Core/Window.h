@@ -9,7 +9,10 @@ namespace Hurikan {
    struct WindowProps {
 		std::string Title;
 		uint32_t Width, Height;
-		WindowProps(const std::string& title = "Hurikan Engine", uint32_t w = 1280, uint32_t h = 720) :Title(title), Width(w), Height(h)
+		bool FullScreen;
+
+		WindowProps(const std::string& title = "Hurikan Engine", bool fullScreen = false, uint32_t w = 1280, uint32_t h = 720) 
+			: Title(title), Width(w), Height(h), FullScreen(fullScreen)
 		{
 		}
 	};

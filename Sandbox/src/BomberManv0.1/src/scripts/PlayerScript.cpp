@@ -2,79 +2,101 @@
 
 #include "FrameAnimatorScript.h"
 
+#include "../core/AudioManager.h"
+
 void PlayerScript::OnCreate()
 {
+	m_Stats = &GetComponent<PlayerStats>();
+	m_Transform = &GetComponent<TransformComponent>();
+	m_PlayerBody = (b2Body*)GetComponent<Rigidbody2DComponent>().RuntimeBody;
+	m_FrameAnimator = &GetComponent<FrameAnimator>();
 }
 
 void PlayerScript::OnDestroy()
 {
 }
 
+extern float pms;
+float timer1 = pms;
+float timer2 = 0;
+
 void PlayerScript::OnUpdate(Timestep ts)
 {
-
 	// Animation
-	auto& animationController = GetComponent<FrameAnimator>();
-	animationController.OnUpdate(ts);
+	m_FrameAnimator->OnUpdate(ts);
+
+	if (m_Stats->Health <= 0)
+		return;
 
 	// Movement
-	auto* translation = (b2Body*)GetComponent<Rigidbody2DComponent>().RuntimeBody;
 
 	Direction = { 0, 0 };
 
-	static bool canBeRotated = true;
 	if (Input::IsKeyPressed(Key::W))
 	{
 		Direction.y = 1;
-		canBeRotated = true;
-		GetComponent<TransformComponent>().Scale.x = glm::abs(GetComponent<TransformComponent>().Scale.x);
+		m_IsRotated = false;
+		m_Transform->Scale.x = glm::abs(GetComponent<TransformComponent>().Scale.x);
 
-		if (animationController.GetActiveAnimation().Tag != "UpAnimation")
-			animationController.Switch("UpAnimation");
+		if (m_FrameAnimator->GetActiveAnimation().Tag != "UpAnimation")
+			m_FrameAnimator->Switch("UpAnimation");
 	}
 	if (Input::IsKeyPressed(Key::D))
 	{
-		Direction.x = 1;
-		if (canBeRotated)
+		timer1 += ts;
+		if (timer1 >= pms)
 		{
-			canBeRotated = false;
-			GetComponent<TransformComponent>().Scale.x *= (-1);
+			timer1 = 0;
+		//	AudioManager::Play(AudioType::PLAYER_HORIZONTAL_MOVEMENT);
 		}
 
-		if (animationController.GetActiveAnimation().Tag != "LeftAnimation")
-			animationController.Switch("LeftAnimation");
+		Direction.x = 1;
+		if (!m_IsRotated)
+		{
+			m_IsRotated = true;
+			m_Transform->Scale.x *= (-1);
+		}
+
+		if (m_FrameAnimator->GetActiveAnimation().Tag != "LeftAnimation")
+			m_FrameAnimator->Switch("LeftAnimation");
 	}
 
 	if (Input::IsKeyPressed(Key::S))
 	{
 		Direction.y = -1;
-		canBeRotated = true;
-		GetComponent<TransformComponent>().Scale.x = glm::abs(GetComponent<TransformComponent>().Scale.x);
+		m_IsRotated = false;
+		m_Transform->Scale.x = glm::abs(GetComponent<TransformComponent>().Scale.x);
 
-
-		if (animationController.GetActiveAnimation().Tag != "DownAnimation")
+		if (m_FrameAnimator->GetActiveAnimation().Tag != "DownAnimation")
 		{
-			animationController.Switch("DownAnimation");
+			m_FrameAnimator->Switch("DownAnimation");
 		}
 	}
 	if (Input::IsKeyPressed(Key::A))
 	{
+		timer1 += ts;
+		if (timer1 >= pms)
+		{
+			timer1 = 0;
+		//	AudioManager::Play(AudioType::PLAYER_HORIZONTAL_MOVEMENT);
+		}
+
 		Direction.x = -1;
-		canBeRotated = true;
-		GetComponent<TransformComponent>().Scale.x = glm::abs(GetComponent<TransformComponent>().Scale.x);
+		m_IsRotated = false;
+		m_Transform->Scale.x = glm::abs(GetComponent<TransformComponent>().Scale.x);
 		
-		if (animationController.GetActiveAnimation().Tag != "LeftAnimation")
-			animationController.Switch("LeftAnimation");
+		if (m_FrameAnimator->GetActiveAnimation().Tag != "LeftAnimation")
+			m_FrameAnimator->Switch("LeftAnimation");
 	}
 
 	if (Direction == b2Vec2(0, 0))
 	{
-		animationController.Stop();
+		m_FrameAnimator->Stop();
 	}
 
-	Velocity.x = Direction.x * Speed;
-	Velocity.y = Direction.y * Speed;
+	Velocity.x = Direction.x * m_Stats->Speed;
+	Velocity.y = Direction.y * m_Stats->Speed;
 
-	translation->SetLinearVelocity(Velocity);
+	m_PlayerBody->SetLinearVelocity(Velocity);
 }
 

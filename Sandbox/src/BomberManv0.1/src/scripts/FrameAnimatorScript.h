@@ -5,9 +5,12 @@ using namespace Hurikan;
 
 #include "../core/GameComponents.h"
 
+// TODO: investigate and propably rewrite( use registry id system? )
 class FrameAnimator
 {
 public:
+	FrameAnimator() = default;
+	FrameAnimator(const FrameAnimator&) = default;
 	FrameAnimator(Entity target);
 	~FrameAnimator() = default;
 
@@ -25,6 +28,5 @@ private:
 	glm::vec2 m_SingleSpriteSize = {0.0f, 0.0f};
 
 	std::vector<AnimationBlock> m_Blocks;
-	AnimationBlock m_EmptyBA;
 	Entity m_TargetEntity;
 };

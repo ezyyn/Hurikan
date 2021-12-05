@@ -20,8 +20,6 @@
 
 #define HU_EXPAND_MACRO(x) x
 #define HU_STRINGIFY_MACRO(x) #x
-
-
 #define HU_CORE_ASSERT(x,...) if(!(x)){ HU_CORE_ERROR(__VA_ARGS__); __debugbreak();}
 
 #define BIT(x) (1 << x)

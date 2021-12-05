@@ -17,18 +17,19 @@ namespace Hurikan {
 		HU_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 
-		m_Window = Window::Create(WindowProps(name,width,height));
+		m_Window = Window::Create(WindowProps(name, false, width, height));
 		m_Window->SetEventCallback(HU_BIND_EVENT_FN(Application::OnEvent));
-		//m_Window->SetVSync(false);
-		
 		Renderer::Init();
 
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverLay(m_ImGuiLayer);
-	
 	}
 	Application::~Application() {
 		HU_PROFILE_FUNCTION();
+
+		for (Layer* layer : m_LayerStack) {
+			layer->OnDetach();
+		}
 
 		Renderer::Shutdown();
 	}

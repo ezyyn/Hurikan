@@ -36,25 +36,22 @@ class Bomb
 {
 public:
 	Bomb() = default;
+	Bomb(const Bomb&) = default;
 	~Bomb() = default;
 
-	Entity GetBombEntity()
-	{
-		return m_Entity;
-	}
+	Entity GetBombEntity() { return m_Entity; }
 
 	void Init(BombProperties props, Player* player);
 	void Deploy();
 	bool Tick(Timestep ts);
+
+	BombState GetState() { return m_Properties.State; }
 public:
 	std::vector<Entity> m_Destroyed = {};
 	std::vector<Entity> m_PostAnimations = {};
 private:
 	void DestroyItSelf();
 	void Explode();
-private:
-	Scene* g_GameScene;
-	Player* g_Player;
 private:
 	BombProperties m_Properties;
 
@@ -75,4 +72,7 @@ private:
 	}
 	bool WingInitialization(uint32_t y, uint32_t distance, bool condition, float rotationZ, std::vector<Entity>& wing);
 	void AddAnimations(std::vector<Entity> wing);
+private:
+	Scene* g_GameScene;
+	Player* g_Player;
 };

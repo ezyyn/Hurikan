@@ -15,7 +15,7 @@ namespace Hurikan
 	public:
 		Entity() = default;
 		Entity(entt::entity id, Scene* scene);
-		Entity(const Entity& other) = default;
+		Entity(const Entity&) = default;
 
 		template<typename T>
 		bool HasComponent()
@@ -53,17 +53,6 @@ namespace Hurikan
 			return m_Scene->m_Registry.get<T>(m_EntityHandle);
 		}
 
-		// Experimental, promising
-		template<typename T>
-		T* GetNativeScript()
-		{
-			HU_CORE_ASSERT(HasComponent<NativeScriptComponent>(), "Entity does not have NSC! {0}");
-			if (m_Scene->m_Registry.get<NativeScriptComponent>(m_EntityHandle).Instance == nullptr)
-				m_Scene->InstantiateScript(Entity(m_EntityHandle, m_Scene));
-
-			return (T*)m_Scene->m_Registry.get<NativeScriptComponent>(m_EntityHandle).Instance;
-		}
-
 		template<typename T>
 		void RemoveComponent()
 		{
@@ -76,6 +65,16 @@ namespace Hurikan
 		operator entt::entity() const { return m_EntityHandle; }
 
 		UUID GetUUID() { return GetComponent<IDComponent>().ID; }
+		//std::vector<Entity>& GetChildren() { return GetComponent<RelationshipComponent>().Children; }
+		//Entity GetParent()
+		//{
+		//	Entity parent = GetComponent<RelationshipComponent>().Parent;
+		//	// Entity has no parent ( maybe implement root entity f.e. Scene)
+		//	if (parent.m_EntityHandle == entt::null)
+		//		parent = *this;
+		//
+		//	return parent;
+		//}
 		
 		bool operator==(const Entity& other) const { return m_EntityHandle == other.m_EntityHandle && m_Scene == other.m_Scene; }
 		bool operator!=(const Entity& other) const { return *this == other; }

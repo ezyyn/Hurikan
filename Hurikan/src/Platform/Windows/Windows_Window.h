@@ -5,27 +5,11 @@
 
 #include <GLFW/glfw3.h>
 
-namespace Hurikan {
-	class Windows_Window : public Window {
-	private:
-		GLFWwindow* m_Window;
-		GraphicsContext* m_Context;
-
-		struct WindowData {
-			std::string Title;
-			unsigned int Width,Height;
-			bool VSync;
-
-			EventCallbackFn EventCallback;
-		};
-		
-		WindowData m_Data;
-
-	private:
-		virtual void Init(const WindowProps& props);
-		virtual void Shutdown();
-
-	public: 
+namespace Hurikan 
+{
+	class Windows_Window : public Window 
+	{
+	public:
 		Windows_Window(const WindowProps& props);
 		virtual ~Windows_Window();
 
@@ -39,5 +23,22 @@ namespace Hurikan {
 		void SetVSync(bool enabled) override;
 		bool IsVSyncEnabled() const override;
 		inline virtual void* GetNativeWindow() const { return m_Window; }
+	private:
+		virtual void Init(const WindowProps& props);
+		virtual void Shutdown();
+	private:
+		GLFWwindow* m_Window;
+		GraphicsContext* m_Context;
+
+		struct WindowData {
+			std::string Title;
+			unsigned int Width, Height;
+			bool VSync;
+
+			EventCallbackFn EventCallback;
+		};
+
+		WindowData m_Data;
+
 	};
 }

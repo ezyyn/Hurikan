@@ -16,7 +16,7 @@ namespace Hurikan {
 
 	void Renderer::Shutdown()
 	{
-
+		Renderer2D::Shutdown();
 	}
 
 	void Renderer::OnWindowResize(uint32_t w, uint32_t h)

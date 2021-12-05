@@ -15,7 +15,10 @@ protected:
 		//camera.SetPerspectiveNearClip(0.1f);
 		//camera.SetPerspectiveFarClip(1000.0f);
 
-		auto& camera = GetComponent<CameraComponent>().Camera;
+		auto& camera_cmp = GetComponent<CameraComponent>();
+		camera_cmp.FixedAspectRatio = true;
+		auto& camera = camera_cmp.Camera;
+		
 		camera.SetProjectionType(SceneCamera::ProjectionType::Orthographic);
 		camera.SetOrthographicSize(18);
 	}

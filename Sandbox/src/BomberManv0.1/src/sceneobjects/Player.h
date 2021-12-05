@@ -9,6 +9,13 @@ using namespace Hurikan;
 
 struct PlayerStats
 {
+	PlayerStats() = default;
+	PlayerStats(const PlayerStats&) = default;
+
+	uint32_t Health = 3;
+	uint32_t Power = 1; 
+	uint32_t Speed = 5;
+
 	uint32_t MaxBombCount = 5;
 	uint32_t PlacedBombs = 0;
 };
@@ -23,13 +30,25 @@ public:
 
 	bool OnKeyPressed(KeyPressedEvent& e);
 	bool OnKeyReleased(KeyReleasedEvent& e);
+
+	const std::vector<Bomb>& GetPlacedBomb()
+	{
+		return m_PlacedBombs;
+	}
+	void OnFatalHit();
+public:
+	// Entt helper functions TODO: maybe rewrite to be consistent
+	glm::vec3& position() { return m_PlayerEntity.GetComponent<TransformComponent>().Translation; }
+	PlayerStats& stats() { return m_PlayerEntity.GetComponent<PlayerStats>(); }
 private:
 	void PlaceBomb();
 	bool CanCreateAnother();
 private:
 	Scene* g_GameScene;
+	GameGrid* g_GameGrid;
 private:
-	Ref<Texture2D> m_PlayerTexture;
+	bool m_Initialized = false;
+
 	Ref<Texture2D> m_BombAnimationSpriteSheet;
 
 	// Player Animations
@@ -37,6 +56,7 @@ private:
 	AnimationBlock m_PlayerBreathingAnimation;
 	AnimationBlock m_PlayerUpAnimation;
 	AnimationBlock m_PlayerDownAnimation;
+	AnimationBlock m_PlayerDead;
 
 	// Bomb Animations
 	AnimationBlock m_BombTickingAnimation;
@@ -49,11 +69,13 @@ private:
 
 	Entity m_PlayerEntity;
 
-	PlayerStats m_PlayerStats;
-
 	std::vector<Bomb> m_PlacedBombs = {};
 
-	GameGrid* m_GameGrid;
+	Ref<Texture2D> SpriteSheet;
+	Ref<Texture2D> SpriteSheet1;
+
+	FrameAnimator* m_FrameAnimator = nullptr;
+
 	friend class GameGrid;
 	friend class Bomb;
 };
