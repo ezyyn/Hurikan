@@ -23,15 +23,27 @@ namespace Hurikan {
 		}
 	};
 
+	struct ApplicationSpecification
+	{
+		std::string Name = "Hurikan App";
+		uint32_t WindowWidth = 1600, WindowHeight = 900;
+		bool WindowDecorated = false;
+		bool Fullscreen = false;
+		bool VSync = true;
+		bool StartMaximized = true;
+		bool Resizable = true;
+		bool EnableImGui = true;
+	};
+
 	class Application
 	{
 	public:
-		Application(const std::string& name, ApplicationCommandLineArgs args = ApplicationCommandLineArgs(), uint32_t width = 1280, uint32_t height = 720);
+		Application(ApplicationSpecification specification, ApplicationCommandLineArgs args = ApplicationCommandLineArgs());
 		virtual ~Application();
 
-		void OnEvent(Event& e);
+		virtual void OnInit() {}
 
-		static inline Application& Get() { return *s_Instance; }
+		void OnEvent(Event& e);
 
 		ApplicationCommandLineArgs GetCommandLineArgs() const { return m_CommandLineArgs; }
 
@@ -44,11 +56,20 @@ namespace Hurikan {
 		ImGuiLayer* GetImGuiLayer() { return m_ImGuiLayer; }
 
 		inline Window& GetWindow() { return *m_Window; }
+
+		static inline Application& Get() { return *s_Instance; }
+
+		inline std::pair<uint32_t, uint32_t> GetWindowSize() { return std::make_pair(GetWindow().GetWidth(), GetWindow().GetHeight()); }
+
+		void SetFullScreen(bool fullscreen);
+		inline bool FullScreenEnabled() const { return m_Window->FullScreen(); }
+
 	private:
 		bool OnWindowClose(WindowCloseEvent& _event);
 		bool OnWindowResize(WindowResizeEvent& _event);
 	private:
 		ApplicationCommandLineArgs m_CommandLineArgs;
+		ApplicationSpecification m_Specification;
 		Scope<Window> m_Window;
 		ImGuiLayer* m_ImGuiLayer;
 

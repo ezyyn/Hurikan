@@ -8,13 +8,12 @@ namespace Hurikan {
 	class Storm : public Application
 	{
 	public:
-		Storm(ApplicationCommandLineArgs args) : Application("Storm Editor",args, 1600, 900)
+		Storm(ApplicationCommandLineArgs args) : Application("Storm Editor", args, 1600, 900)
 		{
 			PushLayer(new EditorLayer());
 		}
 		~Storm()
 		{
-
 		}
 	};
 

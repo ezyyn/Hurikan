@@ -4,7 +4,8 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 
-namespace Hurikan {
+namespace Hurikan 
+{
 
 	OpenGLContext::OpenGLContext(GLFWwindow* windowHandle) : m_WindowHandle(windowHandle)
 	{

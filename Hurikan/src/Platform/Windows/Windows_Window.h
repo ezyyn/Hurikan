@@ -23,6 +23,10 @@ namespace Hurikan
 		void SetVSync(bool enabled) override;
 		bool IsVSyncEnabled() const override;
 		inline virtual void* GetNativeWindow() const { return m_Window; }
+
+		void SetFullScreen(bool fullscreen) override;
+		bool FullScreen() const override;
+
 	private:
 		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();
@@ -30,15 +34,18 @@ namespace Hurikan
 		GLFWwindow* m_Window;
 		GraphicsContext* m_Context;
 
-		struct WindowData {
+		struct WindowData 
+		{
 			std::string Title;
 			unsigned int Width, Height;
+			int DefaultPosition[2];
+			int DefaultSize[2];
 			bool VSync;
+			bool FullScreen;
 
 			EventCallbackFn EventCallback;
 		};
 
 		WindowData m_Data;
-
 	};
 }

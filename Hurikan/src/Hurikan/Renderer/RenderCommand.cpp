@@ -3,10 +3,7 @@
 
 #include "Platform/OpenGL/OpenGLRendererAPI.h"
 
-
-namespace Hurikan {
+namespace Hurikan 
+{
 	RendererAPI* RenderCommand::s_RendererAPI = new OpenGLRendererAPI;
-
-	
-
 }

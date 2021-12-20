@@ -159,7 +159,7 @@ namespace Hurikan
 		float Friction = 0.5f;
 		float Restitution = 0.0f;
 		float RestitutionThreshold = 0.5f;
-		bool  IsSensor = true;
+		bool IsSensor = false;
 		int CategoryBits;
 		int MaskBits;
 

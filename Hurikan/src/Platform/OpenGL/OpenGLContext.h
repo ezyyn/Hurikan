@@ -3,9 +3,11 @@
 
 struct GLFWwindow;
 
-namespace Hurikan {
+namespace Hurikan 
+{
 
-	class OpenGLContext : public GraphicsContext {
+	class OpenGLContext : public GraphicsContext 
+	{
 	public:
 		OpenGLContext(GLFWwindow* windowHandle);
 		virtual void Init() override;

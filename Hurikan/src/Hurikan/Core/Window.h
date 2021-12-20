@@ -6,7 +6,8 @@
 
 namespace Hurikan {
 
-   struct WindowProps {
+   struct WindowProps 
+   {
 		std::string Title;
 		uint32_t Width, Height;
 		bool FullScreen;
@@ -16,9 +17,20 @@ namespace Hurikan {
 		{
 		}
 	};
+   // TODO: use this
+   struct WindowSpecification
+   {
+	   std::string Title = "Hurikan App";
+	   uint32_t Width = 1280;
+	   uint32_t Height = 720;
+	   bool Decorated = true;
+	   bool Fullscreen = false;
+	   bool VSync = true;
+   };
+
 	//Window Interface
-	class Window {
-	
+	class Window 
+	{
 	public:
 		using EventCallbackFn = std::function<void(Event&)>;
 		virtual ~Window() {}
@@ -32,6 +44,9 @@ namespace Hurikan {
 		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
 		virtual void SetVSync(bool enabled) = 0;
 		virtual bool IsVSyncEnabled() const = 0;
+
+		virtual void SetFullScreen(bool fullscreen) = 0;
+		virtual bool FullScreen() const = 0;
 
 		virtual void* GetNativeWindow() const = 0;
 

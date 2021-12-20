@@ -4,7 +4,8 @@
 
 namespace Hurikan {
 
-	class OpenGLRendererAPI : public RendererAPI {
+	class OpenGLRendererAPI : public RendererAPI 
+	{
 		virtual void Init() override;
 		virtual void SetViewport(uint32_t x, uint32_t y, uint32_t w, uint32_t h) override;
 

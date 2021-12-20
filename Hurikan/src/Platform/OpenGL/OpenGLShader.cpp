@@ -132,7 +132,6 @@ namespace Hurikan {
 	OpenGLShader::~OpenGLShader()
 	{
 		HU_PROFILE_FUNCTION();
-
 		glDeleteProgram(m_RendererID);
 	}
 

@@ -11,11 +11,12 @@
 
 #include <glad/glad.h>
 
-namespace Hurikan {
-	
+namespace Hurikan 
+{
 	static bool s_GLFWInitialized = false;
 
-	static void GLFWErrorCallback(int error, const char* desc) {
+	static void GLFWErrorCallback(int error, const char* desc) 
+	{
 		HU_CORE_ERROR("GLFW Error ({0}): {1}", error, desc);
 	}
 
@@ -37,6 +38,9 @@ namespace Hurikan {
 	void Windows_Window::Shutdown()
 	{
 		glfwDestroyWindow(m_Window);
+		glfwTerminate();
+		delete m_Context;
+		m_Context = nullptr;
 	}
 
 	void Windows_Window::OnUpdate()
@@ -60,15 +64,45 @@ namespace Hurikan {
 		return m_Data.VSync;
 	}
 
-	void Windows_Window::Init(const WindowProps& props) 
+	void Windows_Window::SetFullScreen(bool fullscreen)
+	{
+		if (m_Data.FullScreen == fullscreen)
+			return;
+
+		m_Data.FullScreen = fullscreen;
+
+		if (m_Data.FullScreen)
+		{
+			glfwGetWindowPos(m_Window, &m_Data.DefaultPosition[0], &m_Data.DefaultPosition[1]);
+			glfwGetWindowSize(m_Window, &m_Data.DefaultSize[0], &m_Data.DefaultSize[1]);
+
+			GLFWmonitor* primary = glfwGetPrimaryMonitor();
+			const GLFWvidmode* mode = glfwGetVideoMode(primary);
+
+			glfwSetWindowMonitor(m_Window, primary, 0, 0, mode->width, mode->height, mode->refreshRate);
+		}
+		else
+			glfwSetWindowMonitor(m_Window, nullptr, m_Data.DefaultPosition[0], m_Data.DefaultPosition[1], m_Data.DefaultSize[0], m_Data.DefaultSize[1], 0);
+
+	}
+
+	bool Windows_Window::FullScreen() const
+	{
+		return m_Data.FullScreen;
+	}
+
+	void Windows_Window::Init(const WindowProps& props)
 	{
 		HU_PROFILE_FUNCTION();
 
 		m_Data.Title = props.Title;
 		m_Data.Width = props.Width;
 		m_Data.Height = props.Height;
+		m_Data.DefaultSize[0] = props.Width;
+		m_Data.DefaultSize[1] = props.Height;
+		m_Data.FullScreen = props.FullScreen;
 
-		HU_CORE_INFO("Creating window {0} {1} {2}", props.Title, props.Width, props.Height);
+		HU_CORE_INFO("Creating window {0} {1} {2} {3}", props.Title, props.Width, props.Height, props.FullScreen);
 
 		if (!s_GLFWInitialized) 
 		{
@@ -79,14 +113,19 @@ namespace Hurikan {
 			s_GLFWInitialized = true;
 		}
 
+		// Primary monitor needed for launching in fullscreen
+		GLFWmonitor* primary = glfwGetPrimaryMonitor();
+		const GLFWvidmode* mode = glfwGetVideoMode(primary);
+
+		// Centers the window
+		m_Data.DefaultPosition[0] = mode->width / 2 - m_Data.Width / 2;
+		m_Data.DefaultPosition[1] = mode->height / 2 - m_Data.Height / 2;
+
 		{
 			HU_PROFILE_SCOPE("Window Creation");
 			glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 			if (props.FullScreen)
 			{
-				GLFWmonitor* primary = glfwGetPrimaryMonitor();
-				const GLFWvidmode* mode = glfwGetVideoMode(primary);
-
 				m_Window = glfwCreateWindow(mode->width, mode->height, props.Title.c_str(), primary, nullptr);
 			}
 			else
@@ -94,6 +133,9 @@ namespace Hurikan {
 				m_Window = glfwCreateWindow(props.Width, props.Height, props.Title.c_str(), nullptr, nullptr);
 			}
 		}
+
+		glfwSetWindowPos(m_Window, m_Data.DefaultPosition[0], m_Data.DefaultPosition[1]);
+
 		m_Context = new OpenGLContext(m_Window);
 		m_Context->Init();
 

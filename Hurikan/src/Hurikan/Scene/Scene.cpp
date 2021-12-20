@@ -7,6 +7,14 @@
 
 #include "Hurikan/Renderer/Renderer2D.h"
 
+// Box2D
+#include "box2d/b2_world.h"
+#include "box2d/b2_body.h"
+#include "box2d/b2_fixture.h"
+#include "box2d/b2_polygon_shape.h"
+#include "box2d/b2_circle_shape.h"
+#include "box2d/b2_joint.h"
+
 #include <glm/glm.hpp>
 
 namespace Hurikan
@@ -30,8 +38,8 @@ namespace Hurikan
 
 	Scene::~Scene()
 	{
-		delete m_PhysicsWorld;
-		m_PhysicsWorld = nullptr;
+		if(m_PhysicsWorld != nullptr)
+			OnRuntimeStop();
 	}
 
 	Entity Scene::CreateEntity(const std::string& name)
@@ -87,6 +95,9 @@ namespace Hurikan
 
 	void Scene::OnRuntimeStop()
 	{
+		for (int i = 0; i < m_PhysicsUserData.size(); i++)
+			delete m_PhysicsUserData[i];
+
 		delete m_PhysicsWorld;
 		m_PhysicsWorld = nullptr;
 	}
@@ -94,8 +105,8 @@ namespace Hurikan
 	void Scene::UpdatePhysics(Timestep ts)
 	{
 		// Physics
-		const int32_t velocityIterations = 6;
-		const int32_t positionIterations = 2;
+		constexpr int32_t velocityIterations = 6;
+		constexpr int32_t positionIterations = 2;
 		m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);
 
 		// Retrieve transform from Box2D
@@ -158,7 +169,7 @@ namespace Hurikan
 
 			if (m_DrawOrder.empty())
 			{
-				auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
+				auto& group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 				for (int i = group.size() - 1; i >= 0; i--)
 				{
 					auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(group[i]);
@@ -166,12 +177,23 @@ namespace Hurikan
 					Renderer2D::DrawSprite(transform.GetTransform(), sprite, (int)group[i]);
 				}
 			}
-			else {
+			else 
+			{
 				for (int j = 0; j < m_DrawOrder.size(); j++)
 				{
-					if (m_DrawOrder[j].second.HasComponent<SpriteRendererComponent>()) {
+					if (m_DrawOrder[j].second.HasComponent<SpriteRendererComponent>()) 
+					{
 						auto& transform = m_DrawOrder[j].second.GetComponent<TransformComponent>().GetTransform();
 						auto& sprite = m_DrawOrder[j].second.GetComponent<SpriteRendererComponent>();
+
+						if (sprite.Texture != nullptr)
+						{
+							Renderer2D::DrawSprite(transform, sprite, m_DrawOrder[j].second);
+							continue;
+						}
+
+						if(sprite.Color.w == 0.0f || sprite.SubTexture == nullptr)
+							continue;
 
 						Renderer2D::DrawSprite(transform, sprite, m_DrawOrder[j].second);
 					}
@@ -226,10 +248,12 @@ namespace Hurikan
 		return {};
 	}
 
-	Hurikan::Entity Scene::GetEntityByTag(const std::string& _tag)
+
+
+	Entity Scene::GetEntityByTag(const std::string& _tag)
 	{
 		auto view = m_Registry.view<TagComponent>();
-		for (auto entity : view)
+		for (auto& entity : view)
 		{
 			const auto& tag = view.get<TagComponent>(entity).Tag;
 			if (tag == _tag)
@@ -238,7 +262,7 @@ namespace Hurikan
 		return {};
 	}
 
-	Hurikan::Entity Scene::GetEntityByUUID(UUID uuid)
+	Entity Scene::GetEntityByUUID(UUID uuid)
 	{
 		auto view = m_Registry.view<IDComponent>();
 		for (auto entity : view)
@@ -258,16 +282,15 @@ namespace Hurikan
 		nsc.Instance->OnCreate();
 	}
 
-	bool compare(const std::pair<int, Entity>& i, const  std::pair<int, Entity>& j)
-	{
-		return (i.first < j.first);
-	}
-
 	Entity Scene::CreateEntityWithDrawOrder(int order, const std::string& name /*= std::string()*/) // Ascending order
 	{
 		Entity entity = CreateEntity(name);
 		m_DrawOrder.push_back({ order, entity });
-		std::sort(m_DrawOrder.begin(), m_DrawOrder.end(),compare);
+		std::sort(m_DrawOrder.begin(), m_DrawOrder.end(), 
+			[](const std::pair<int, Entity>& i, const  std::pair<int, Entity>& j) 
+			{
+				return (i.first < j.first);
+			});
 		return entity;
 	}
 
@@ -293,8 +316,9 @@ namespace Hurikan
 		bodyDef.position.Set(transform.Translation.x, transform.Translation.y);
 		bodyDef.angle = transform.Rotation.z;
 		
-		// TODO: fix memory leak
-		bodyDef.userData.pointer = (uintptr_t)(new Entity(entity));
+		//Entity* userData = new Entity(entity);
+		//m_PhysicsUserData.push_back(userData);
+		//bodyDef.userData.pointer = (uintptr_t)userData;
 
 		b2Body* body = m_PhysicsWorld->CreateBody(&bodyDef);
 		body->SetFixedRotation(rb2d.FixedRotation);
@@ -353,7 +377,16 @@ namespace Hurikan
 	{
 		b2Body* rb = (b2Body*)entity.GetComponent<Rigidbody2DComponent>().RuntimeBody;
 
-		m_PhysicsWorld->DestroyBody((b2Body*)entity.GetComponent<Rigidbody2DComponent>().RuntimeBody);
+		// Deleting heap allocated b2UserData
+		//for (int i = 0; i < m_PhysicsUserData.size(); i++)
+		//{
+		//	if (entity == *m_PhysicsUserData[i])
+		//	{
+		//		delete m_PhysicsUserData[i];
+		//		m_PhysicsUserData.erase(m_PhysicsUserData.begin() + i);
+		//	}
+		//}
+		m_PhysicsWorld->DestroyBody(rb);
 	}
 
 	template<typename T>

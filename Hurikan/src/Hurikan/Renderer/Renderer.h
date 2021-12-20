@@ -8,7 +8,8 @@
 
 namespace Hurikan {
 
-	class Renderer {
+	class Renderer 
+	{
 	public:
 		static void Init();
 		static void Shutdown();
@@ -22,11 +23,12 @@ namespace Hurikan {
 
 		static inline RendererAPI::API GetAPI() { return RendererAPI::GetAPI(); }
 	private:
-		struct SceneData {
+		struct SceneData 
+		{
 			glm::mat4 ViewProjectionMatrix;
 		};
 
-		static SceneData* m_SceneData;
+		static SceneData m_SceneData;
 	};
 }
 

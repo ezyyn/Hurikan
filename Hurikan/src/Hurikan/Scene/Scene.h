@@ -6,13 +6,6 @@
 
 #include "Hurikan/Renderer/EditorCamera.h"
 
-// Box2D
-#include "box2d/b2_world.h"
-#include "box2d/b2_body.h"
-#include "box2d/b2_fixture.h"
-#include "box2d/b2_polygon_shape.h"
-#include "box2d/b2_circle_shape.h"
-
 class b2World;
 class b2ContactListener;
 
@@ -42,16 +35,23 @@ namespace Hurikan
 
 		Entity GetPrimaryCameraEntity();
 		
+		template<typename... Components>
+		auto& GetAllEntitiesWith()
+		{
+			return m_Registry.view<Components...>();
+		}
 		Entity GetEntityByTag(const std::string& _tag);
 		Entity GetEntityByUUID(UUID uuid);
 
 		// TODO: Find better way to do this
 		void InstantiateScript(Entity entity);
+
 		Entity CreateEntityWithDrawOrder(int order, const std::string & name = std::string());
 		void ChangeDrawIndex(int index, Entity entity);
-		void DestroyBody(Entity entity);
 
 		void CreateBody(Entity entity);
+		void DestroyBody(Entity entity);
+
 		void SetContactListener(b2ContactListener* listener);
 	private:
 		template<typename T>
@@ -61,6 +61,10 @@ namespace Hurikan
 		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 
 		b2World* m_PhysicsWorld = nullptr;
+
+		// Testing
+		// Heap allocated entities due to keep userData
+		std::vector<Entity*> m_PhysicsUserData;
 
 		friend class Entity;
 		friend class SceneSerializer;

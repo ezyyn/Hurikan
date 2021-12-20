@@ -2,10 +2,11 @@
 
 #include "RendererAPI.h"
 
-namespace Hurikan {
-	class RenderCommand {
+namespace Hurikan 
+{
+	class RenderCommand 
+	{
 	public:
-
 		inline static void Init()
 		{
 			s_RendererAPI->Init();
@@ -26,11 +27,16 @@ namespace Hurikan {
 			s_RendererAPI->Clear();
 		}
 
-
-		inline static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0) {
+		inline static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0) 
+		{
 
 			uint32_t count = indexCount == 0 ? vertexArray->GetIndexBuffer()->GetCount() : indexCount; 
 			s_RendererAPI->DrawIndexed(vertexArray,count);
+		}
+
+		inline static void Shutdown()
+		{
+			delete s_RendererAPI;
 		}
 	private:
 		static RendererAPI* s_RendererAPI;

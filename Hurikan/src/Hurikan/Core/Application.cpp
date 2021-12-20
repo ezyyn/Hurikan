@@ -9,42 +9,54 @@ namespace Hurikan {
 
 	Application* Application::s_Instance = nullptr;
 
-	Application::Application(const std::string& name = "Hurikan App", ApplicationCommandLineArgs args, uint32_t width /*= 1280*/, uint32_t height /*= 720*/)
-		: m_CommandLineArgs(args)
+	Application::Application(ApplicationSpecification specification, ApplicationCommandLineArgs args)
+		: m_Specification(specification), m_CommandLineArgs(args)
 	{
 		HU_PROFILE_FUNCTION();
 
 		HU_CORE_ASSERT(!s_Instance, "Application already exists!");
 		s_Instance = this;
 
-		m_Window = Window::Create(WindowProps(name, false, width, height));
+		m_Window = Window::Create(WindowProps(specification.Name, specification.StartMaximized, specification.WindowWidth, specification.WindowHeight));
 		m_Window->SetEventCallback(HU_BIND_EVENT_FN(Application::OnEvent));
 		Renderer::Init();
 
-		m_ImGuiLayer = new ImGuiLayer();
-		PushOverLay(m_ImGuiLayer);
+		if (specification.EnableImGui)
+		{
+			m_ImGuiLayer = new ImGuiLayer();
+			PushOverLay(m_ImGuiLayer);
+		}
 	}
-	Application::~Application() {
+	Application::~Application() 
+	{
 		HU_PROFILE_FUNCTION();
 
-		for (Layer* layer : m_LayerStack) {
+		for (Layer* layer : m_LayerStack) 
+		{
 			layer->OnDetach();
 		}
 
 		Renderer::Shutdown();
 	}
 
-	void Application::PushLayer(Layer* layer) {
+	void Application::PushLayer(Layer* layer) 
+	{
 		HU_PROFILE_FUNCTION();
 
 		m_LayerStack.PushLayer(layer);
 		layer->OnAttach();
 	}
-	void Application::PushOverLay(Layer* overlayer) {
+	void Application::PushOverLay(Layer* overlayer) 
+	{
 		HU_PROFILE_FUNCTION();
 
 		m_LayerStack.PushOverLay(overlayer);
 		overlayer->OnAttach();
+	}
+
+	void Application::SetFullScreen(bool fullscreen)
+	{
+		m_Window->SetFullScreen(fullscreen);
 	}
 
 	void Application::OnEvent(Event& e) {
@@ -61,16 +73,18 @@ namespace Hurikan {
 		}
 	}
 
-	void Application::Run() {
+	void Application::Run() 
+	{
 		HU_PROFILE_FUNCTION();
 
-		while (m_Running) {
+		OnInit();
+		while (m_Running) 
+		{
 			HU_PROFILE_SCOPE("RunLoop");
 
 			float time = (float)glfwGetTime(); // -> Platform::GetTime()
 			Timestep timestep = time - m_LastFrameTime;
 			m_LastFrameTime = time;
-
 			if (!m_Minimized) 
 			{
 				{
@@ -81,14 +95,17 @@ namespace Hurikan {
 					}
 				}
 
-				m_ImGuiLayer->Begin();
+				if (m_Specification.EnableImGui)
 				{
-					HU_PROFILE_SCOPE("Layerstack OnImGuiRender");
+					m_ImGuiLayer->Begin();
+					{
+						HU_PROFILE_SCOPE("Layerstack OnImGuiRender");
 
-					for (Layer* layer : m_LayerStack)
-						layer->OnImGuiRender();
+						for (Layer* layer : m_LayerStack)
+							layer->OnImGuiRender();
+					}
+					m_ImGuiLayer->End();
 				}
-				m_ImGuiLayer->End();
 			}
 			m_Window->OnUpdate();
 		}
@@ -102,7 +119,7 @@ namespace Hurikan {
 	bool Application::OnWindowClose(WindowCloseEvent& e)
 	{
 		m_Running = false;
-		return true;
+		return false;
 	}
 	bool Application::OnWindowResize(WindowResizeEvent& e)
 	{
