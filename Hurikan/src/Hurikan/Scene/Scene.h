@@ -63,8 +63,9 @@ namespace Hurikan
 		b2World* m_PhysicsWorld = nullptr;
 
 		// Testing
-		// Heap allocated entities due to keep userData
 		std::vector<Entity*> m_PhysicsUserData;
+		// Queue for "to be created in PhysicsWorld" entities
+		std::vector<Entity> m_CreateB2BodyQueue;
 
 		friend class Entity;
 		friend class SceneSerializer;

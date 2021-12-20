@@ -1,5 +1,7 @@
 #pragma once
 
+#include <box2d/b2_body.h>
+
 #include <Hurikan.h>
 using namespace Hurikan;
 
@@ -25,9 +27,13 @@ public:
 private:
 	MonsterProperties m_Properties;
 
+	glm::vec2 m_Direction = { 1.0f,1.0f };
+	glm::vec2 m_Velocity = { 1.0f, 1.0f };
+	float m_Speed = 1.0f;
+
+	b2Body* m_Body;
+
 	Entity m_Handle;
-private:
-	Scene* g_GameScene = nullptr;
 };
 
 

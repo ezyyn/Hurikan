@@ -37,11 +37,11 @@ void Grid::Generate(const Level& level, glm::vec2* const startpos)
 	m_CurrentLevel = level;
 	
 	// Every level could have unique textures
-	Entity backgroundEntity = g_GameScene->CreateEntityWithDrawOrder(0, "Gamegrid-Background");
-	backgroundEntity.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f)).Texture = m_BackgroundTile;
-	backgroundEntity.GetComponent<TransformComponent>().Scale = { m_CurrentLevel.Width - 2, m_CurrentLevel.Width - 2 , 0.0f };
-	backgroundEntity.GetComponent<TransformComponent>().Translation = { glm::round(m_CurrentLevel.Width / 2), -glm::round(m_CurrentLevel.Height / 2) - 1, 0 };
-	backgroundEntity.GetComponent<SpriteRendererComponent>().TilingFactor = (float)m_CurrentLevel.Width;
+	//Entity backgroundEntity = g_GameScene->CreateEntityWithDrawOrder(0, "Gamegrid-Background");
+	//backgroundEntity.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f)).Texture = m_BackgroundTile;
+	//backgroundEntity.GetComponent<TransformComponent>().Scale = { m_CurrentLevel.Width - 2, m_CurrentLevel.Width - 2 , 0.0f };
+	//backgroundEntity.GetComponent<TransformComponent>().Translation = { glm::round(m_CurrentLevel.Width / 2), -glm::round(m_CurrentLevel.Height / 2) - 1, 0 };
+	//backgroundEntity.GetComponent<SpriteRendererComponent>().TilingFactor = (float)m_CurrentLevel.Width;
 
 	m_GameGrid = new GridNode * [GetLevelHeight()];
 
@@ -110,8 +110,14 @@ void Grid::Generate(const Level& level, glm::vec2* const startpos)
 				break;
 			}
 			case 'M': // MONSTER SPAWN POINT
+			{
 				gridEntity.GetComponent<BoxCollider2DComponent>().IsSensor = true;
+
+				MonsterProperties props;
+				props.StartPosition = gridEntity.Transform().Translation;
+				m_EnemySpawner.Spawn(props);
 				break;
+			}
 			case '-': // EMPTY
 				gridEntity.GetComponent<BoxCollider2DComponent>().IsSensor = true;
 				break;
@@ -162,7 +168,10 @@ void Grid::OnUpdate(Timestep ts)
 			}
 		}
 	}
-BREAKOUT:;
+BREAKOUT:
+
+
+	m_EnemySpawner.OnUpdate(ts);
 }
 
 void Grid::Shutdown()

@@ -5,9 +5,6 @@
 
 #include "../sceneobjects/Enemy.h"
 
-#include <Hurikan.h>
-using namespace Hurikan;
-
 struct GridNode
 {
 	// SearchAlg stuff
@@ -77,7 +74,7 @@ private:
 	GridNode* m_PlayerGridPosition;
 
 	// Monsters
-
+	EnemySpawner m_EnemySpawner;
 };
 /*
 

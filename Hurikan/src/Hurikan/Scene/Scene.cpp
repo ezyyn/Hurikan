@@ -143,6 +143,21 @@ namespace Hurikan
 			});
 		}
 
+		m_Registry.view<Rigidbody2DComponent>().each([=](auto entity, auto& rb2d)
+		{
+			if (rb2d.RuntimeBody == nullptr)
+			{
+				for (size_t i = 0; i < m_CreateB2BodyQueue.size(); i++)
+				{
+					if (!m_PhysicsWorld->IsLocked())
+					{
+						CreateBody(m_CreateB2BodyQueue[i]);
+						m_CreateB2BodyQueue.erase(m_CreateB2BodyQueue.begin() + i);
+					}
+				}
+			}
+		});
+
 		UpdatePhysics(ts);
 
 		// Render 2D
@@ -192,7 +207,7 @@ namespace Hurikan
 							continue;
 						}
 
-						if(sprite.Color.w == 0.0f || sprite.SubTexture == nullptr)
+						if(sprite.Color.w == 0.0f && sprite.SubTexture == nullptr)
 							continue;
 
 						Renderer2D::DrawSprite(transform, sprite, m_DrawOrder[j].second);
