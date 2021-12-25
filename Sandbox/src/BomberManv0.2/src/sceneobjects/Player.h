@@ -45,6 +45,7 @@ public:
 	{
 		return { glm::round(m_Handle.Transform().Translation.x), glm::round(m_Handle.Transform().Translation.y) };
 	}
+
 public:
 	bool m_Alive = true;
 private:

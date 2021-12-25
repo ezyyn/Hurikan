@@ -8,7 +8,8 @@
 
 #include "EditorCamera.h"
 
-namespace Hurikan {
+namespace Hurikan 
+{
 	class Renderer2D
 	{
 	public:

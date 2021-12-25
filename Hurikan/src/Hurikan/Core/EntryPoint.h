@@ -13,24 +13,6 @@
 
 extern Hurikan::Application* Hurikan::CreateApplication(ApplicationCommandLineArgs args);
 
-#define MEMTRACK
-#ifdef MEMTRACK
-
-extern size_t usage = 0;
-
-void* operator new(size_t size)
-{
-	usage += size;
-	return malloc(size);
-}
-
-void operator delete(void* memory, size_t size)
-{
-	usage -= size;
-	free(memory);
-}
-#endif
-
 int main(int argc, char** argv) 
 {
 	//_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
@@ -56,10 +38,6 @@ int main(int argc, char** argv)
 	HU_PROFILE_END_SESSION();
 
 	_CrtDumpMemoryLeaks();
-
-#ifdef MEMTRACK
-	HU_CORE_WARN("Memory leak: {0}", usage);
-#endif
 	return 0;
 }
 

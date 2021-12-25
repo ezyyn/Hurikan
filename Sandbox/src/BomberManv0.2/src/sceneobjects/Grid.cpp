@@ -60,8 +60,7 @@ void Grid::Generate(const Level& level, glm::vec2* const startpos)
 			gridEntity.AddComponent<BoxCollider2DComponent>();
 
 			m_GameGrid[y][x].Handle = gridEntity;
-			m_GameGrid[y][x].IndexX = x;
-			m_GameGrid[y][x].IndexY = y;
+			m_GameGrid[y][x].Position = { x, y };
 
 			// Counter-clockwise
 			if (y > 0)
@@ -128,6 +127,48 @@ void Grid::Generate(const Level& level, glm::vec2* const startpos)
 		}
 	}
 }
+/// <summary>
+/// Helper method for iterating through the grid
+/// </summary>
+void Grid::Each(const std::function<bool(GridNode*)>& func)
+{
+	for (int y = 0; y < GetLevelHeight(); ++y)
+	{
+		for (int x = 0; x < GetLevelWidth(); ++x)
+		{
+			if (func(&m_GameGrid[y][x]))
+				return;
+		}
+	}
+}
+
+GridNode* Grid::SearchFor(Entity entity)
+{
+	for (int y = 1; y < GetLevelHeight() - 1; ++y)
+	{
+		for (int x = 1; x < GetLevelWidth() - 1; ++x)
+		{
+			if (m_GameGrid[y][x].Handle.Transform().Translation.x == glm::round(entity.Transform().Translation.x) &&
+				m_GameGrid[y][x].Handle.Transform().Translation.y == glm::round(entity.Transform().Translation.y))
+					return &m_GameGrid[y][x];	
+		}
+	}
+	return nullptr;
+}
+
+GridNode* Grid::SearchFor(glm::vec3 position)
+{
+	for (int y = 1; y < GetLevelHeight() - 1; ++y)
+	{
+		for (int x = 1; x < GetLevelWidth() - 1; ++x)
+		{
+			if (m_GameGrid[y][x].Handle.Transform().Translation.x == glm::round(position.x) &&
+				m_GameGrid[y][x].Handle.Transform().Translation.y == glm::round(position.y))
+				return &m_GameGrid[y][x];
+		}
+	}
+	return nullptr;
+}
 
 void Grid::OnUpdate(Timestep ts)
 {
@@ -154,24 +195,20 @@ void Grid::OnUpdate(Timestep ts)
 	}
 
 	// Checks every frame for player to move on the grid
-	for (int y = 0; y < GetLevelHeight(); ++y)
-	{
-		for (int x = 0; x < GetLevelWidth(); ++x)
-		{
-			if (m_GameGrid[y][x].Handle.Transform().Translation.x == g_Player->RoundPosition().x &&
-				m_GameGrid[y][x].Handle.Transform().Translation.y == g_Player->RoundPosition().y)
-			{
-				//HU_INFO("{0} | {1}", m_GameGrid[y][x].IndexX, m_GameGrid[y][x].IndexY);
-				//HU_INFO("{0} | {1}", m_GameGrid[y][x].Handle.Transform().Translation.x, m_GameGrid[y][x].Handle.Transform().Translation.y);
-				m_PlayerGridPosition = &m_GameGrid[y][x];
-				goto BREAKOUT;
-			}
-		}
-	}
-BREAKOUT:
-
-
+	m_PlayerGridPosition = SearchFor(g_Player->Position2());
+	
 	m_EnemySpawner.OnUpdate(ts);
+
+	// AI STUFF
+	if (m_PlayerPreviousPosition != m_PlayerGridPosition || m_BombEvent)
+	{
+		HU_INFO("Player position changed! Calculating new path.");
+		m_BombEvent = false;
+		m_PlayerPreviousPosition = m_PlayerGridPosition;
+
+		m_EnemySpawner.UpdatePaths();
+	}
+
 }
 
 void Grid::Shutdown()

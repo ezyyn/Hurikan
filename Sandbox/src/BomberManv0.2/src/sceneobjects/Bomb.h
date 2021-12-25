@@ -45,13 +45,13 @@ public:
 
 	Entity GetBombEntity() { return m_Handle; }
 
-	void Deploy();
 	bool Tick(Timestep ts);
 
 	BombState GetState() { return m_Properties.State; }
 
 	const glm::vec3& Position() { return m_Handle.Transform().Translation; }
 private:
+	void Deploy();
 	void WingInit();
 
 	void DestroyItSelf();
@@ -92,6 +92,4 @@ public:
 	void OnUpdate(Timestep ts);
 private:
 	Level m_CurrentLevel;
-private:
-	GridNode** g_GameGrid = nullptr;
 };

@@ -4,6 +4,11 @@
 
 void SceneManager::Init()
 {
+#ifdef EXPRM
+	m_TestScene.Init();
+	return;
+#endif
+
 	GameText::Init();
 
 	m_MainMenu.Init(this);
@@ -12,12 +17,21 @@ void SceneManager::Init()
 
 void SceneManager::Shutdown()
 {
+#ifdef EXPRM
+	m_TestScene.Shutdown();
+	return;
+#endif
 	m_MainMenu.Shutdown();
 	m_Game.Shutdown();
 }
 
 void SceneManager::OnUpdate(Timestep ts)
 {
+	
+#ifdef EXPRM
+	m_TestScene.OnUpdate(ts);
+	return;
+#endif
 	switch (m_GameState)
 	{
 	case GameState::MENU:
@@ -42,6 +56,10 @@ bool F4_Pressed = false;
 
 bool SceneManager::OnKeyPressed(KeyPressedEvent& e)
 {
+#ifdef EXPRM
+	return false;
+#endif
+
 	// TODO: maybe move to GameLayer.h because scenemananager should not handle this
 	if (e.GetKeyCode() == Key::F4 && !F4_Pressed)
 	{
@@ -60,6 +78,10 @@ bool SceneManager::OnKeyPressed(KeyPressedEvent& e)
 
 bool SceneManager::OnKeyReleased(KeyReleasedEvent& e)
 {
+#if EXPRM
+	return false;
+#endif
+
 	F4_Pressed = false;
 
 	if (m_GameState == GameState::MENU)
@@ -76,6 +98,7 @@ void SceneManager::Switch(GameState state)
 	case GameState::INGAME:
 	{
 		Level firstLevel;
+		/*
 		firstLevel.Height = 15;
 		firstLevel.Width = 68;
 		firstLevel.MapSkeleton += "####################################################################";
@@ -93,6 +116,26 @@ void SceneManager::Switch(GameState state)
 		firstLevel.MapSkeleton += "#-#-#-#-#-#-#------------------------------------------------------#";
 		firstLevel.MapSkeleton += "#P-----------------------------------------------------------------#";
 		firstLevel.MapSkeleton += "####################################################################";
+		*/
+		firstLevel.Height = 15;
+		firstLevel.Width = 15;
+		firstLevel.MapSkeleton += "###############";
+		firstLevel.MapSkeleton += "#------BBB----#";
+		firstLevel.MapSkeleton += "#-#-#-#-#-#-#-#";
+		firstLevel.MapSkeleton += "#----BBBB-----#";
+		firstLevel.MapSkeleton += "#-#-#-#-#-#-#-#";
+		firstLevel.MapSkeleton += "#--------B----#";
+		firstLevel.MapSkeleton += "#-#-#-#-#-#B#-#";
+		firstLevel.MapSkeleton += "#---BBBBB--BB-#";
+		firstLevel.MapSkeleton += "#-#-#-#-#-#B#-#";
+		firstLevel.MapSkeleton += "#------BBBB---#";
+		firstLevel.MapSkeleton += "#-#-#-#-#-#-#-#";
+		firstLevel.MapSkeleton += "#--M----------#";
+		firstLevel.MapSkeleton += "#-#-#-#-#-#-#-#";
+		firstLevel.MapSkeleton += "#P------------#";
+		firstLevel.MapSkeleton += "###############";
+
+
 		m_Game.Play(firstLevel);
 		break;
 	}

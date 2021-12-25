@@ -9,7 +9,8 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-namespace Hurikan {
+namespace Hurikan 
+{
 
 	struct QuadVertex
 	{
@@ -75,7 +76,7 @@ namespace Hurikan {
 
 		s_Data.QuadVertexBufferBase = new QuadVertex[s_Data.MaxVertices];
 
-		uint32_t* quadIndices = new uint32_t[s_Data.MaxIndices];
+		uint32_t quadIndices[s_Data.MaxIndices];
 
 		uint32_t offset = 0;
 		for (uint32_t i = 0; i < s_Data.MaxIndices; i += 6)
@@ -93,7 +94,7 @@ namespace Hurikan {
 
 		Ref<IndexBuffer> quadIB = IndexBuffer::Create(quadIndices, s_Data.MaxIndices);
 		s_Data.QuadVertexArray->SetIndexBuffer(quadIB);
-		delete[] quadIndices;
+		//delete[] quadIndices;
 
 		s_Data.WhiteTexture = Texture2D::Create(1, 1);
 		uint32_t whiteTextureData = 0xffffffff;

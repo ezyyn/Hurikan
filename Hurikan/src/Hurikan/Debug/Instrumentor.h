@@ -20,7 +20,8 @@
 #include <fstream>
 #include <thread>
 
-namespace Hurikan {
+namespace Hurikan 
+{
 	struct ProfileResult
 	{
 		std::string Name;

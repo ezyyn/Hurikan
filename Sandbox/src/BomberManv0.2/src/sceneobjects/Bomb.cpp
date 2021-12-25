@@ -22,7 +22,7 @@ void BombManager::Init(const Level& level)
 /// <summary>
 /// Calling this method results in placing a new bomb
 /// </summary>
-/// <param name="bombprops">Properties to a fresh born bomb</param>
+/// <param name="bombprops">Properties to a fresh new born bomb</param>
 /// <returns>Returns true if a new bomb was placed otherwise false</returns>
 bool BombManager::PlaceBomb(const BombProperties& bombprops)
 {
@@ -36,6 +36,9 @@ bool BombManager::PlaceBomb(const BombProperties& bombprops)
 		}
 	}
 
+	// Updating the grid
+	g_GameGrid->BombChanged();
+
 	// Creating a new bomb
 	s_PlacedBombs.push_back({ bombprops });
 	return true;
@@ -47,7 +50,11 @@ void BombManager::OnUpdate(Timestep ts)
 	{
 		bool exploded = s_PlacedBombs[i].Tick(ts);
 		if (exploded)
+		{
 			s_PlacedBombs.erase(s_PlacedBombs.begin() + i);
+			// Updating the grid again
+			g_GameGrid->BombChanged();
+		}
 	}
 }
 
@@ -253,13 +260,9 @@ void Bomb::WingInit()
 {
 #define FUCK 1
 #if FUCK
-	int index_x = m_BombPlaced->IndexX;
-	int index_y = m_BombPlaced->IndexY;
+	int index_x = static_cast<float>(m_BombPlaced->Position.x);
+	int index_y = static_cast<float>(m_BombPlaced->Position.y);
 
-	////HU_INFO("w{0}",index_x);
-	////HU_INFO("w{0}",index_y);
-
-	////HU_INFO("Left");
 	for (int j = 1; j <= m_Properties.Reach; j++)
 	{
 		if (index_x - j >= 0)
@@ -287,8 +290,6 @@ void Bomb::WingInit()
 				spread.GetComponent<TransformComponent>().Translation = leftspread->Handle.Transform().Translation;
 				spread.GetComponent<TransformComponent>().Rotation.z = glm::radians(90.0f);
 				m_LeftWing.push_back(spread);
-
-				////HU_INFO(" [{0}, {1}] ", spread.Transform().Translation.x, spread.Transform().Translation.y)
 
 				auto& fa = spread.AddCustomComponent<FrameAnimator>();
 				fa.SetTarget(spread);

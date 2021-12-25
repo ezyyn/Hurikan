@@ -6,7 +6,6 @@
 
 namespace Hurikan 
 {
-	
 	Renderer::SceneData Renderer::m_SceneData;
 
 	void Renderer::Init()

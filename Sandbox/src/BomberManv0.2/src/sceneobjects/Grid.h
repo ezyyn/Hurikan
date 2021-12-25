@@ -13,7 +13,7 @@ struct GridNode
 	float GlobalGoal;
 	float LocalGoal;
 
-	int IndexX = -1, IndexY = -1;
+	glm::vec2 Position = {};
 
 	std::vector<GridNode*> Neighbours;
 	GridNode* Parent = nullptr;
@@ -51,13 +51,19 @@ public:
 
 	void Generate(const Level& level, glm::vec2* const startpos);
 
-	inline int GetLevelWidth() const { return m_CurrentLevel.Width; }
-	inline int GetLevelHeight() const { return m_CurrentLevel.Height; }
+	void Each(const std::function<bool(GridNode*)>& func);
+	GridNode* SearchFor(Entity entity);
+	GridNode* SearchFor(glm::vec3 position);
 
-	GridNode* WherePlayerAt() { return m_PlayerGridPosition; }
+	inline int GetLevelWidth()  const noexcept { return m_CurrentLevel.Width; }
+	inline int GetLevelHeight() const noexcept { return m_CurrentLevel.Height; }
 
-	GridNode** Get() { return m_GameGrid; }
-	GridNode* Get(int y, int x) { return &m_GameGrid[y][x]; }
+	inline GridNode* WherePlayerAt() noexcept { return m_PlayerGridPosition; }
+
+	inline GridNode** Get() { return m_GameGrid; }
+	inline GridNode* Get(int y, int x) { return &m_GameGrid[y][x]; }
+
+	inline void BombChanged() { m_BombEvent = true; };
 private:
 	Level m_CurrentLevel;
 
@@ -71,70 +77,12 @@ private:
 
 	GridNode** m_GameGrid = nullptr;
 
-	GridNode* m_PlayerGridPosition;
+	GridNode* m_PlayerGridPosition = nullptr;
+	GridNode* m_PlayerPreviousPosition = nullptr;
 
 	// Monsters
 	EnemySpawner m_EnemySpawner;
+
+	// TODO: maybe make an event system ?
+	bool m_BombEvent = false;
 };
-/*
-
-
-// TODO: path finding
-struct GridNode
-{
-	bool Obstacle = false;
-	bool Visited = false;
-	float GlobalGoal;
-	float LocalGoal;
-	glm::vec2 Position;
-	std::vector<GridNode*> Neighbours;
-
-	GridNode* Parent = nullptr;
-	Entity Handle;
-};
-
-class GameGrid
-{
-public:
-	GameGrid() = default;
-	~GameGrid();
-	void Init(Scene* scene, Player* player, Level level);
-
-	void ForEach(const std::function<bool(uint32_t, uint32_t, Entity)>& func);
-	void ForEach(const std::function<bool(Entity)>& func);
-
-	void OnUpdate(Timestep ts);
-
-	void DestroyGridEntity(Entity entity);
-
-	GridNode** GetGrid() const { return m_GameGrid; }
-public:
-	int32_t GetLevelWidth() { return m_CurrentLevel.Width; }
-	int32_t GetLevelHeight() { return m_CurrentLevel.Height; }
-private:
-	Scene* g_GameScene;
-	Player* g_Player;
-private:
-	void SolvePath(); // TODO: move this to separate file
-private:
-	Ref<Texture2D> m_SpriteSheet;
-
-	GridNode** m_GameGrid;
-
-	GridNode* m_Start; // Changes location according to the enemy
-	GridNode* m_End; // Changes location according to the player
-	GridNode* m_PrevisousEnd = nullptr;
-	std::deque<GridNode*> m_Path;
-	std::deque<GridNode*> m_Steer;
-
-	int m_CurrentIndex = 0;
-	int m_NextIndex = 1;
-
-	Level m_CurrentLevel;
-
-	EnemySpawner m_EnemySpawner;
-
-	friend class Player;
-	friend class Bomb;
-};
-*/

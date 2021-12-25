@@ -60,7 +60,7 @@ namespace Hurikan
 			m_Scene->m_Registry.remove<T>(m_EntityHandle);
 		}
 
-		bool IsValid()
+		inline bool IsValid()
 		{
 			return m_Scene != nullptr && m_EntityHandle != entt::null;
 		}
@@ -71,7 +71,7 @@ namespace Hurikan
 		operator uint32_t() const { return (uint32_t)m_EntityHandle; }
 		operator entt::entity() const { return m_EntityHandle; }
 
-		UUID GetUUID() { return GetComponent<IDComponent>().ID; }
+		inline UUID GetUUID() { return GetComponent<IDComponent>().ID; }
 		//std::vector<Entity>& GetChildren() { return GetComponent<RelationshipComponent>().Children; }
 		//Entity GetParent()
 		//{

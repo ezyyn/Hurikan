@@ -1,6 +1,5 @@
 #pragma once
-// Sjednoceni vsech header filu 
-
+// Sjednoceni vsech header filu pro klienta
 
 #include "Hurikan/Core/Application.h"
 #include "Hurikan/Core/Log.h"

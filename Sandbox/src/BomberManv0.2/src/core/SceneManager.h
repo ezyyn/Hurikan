@@ -3,6 +3,11 @@
 #include "../ui/MainMenu.h"
 #include "../sceneobjects/Game.h"
 
+//#define EXPRM 1
+
+#ifdef EXPRM
+	#include "../test/TestScene.h"
+#endif
 enum class GameState
 {
 	MENU = 0, INGAME
@@ -26,7 +31,9 @@ public:
 private:
 	MainMenu m_MainMenu;
 	Game m_Game;
-
+#ifdef EXPRM
+	TestScene m_TestScene;
+#endif
 	GameState m_GameState = GameState::MENU;
 };
 

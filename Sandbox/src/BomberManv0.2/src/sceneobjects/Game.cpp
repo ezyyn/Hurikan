@@ -50,11 +50,13 @@ void Game::OnUpdate(Timestep ts)
 		m_CameraTransform.Translation.x = m_PlayerTransform->Translation.x;
 	*/
 
+	HU_INFO(ts);
+
+	g_GameScene->OnUpdateRuntime(ts);
+
 	g_Player->OnUpdate(ts);
 	m_BombManager.OnUpdate(ts);
 	g_GameGrid->OnUpdate(ts);
-
-	g_GameScene->OnUpdateRuntime(ts);
 }
 
 void Game::Shutdown()
