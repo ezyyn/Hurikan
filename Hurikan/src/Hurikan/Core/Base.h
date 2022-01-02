@@ -43,4 +43,7 @@ namespace Hurikan
 	{
 		return std::make_shared<T>(std::forward<Args>(args)...);
 	}
+
+	template<typename T>
+	using WeakRef = std::weak_ptr<T>;
 }

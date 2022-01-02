@@ -10,12 +10,8 @@ std::deque<glm::vec2> PathFinder::NewPath(GridNode* start, GridNode* target)
 {
 	std::deque<glm::vec2> path;
 
-
 	g_GameGrid->Each([](GridNode* node)
 		{
-			if (!node->Obstacle)
-				node->Handle.GetComponent<SpriteRendererComponent>().Color = glm::vec4(0.0f);
-
 			node->Visited = false;
 			node->GlobalGoal = INFINITY;
 			node->LocalGoal = INFINITY;
@@ -25,13 +21,9 @@ std::deque<glm::vec2> PathFinder::NewPath(GridNode* start, GridNode* target)
 		});
 
 
-	auto distance = [](GridNode* a, GridNode* b)
+	auto heuristic = [](GridNode* a, GridNode* b)
 	{
-		return glm::distance(a->Position, b->Position);
-	};
-	auto heuristic = [distance](GridNode* a, GridNode* b)
-	{
-		return distance(a, b);
+		return glm::distance(glm::vec2{ a->IndexX, a->IndexY }, glm::vec2{ b->IndexX, b->IndexY });
 	};
 
 	GridNode* currentNode = start;
@@ -59,7 +51,7 @@ std::deque<glm::vec2> PathFinder::NewPath(GridNode* start, GridNode* target)
 			if (!nodeNeighbour->Visited && !nodeNeighbour->Obstacle)
 				notTestedNodes.push_back(nodeNeighbour);
 
-			float possiblyLowerGoal = currentNode->LocalGoal + distance(currentNode, nodeNeighbour);
+			float possiblyLowerGoal = currentNode->LocalGoal + heuristic(currentNode, nodeNeighbour);
 
 			if (possiblyLowerGoal < nodeNeighbour->LocalGoal)
 			{
@@ -67,10 +59,8 @@ std::deque<glm::vec2> PathFinder::NewPath(GridNode* start, GridNode* target)
 				nodeNeighbour->LocalGoal = possiblyLowerGoal;
 				nodeNeighbour->GlobalGoal = nodeNeighbour->LocalGoal + heuristic(nodeNeighbour, target);
 			}
-
 		}
 	}
-
 
 	if (target != nullptr)
 	{
@@ -78,18 +68,25 @@ std::deque<glm::vec2> PathFinder::NewPath(GridNode* start, GridNode* target)
 
 		while (p->Parent != nullptr)
 		{
-			p->Parent->Handle.GetComponent<SpriteRendererComponent>().Color = { 1,1,1, 0.5f };
-
 			// Storing each gridnode for enemy to follow each tile
-			path.push_front({ p->Position.x, p->Position.y * (-1) });
+			path.push_front({ p->Handle.Transform().Translation.x, p->Handle.Transform().Translation.y });
 			p = p->Parent;
 		}
 
-		path.push_front({ start->Position.x, start->Position.y * (-1) });
+		path.push_front({ start->Handle.Transform().Translation.x, start->Handle.Transform().Translation.y });
 
 		//	HU_INFO("-------------");
 	}
 
+	g_GameGrid->Each([](GridNode* node)
+		{
+			node->Visited = false;
+			node->GlobalGoal = INFINITY;
+			node->LocalGoal = INFINITY;
+			node->Parent = nullptr;
+
+			return false;
+		});
 
 	return path;
 }

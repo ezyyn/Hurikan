@@ -3,7 +3,8 @@
 
 #include "glad/glad.h"
 
-namespace Hurikan {
+namespace Hurikan 
+{
 
 	static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type) 
 	{
@@ -72,9 +73,9 @@ namespace Hurikan {
 	{
 		HU_PROFILE_FUNCTION();
 
-		HU_CORE_ASSERT(vertexBuffer->GetLayout().GetElements().size(), "AddVertexBuffer: VertexBuffer has no layout!")
+		HU_CORE_ASSERT(vertexBuffer->GetLayout().GetElements().size(), "AddVertexBuffer: VertexBuffer has no layout!");
 
-			glBindVertexArray(m_RendererID);
+		glBindVertexArray(m_RendererID);
 		vertexBuffer->Bind();
 
 		uint32_t index = 0;

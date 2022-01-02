@@ -25,8 +25,11 @@ void EnemySpawner::UpdatePaths()
 {
 	for (auto& monster : m_MonsterList)
 	{
-		GridNode* start = g_GameGrid->SearchFor(monster.Transform().Translation);
-		monster.Follow(m_PathFinder.NewPath(start, g_GameGrid->WherePlayerAt()));
+		if (glm::distance(g_Player->Position(), monster.Position()) < monster.m_Properties.AttackRadius)
+		{
+			GridNode* start = g_GameGrid->SearchFor(monster.Transform().Translation);
+			monster.Follow(m_PathFinder.NewPath(start, g_GameGrid->WherePlayerAt()));
+		}
 	}
 }
 
@@ -53,7 +56,7 @@ void Monster::OnSpawn()
 	// Setings up animations
 	//auto& fa = m_Handle.AddCustomComponent<FrameAnimator>(m_Handle);
 
-	float scale = 0.8f;
+	constexpr float scale = 0.8f;
 	auto& scale_cmp = m_Handle.GetComponent<TransformComponent>().Scale;
 	scale_cmp.x = scale;
 	scale_cmp.y = scale;
@@ -69,10 +72,6 @@ void Monster::OnSpawn()
 	//cc2d.IsSensor = true;
 }
 
-float timer = 0;
-float maxtimer = 0.5f;
-
-float previousDistance = 0.0f;
 /// <summary>
 ///  ADEPT NA HURIKAN MATH CLASSU
 /// </summary>
@@ -88,12 +87,6 @@ inline float mylerp(float start, float end, float maxDistanceDelta)
 	return start + glm::sign(end - start) * maxDistanceDelta;
 }
 
-// TODO: make this more readable
-
-// True => Horizontal
-// False => Vertical
-bool AXSMVMT = false;
-
 void Monster::OnUpdate(Timestep ts)
 {
 	if (m_Path.empty())
@@ -102,17 +95,18 @@ void Monster::OnUpdate(Timestep ts)
 	if (m_CurrentIndex >= m_Path.size() - 1)
 	{
 		// Player hit?
-		m_Path.clear();
+		//m_Path.clear();
 		return;
 	}
 
 	if (m_IsMoving == false)
 	{
 		// AXIS MOVEMENT
-		AXSMVMT = m_Path[m_CurrentIndex].y == m_Path[m_CurrentIndex + 1].y;
+		m_Horizontal = m_Path[m_CurrentIndex].y == m_Path[m_CurrentIndex + 1].y;
+		m_Vertical = m_Path[m_CurrentIndex].x == m_Path[m_CurrentIndex + 1].x;
 	}
 
-	if (AXSMVMT)
+	if (m_Horizontal)
 	{
 		glm::vec2 monster_pos = Position();
 
@@ -128,25 +122,26 @@ void Monster::OnUpdate(Timestep ts)
 	}
 	else
 	{
-		glm::vec2 monster_pos = Position();
-
-		float linearY = mylerp(monster_pos.y, m_Path[m_CurrentIndex + 1].y, ts * m_Properties.Speed);
-		m_Handle.Transform().Translation.y = linearY;
-		m_IsMoving = true;
-
-		if (linearY == m_Path[m_CurrentIndex + 1].y)
+		if (m_Vertical)
 		{
-			m_IsMoving = false;
-			m_CurrentIndex++;
-		}
+			glm::vec2 monster_pos = Position();
 
+			float linearY = mylerp(monster_pos.y, m_Path[m_CurrentIndex + 1].y, ts * m_Properties.Speed);
+			m_Handle.Transform().Translation.y = linearY;
+			m_IsMoving = true;
+
+			if (linearY == m_Path[m_CurrentIndex + 1].y)
+			{
+				m_IsMoving = false;
+				m_CurrentIndex++;
+			}
+		}
 	}
 }
 
 void Monster::Follow(const std::deque<glm::vec2>& path)
 {
 	m_CurrentIndex = 0;
-	m_LastIndex = -1;
 
 	if (!m_Path.empty())
 	{

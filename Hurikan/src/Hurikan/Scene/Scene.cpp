@@ -60,13 +60,28 @@ namespace Hurikan
 	void Scene::DestroyEntity(Entity entity)
 	{
 		// Removes it from draw order
-		for (int i = 0; i < m_DrawOrder.size(); i++)
+
+		auto& it = m_DrawOrder.begin();
+
+		while (it != m_DrawOrder.end())
+		{
+			if (it->second == entity)
+			{
+				it = m_DrawOrder.erase(it);
+			}
+			else
+			{
+				++it;
+			}
+		}
+
+		/*for (int i = 0; i < m_DrawOrder.size(); ++i)
 		{
 			if (entity == m_DrawOrder[i].second)
 			{
 				m_DrawOrder.erase(m_DrawOrder.begin() + i);
 			}
-		}
+		}*/
 		// If entity has any children attached to it, remove them as well
 		//for (auto& child : entity.GetChildren())
 		//{
@@ -75,12 +90,19 @@ namespace Hurikan
 		//	m_Registry.destroy(child);
 		//}
 		// Destroys RigidBody in b2World too
-		if (entity.HasComponent<Rigidbody2DComponent>())
-			DestroyBody(entity);
 
+		if (m_PhysicsInitialized)
+		{
+			if (entity.HasComponent<Rigidbody2DComponent>())
+				DestroyBody(entity);
+		}
 		m_Registry.destroy(entity);
 	}
 
+
+	/// <summary>
+	/// Initializes Box2D physics and entities that have b2Bodies
+	/// </summary>
 	void Scene::OnRuntimeStart()
 	{
 		m_PhysicsWorld = new b2World({ 0.0f, -9.8f });
@@ -91,10 +113,14 @@ namespace Hurikan
 			Entity entity = { e, this };
 			CreateBody(entity);
 		}
+
+		m_PhysicsInitialized = true;
 	}
 
 	void Scene::OnRuntimeStop()
 	{
+		m_PhysicsInitialized = false;
+
 		for (int i = 0; i < m_PhysicsUserData.size(); i++)
 			delete m_PhysicsUserData[i];
 
@@ -143,22 +169,27 @@ namespace Hurikan
 			});
 		}
 
-		m_Registry.view<Rigidbody2DComponent>().each([=](auto entity, auto& rb2d)
+		if (m_PhysicsInitialized)
 		{
-			if (rb2d.RuntimeBody == nullptr)
-			{
-				for (size_t i = 0; i < m_CreateB2BodyQueue.size(); i++)
+			m_Registry.view<Rigidbody2DComponent>().each([=](auto entity, auto& rb2d)
 				{
-					if (!m_PhysicsWorld->IsLocked())
+					if (rb2d.RuntimeBody == nullptr)
 					{
-						CreateBody(m_CreateB2BodyQueue[i]);
-						m_CreateB2BodyQueue.erase(m_CreateB2BodyQueue.begin() + i);
+						for (size_t i = 0; i < m_CreateB2BodyQueue.size(); i++)
+						{
+							if (!m_PhysicsWorld->IsLocked())
+							{
+								CreateBody(m_CreateB2BodyQueue[i]);
+								m_CreateB2BodyQueue.erase(m_CreateB2BodyQueue.begin() + i);
+							}
+						}
 					}
-				}
-			}
-		});
+				});
 
-		UpdatePhysics(ts);
+			UpdatePhysics(ts);
+		}
+
+		
 
 		// Render 2D
 		Camera* mainCamera = nullptr;
@@ -185,7 +216,8 @@ namespace Hurikan
 			if (m_DrawOrder.empty())
 			{
 				auto& group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
-				for (int i = group.size() - 1; i >= 0; i--)
+				//for (int i = group.size() - 1; i >= 0; i--)
+				for (int i = 0; i < group.size(); i++)
 				{
 					auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(group[i]);
 
@@ -194,23 +226,14 @@ namespace Hurikan
 			}
 			else 
 			{
-				for (int j = 0; j < m_DrawOrder.size(); j++)
+				for (auto& entity : m_DrawOrder)
 				{
-					if (m_DrawOrder[j].second.HasComponent<SpriteRendererComponent>()) 
+					if (entity.second.HasComponent<SpriteRendererComponent>())
 					{
-						auto& transform = m_DrawOrder[j].second.GetComponent<TransformComponent>().GetTransform();
-						auto& sprite = m_DrawOrder[j].second.GetComponent<SpriteRendererComponent>();
+						auto& transform = entity.second.GetComponent<TransformComponent>().GetTransform();
+						auto& src = entity.second.GetComponent<SpriteRendererComponent>();
 
-						if (sprite.Texture != nullptr)
-						{
-							Renderer2D::DrawSprite(transform, sprite, m_DrawOrder[j].second);
-							continue;
-						}
-
-						if(sprite.Color.w == 0.0f && sprite.SubTexture == nullptr)
-							continue;
-
-						Renderer2D::DrawSprite(transform, sprite, m_DrawOrder[j].second);
+						Renderer2D::DrawSprite(transform, src, entity.second);
 					}
 				}
 			}
@@ -301,6 +324,7 @@ namespace Hurikan
 	{
 		Entity entity = CreateEntity(name);
 		m_DrawOrder.push_back({ order, entity });
+
 		std::sort(m_DrawOrder.begin(), m_DrawOrder.end(), 
 			[](const std::pair<int, Entity>& i, const  std::pair<int, Entity>& j) 
 			{

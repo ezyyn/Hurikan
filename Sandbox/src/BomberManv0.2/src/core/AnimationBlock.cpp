@@ -2,7 +2,6 @@
 
 void AnimationBlock::Load(const std::vector<FrameSpecification>& frameSpec)
 {
-	Animation.reserve(frameSpec.size());
 	for (size_t i = 0; i < frameSpec.size(); i++)
 	{
 		FrameData frameData;
@@ -16,54 +15,52 @@ void AnimationBlock::Load(const std::vector<FrameSpecification>& frameSpec)
 
 		frameData.Delay = frameSpec[i].Delay;
 
-		Animation.emplace_back(frameData);
+		Animation.push_back(frameData);
 	}
 }
 
-void AnimationBlock::OnUpdate(SpriteRendererComponent& src, Timestep ts)
+void AnimationBlock::OnUpdate(SpriteRendererComponent* src, Timestep ts)
 {
-	if (FirstFrame)
+	if (!Active)
 	{
-		FirstFrame = false;
-		src.SubTexture = Animation[Index].Subtexture;
-		src.Color = Animation[Index].Color;
+		HU_INFO("????????");
+		return;
 	}
 
-	if (Animation.empty())
+	if (Animation.empty() && Index >= Animation.size() - 1)
+	{
+		src->SubTexture = nullptr;
+		src->Color = glm::vec4(0.0f);
 		return;
+	}
 
-	if (!Active)
-		return;
+	if (Index == 0)
+	{
+		src->SubTexture = Animation[0].Subtexture;
+		src->Color = Animation[0].Color;
+	}
 
 	CurrentFrameTime += ts;
 
 	if (CurrentFrameTime >= Animation[Index].Delay / 1000) // <- definetely change
 	{
 		CurrentFrameTime = 0.0f;
+		Index = (Index + 1) % Animation.size();
+		src->SubTexture = Animation[Index].Subtexture;
+		src->Color = Animation[Index].Color;
+
 		if (NextFrameStop)
 		{
-			NextFrameStop = false;
-			Index = 0;
-		}
-		else
-			Index++;
-
-		//Index = (Index + 1) % Animation.size();
-		src.SubTexture = Animation[Index].Subtexture;
-		src.Color = Animation[Index].Color;
-	}
-
-	if (Index == Animation.size() - 1)
-	{
-		if (Repeat)
-		{
-			NextFrameStop = true;
-		}
-		else
-		{
-			Index = 0;
 			Active = false;
 			return;
 		}
+	}
+	
+	if (!NextFrameStop && Index == Animation.size() - 1 && Repeat == false)
+	{
+		HU_INFO("ASD");
+		src->SubTexture = Animation[Index].Subtexture;
+		src->Color = Animation[Index].Color;
+		NextFrameStop = true;
 	}
 }

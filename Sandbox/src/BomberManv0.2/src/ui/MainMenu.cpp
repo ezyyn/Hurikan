@@ -93,7 +93,6 @@ void MainMenu::Init(SceneManager* sm)
 	m_ArrowHead.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f)).Texture = Texture2D::Create("assets/textures/heart.png");
 	m_ArrowHead.GetComponent<TransformComponent>().Translation.x = -12;
 	m_ArrowHead.GetComponent<TransformComponent>().Translation.y = 0.0f;
-	m_ArrowHead.GetComponent<TransformComponent>().Rotation.z = glm::radians(90.0f);
 }
 
 void MainMenu::Shutdown()

@@ -4,13 +4,20 @@
 #include "Hurikan/Core/Application.h"
 #include <GLFW/glfw3.h>
 
-namespace Hurikan {
-
+namespace Hurikan 
+{
 	bool Input::IsKeyPressed(int keycode)
 	{
 		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		auto state = glfwGetKey(window, keycode);
 		return state == GLFW_PRESS || state == GLFW_REPEAT;
+	}
+
+	bool Input::IsKeyReleased(int keycode)
+	{
+		auto window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		auto state = glfwGetKey(window, keycode);
+		return state == GLFW_RELEASE;
 	}
 
 	bool Input::IsMouseButtonPressed(int button)
@@ -36,7 +43,6 @@ namespace Hurikan {
 		double xpos, ypos;
 		glfwGetCursorPos(window, &xpos, &ypos);
 
-		return{ (float)xpos, (float)ypos};
+		return{ (float)xpos, (float)ypos };
 	}
-
 }

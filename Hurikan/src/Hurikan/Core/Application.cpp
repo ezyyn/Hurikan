@@ -90,7 +90,8 @@ namespace Hurikan {
 				{
 					HU_PROFILE_SCOPE("LayerStack OnUpdate");
 
-					for (Layer* layer : m_LayerStack) {
+					for (Layer* layer : m_LayerStack) 
+					{
 						layer->OnUpdate(timestep);
 					}
 				}
@@ -131,6 +132,7 @@ namespace Hurikan {
 			m_Minimized = true;
 			return false;
 		}
+
 		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
 
 		return false;

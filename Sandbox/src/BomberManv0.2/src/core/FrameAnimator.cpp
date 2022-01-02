@@ -1,33 +1,53 @@
 #include "FrameAnimator.h"
 
+FrameAnimator::~FrameAnimator()
+{
+	m_Blocks.clear();
+	m_Blocks.shrink_to_fit();
+}
+
 bool FrameAnimator::IsAnyPlaying()
 {
-	for (auto& block : m_Blocks)
-	{
-		if (block.Active)
-			return true;
-	}
-	return false;
+	return m_ActiveAnimation != nullptr && m_ActiveAnimation->Active;
 }
 
 void FrameAnimator::Stop()
 {
-	GetActiveAnimation().Active = false;
+	if (m_ActiveAnimation != nullptr)
+	{
+		m_ActiveAnimation->Active = false;
+		m_ActiveAnimation->Index = 0;
+		m_ActiveAnimation->CurrentFrameTime = 0.0f;
+		m_ActiveAnimation = nullptr;
+	}
+}
+void FrameAnimator::Pause()
+{
+	if (m_ActiveAnimation != nullptr)
+	{
+		m_ActiveAnimation->Active = false;
+	}
+}
+
+void FrameAnimator::SetTarget(Entity target)
+{
+	m_TargetEntity = target;
+	m_TargetSRC = &m_TargetEntity.GetComponent<SpriteRendererComponent>();
+}
+
+bool FrameAnimator::IsActive(const std::string& tag)
+{
+	return GetActiveAnimation()->Active;
 }
 
 bool FrameAnimator::OnUpdate(Timestep ts)
 {
-	auto& src = m_TargetEntity.GetComponent<SpriteRendererComponent>();
-
-	for (auto& block : m_Blocks)
+	if (m_ActiveAnimation && m_ActiveAnimation->Active)
 	{
-		if (block.Active)
-		{
-			block.OnUpdate(src, ts);
-			return block.Active;
-		}
+		m_ActiveAnimation->OnUpdate(m_TargetSRC, ts);
+		return m_ActiveAnimation->Active;
 	}
-	// No active was found so returning false
+
 	return false;
 }
 void FrameAnimator::Add(const AnimationBlock& ba)
@@ -41,35 +61,43 @@ void FrameAnimator::Add(const AnimationBlock& ba)
 			return;
 		}
 	}
-	
 	m_Blocks.push_back(ba);
+
+	size_t newid = m_Blocks.size() - 1;
+
+	HU_INFO(newid);
+	m_Blocks[newid].ID = newid;
 }
 
-void FrameAnimator::Switch(const std::string& tag)
+void FrameAnimator::Play(const std::string& tag)
 {
-	for (auto& block : m_Blocks)
-		block.Active = strcmp(block.Tag.c_str(), tag.c_str()) == 0;
-}
-
-AnimationBlock& FrameAnimator::GetActiveAnimation()
-{
-	for (auto& block : m_Blocks)
+	// Reset the animation
+	if (m_ActiveAnimation)
 	{
-		if (block.Active)
-			return block;
+		m_ActiveAnimation->CurrentFrameTime = 0.0f;
+		m_ActiveAnimation->Active = false;
+		m_ActiveAnimation->Index = 0;
 	}
 
-	// past here frameAnimator does not have any active animations! retuning empty animblock
-	return AnimationBlock();
+	for (size_t i = 0; i < m_Blocks.size(); i++)
+	{
+		if (strcmp(m_Blocks[i].Tag.c_str(), tag.c_str()) == 0)
+		{
+			m_ActiveAnimation = &m_Blocks[i];
+			m_ActiveAnimation->Active = true;
+			return;
+		}
+	}
+
+	HU_ERROR("Animation not found! (\"{0}\")", tag);
 }
 
-AnimationBlock FrameAnimator::GetAnimationByTag(const std::string& tag)
+AnimationBlock* FrameAnimator::GetActiveAnimation()
 {
-	for (auto& block : m_Blocks)
+	if (m_ActiveAnimation == nullptr)
 	{
-		if (block.Tag == tag)
-			return block;
+		HU_WARN("No active animation found! Returning empty AnimationBlock.");
 	}
-	HU_CORE_ASSERT(false, "");
-	return AnimationBlock();
+	return m_ActiveAnimation;
 }
+

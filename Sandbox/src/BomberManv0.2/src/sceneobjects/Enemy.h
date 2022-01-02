@@ -15,13 +15,8 @@ struct MonsterProperties
 	int Power = 0; // If a creature has its own unique ability(-Only accesible to MINIBOSS and BOSS-) 
 	int IntelligencyLevel = 0;
 	glm::vec3 StartPosition;
-};
 
-enum class EnemyMovement
-{
-	NONE,
-	HORIZONTAL,
-	VERTICAL
+	float AttackRadius = 5.0f;
 };
 
 class Monster
@@ -30,35 +25,29 @@ public:
 	Monster(const MonsterProperties& props);
 	~Monster() = default;
 
-	void OnSpawn();
 	void OnUpdate(Timestep ts);
-	void SetDirection(const glm::vec2& dir) noexcept { m_Direction = dir; }
 	void Follow(const std::deque<glm::vec2>& path);
 	void DestroyItself();
 
 	inline TransformComponent& Transform() { return m_Handle.Transform(); }
-	inline const glm::vec2& Position() { return { m_Handle.Transform().Translation.x, m_Handle.Transform().Translation.y }; }
-
+	inline const glm::vec2 Position() { return { m_Handle.Transform().Translation.x, m_Handle.Transform().Translation.y }; }
 private:
-	glm::vec2 m_Direction = { 1.0f,1.0f };
-	glm::vec2 m_Velocity = { 1.0f, 1.0f };
-	float m_Speed = 5.0f;
+	void OnSpawn();
+private:
+	MonsterProperties m_Properties;
 
 	std::deque<glm::vec2> m_Path;
-	std::deque<glm::vec2> m_Steering;
 	bool m_IsMoving = false;
 
-	glm::vec2 m_GetToLI;
+	bool m_Vertical = false;
+	bool m_Horizontal = false;
 
-	int m_CurrentIndex = 1;
-	int m_LastIndex = -1;
-	MonsterProperties m_Properties;
+	unsigned int m_CurrentIndex = 1;
 
 	Entity m_Handle;
 
 	friend class EnemySpawner;
 };
-
 
 class EnemySpawner
 {

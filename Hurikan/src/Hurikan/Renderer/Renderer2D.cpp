@@ -11,7 +11,6 @@
 
 namespace Hurikan 
 {
-
 	struct QuadVertex
 	{
 		glm::vec3 Position;
@@ -120,7 +119,6 @@ namespace Hurikan
 	void Renderer2D::Shutdown()
 	{
 		HU_PROFILE_FUNCTION();
-
 		delete[] s_Data.QuadVertexBufferBase;
 	}
 
@@ -424,16 +422,19 @@ namespace Hurikan
 
 	void Renderer2D::DrawSprite(const glm::mat4& transform, SpriteRendererComponent& src, int entityID)
 	{
-		if (src.SubTexture)
+		if (src.Color.w != 0.0f)
 		{
-			DrawQuad(transform, src.SubTexture, src.TilingFactor, src.Color, entityID);
-			return;
-		}
+			if (src.SubTexture)
+			{
+				DrawQuad(transform, src.SubTexture, src.TilingFactor, src.Color, entityID);
+				return;
+			}
 
-		if (src.Texture)
-			DrawQuad(transform, src.Texture, src.TilingFactor, src.Color, entityID);
-		else
-			DrawQuad(transform, src.Color, entityID);
+			if (src.Texture)
+				DrawQuad(transform, src.Texture, src.TilingFactor, src.Color, entityID);
+			else
+				DrawQuad(transform, src.Color, entityID);
+		}
 	}
 
 	void Renderer2D::ResetStats()

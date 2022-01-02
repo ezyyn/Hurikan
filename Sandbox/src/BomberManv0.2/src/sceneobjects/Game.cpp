@@ -1,13 +1,18 @@
 #include "Game.h"
 
 #include "../sceneobjects/Player.h"
+#include "../sceneobjects/Grid.h"
 
 extern Player* g_Player = new Player;
 extern Grid* g_GameGrid = new Grid;
 extern Scene* g_GameScene = new Scene;
 
+constexpr float orthoSize = 18;
+
 void Game::Init()
 {
+	ResourceManager::Init("assets/textures/");
+
 	// Camera settings
 	m_Camera = g_GameScene->CreateEntity();
 
@@ -18,16 +23,16 @@ void Game::Init()
 	camera_cmp.FixedAspectRatio = true;
 	auto& camera = camera_cmp.Camera;
 	camera.SetProjectionType(SceneCamera::ProjectionType::Orthographic);
-	camera.SetOrthographicSize(18);
+	camera.SetOrthographicSize(orthoSize);
 
 	m_CameraTransform = &m_Camera.Transform();
-	m_CameraTransform->Translation.x = 15.5f;
-	m_CameraTransform->Translation.y = -7.5f;
 
-	// GameGrid settings
 	g_GameGrid->Init();
 	g_Player->Init();
 }
+
+extern float camera_position_x = 0.0f;
+extern float camera_position_y = 0.0f;
 
 void Game::Play(const Level& level)
 {
@@ -36,27 +41,82 @@ void Game::Play(const Level& level)
 	glm::vec2 startupPosition = {};
 	g_GameGrid->Generate(level, &startupPosition);
 	g_Player->SetStartPosition(startupPosition);
-
 	m_BombManager.Init(m_CurrentLevel);
+
+	float vertExtent = orthoSize;
+	float horzExtent = vertExtent * 1600.0f / 900.0f;
+
+	m_Boundaries.MinX = 15.5f;
+	m_Boundaries.MinY = -0.5f;
+	m_Boundaries.MaxX = g_GameGrid->GetLevelWidth() - m_Boundaries.MinX - 1;
+	m_Boundaries.MaxY = 5.1f;
+
+	camera_position_x = glm::clamp(g_Player->Position2().x, m_Boundaries.MinX, m_Boundaries.MaxX);
+	camera_position_y = glm::clamp(g_Player->Position2().y, m_Boundaries.MinY, m_Boundaries.MaxY);
+
+	m_CameraTransform->Translation.x = camera_position_x;
+	m_CameraTransform->Translation.y = camera_position_y;
+
+	HU_INFO(camera_position_x);
+	HU_INFO(m_CameraTransform->Translation.y);
+
+	m_UI.Init(m_CurrentLevel);
 
 	g_GameScene->OnRuntimeStart();
 }
 
+inline float mylerp(float start, float end, float maxDistanceDelta)
+{
+	if (glm::abs(end - start) <= maxDistanceDelta)
+		return end;
+
+	return start + glm::sign(end - start) * maxDistanceDelta;
+}
+
 void Game::OnUpdate(Timestep ts)
 {
-	// Camera follows player
-	/*
-	if (m_PlayerTransform->Translation.x >= 15.5f && m_PlayerTransform->Translation.x <= m_CurrentLevel.Width - 15.5f)
-		m_CameraTransform.Translation.x = m_PlayerTransform->Translation.x;
-	*/
+	// Placing a bomb
+	if (Input::IsKeyPressed(Key::B))
+	{
+		if (m_LastKeyPressed != Key::B)
+		{
+			m_LastKeyPressed = Key::B;
 
-	HU_INFO(ts);
+			BombProperties props;
+			props.Type = BombType::CLASSIC;
+			props.ExplosionTime = 3.0f;
+			props.Reach = 1;
+			props.State = BombState::TICKING;
+
+			props.StartPosition = g_Player->RoundPosition();
+			props.CurrentLevel = m_CurrentLevel;
+			m_BombManager.PlaceBomb(props);
+		}
+	}
+	else if (Input::IsKeyReleased(Key::B))
+	{
+		m_LastKeyPressed = 0;
+	}
+
+	m_BombManager.OnUpdate(ts);
+
+	g_Player->OnUpdate(ts);
+
+	g_GameGrid->OnUpdate(ts);
+
+	// Camera follows player
+	if (g_Player->IsMoving())
+	{
+		camera_position_x = glm::clamp(g_Player->Position2().x, m_Boundaries.MinX, m_Boundaries.MaxX);
+		camera_position_y = glm::clamp(g_Player->Position2().y, m_Boundaries.MinY, m_Boundaries.MaxY);
+
+		m_CameraTransform->Translation.x = camera_position_x;
+		m_CameraTransform->Translation.y = camera_position_y;
+	}
 
 	g_GameScene->OnUpdateRuntime(ts);
 
-	g_Player->OnUpdate(ts);
-	m_BombManager.OnUpdate(ts);
-	g_GameGrid->OnUpdate(ts);
+	m_UI.OnUpdate(ts);
 }
 
 void Game::Shutdown()
@@ -69,34 +129,4 @@ void Game::Shutdown()
 
 	g_GameScene->OnRuntimeStop();
 	delete g_GameScene;
-}
-
-KeyCode lastKey1 = 0;
-
-void Game::OnKeyPressed(KeyPressedEvent& e)
-{
-	switch (e.GetKeyCode())
-	{
-		case Key::B:
-		{
-			if (lastKey1 != Key::B)
-			{
-				BombProperties props;
-				props.Type = BombType::CLASSIC;
-				props.ExplosionTime = 3.0f;
-				props.Reach = 3;
-				props.State = BombState::TICKING;
-
-				props.StartPosition = g_Player->RoundPosition();
-				props.CurrentLevel = m_CurrentLevel;
-				m_BombManager.PlaceBomb(props);
-			}
-			break;
-		}
-	}
-
-}
-void Game::OnKeyReleased(KeyReleasedEvent& e)
-{
-	lastKey1 = 0;
 }

@@ -1,23 +1,26 @@
 #pragma once
 
 #include "../core/Level.h"
-#include "../core/AnimationBlock.h"
 
 #include "../sceneobjects/Enemy.h"
+
+struct AnimationDetails;
 
 struct GridNode
 {
 	// SearchAlg stuff
-	bool Obstacle = false;
+	// TOTALLY ENEMY DEPENDENT
 	bool Visited = false;
-	float GlobalGoal;
-	float LocalGoal;
+	float GlobalGoal = 0.0f;
+	float LocalGoal = 0.0f;
 
-	glm::vec2 Position = {};
+	// NOT ENEMY DEPENDENT
+	bool Obstacle = false;
+	
+	int IndexX, IndexY;
 
 	std::vector<GridNode*> Neighbours;
 	GridNode* Parent = nullptr;
-
 	Entity Handle;
 };
 
@@ -53,15 +56,15 @@ public:
 
 	void Each(const std::function<bool(GridNode*)>& func);
 	GridNode* SearchFor(Entity entity);
-	GridNode* SearchFor(glm::vec3 position);
+	GridNode* SearchFor(const glm::vec3& position);
 
-	inline int GetLevelWidth()  const noexcept { return m_CurrentLevel.Width; }
-	inline int GetLevelHeight() const noexcept { return m_CurrentLevel.Height; }
+	inline const int GetLevelWidth()  const noexcept { return m_CurrentLevel.Width; }
+	inline const int GetLevelHeight() const noexcept { return m_CurrentLevel.Height; }
 
 	inline GridNode* WherePlayerAt() noexcept { return m_PlayerGridPosition; }
 
-	inline GridNode** Get() { return m_GameGrid; }
-	inline GridNode* Get(int y, int x) { return &m_GameGrid[y][x]; }
+	//inline GridNode** Get() { return m_GameGrid; }
+	inline GridNode* Get(int y, int x) { return &m_GameGrid[y * GetLevelWidth() + x]; }
 
 	inline void BombChanged() { m_BombEvent = true; };
 private:
@@ -72,10 +75,9 @@ private:
 	Ref<SubTexture2D> m_WallTile;
 	Ref<SubTexture2D> m_BoxTile;
 
-	AnimationBlock m_WallBreakAnimation;
-	std::vector<GridNode*> m_Destroyable;
+	std::vector<GridNode*> m_Destroyable = {};
 
-	GridNode** m_GameGrid = nullptr;
+	GridNode* m_GameGrid = nullptr;
 
 	GridNode* m_PlayerGridPosition = nullptr;
 	GridNode* m_PlayerPreviousPosition = nullptr;
@@ -83,6 +85,6 @@ private:
 	// Monsters
 	EnemySpawner m_EnemySpawner;
 
-	// TODO: maybe make an event system ?
+	// TODO: maybe make an event system ? No
 	bool m_BombEvent = false;
 };

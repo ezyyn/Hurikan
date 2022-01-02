@@ -5,6 +5,14 @@
 
 struct GridNode;
 
+struct PathNode
+{
+	bool Visited = false;
+	float GlobalGoal = 0.0f;
+	float LocalGoal = 0.0f;
+	GridNode* Handle = nullptr;
+};
+
 class PathFinder
 {
 public:

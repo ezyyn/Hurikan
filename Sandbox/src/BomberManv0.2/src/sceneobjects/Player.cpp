@@ -16,76 +16,15 @@ void Player::Init()
 	Ref<Texture2D> spriteSheet = Texture2D::Create("assets/textures/player_animation/Chr_00_0.png");
 	Ref<Texture2D> spriteSheet1 = Texture2D::Create("assets/textures/tileset_16x16.png");
 
-	m_Handle.GetComponent<SpriteRendererComponent>().SubTexture = SubTexture2D::CreateFromCoords(spriteSheet, { 4, 7 }, { 16, 16 });
-
+	m_IdleAnimation = SubTexture2D::CreateFromCoords(spriteSheet, { 4, 7 }, { 16, 16 });
+	m_Handle.GetComponent<SpriteRendererComponent>().SubTexture = m_IdleAnimation;
 	// PLAYER ANIMATIONS
 	m_PlayerAnimator.SetTarget(m_Handle);
-	AnimationBlock playerLeftAnimation, playerUpAnimation, playerDownAnimation, playerDeadAnimation;
-	{
-		playerLeftAnimation.Tag = "LeftAnimation";
-		playerLeftAnimation.SpriteSize = { 16,16 };
-		playerLeftAnimation.SpriteSheet = spriteSheet;
-		playerLeftAnimation.Repeat = true;
 
-		std::vector<FrameSpecification> framesSpec;
-		framesSpec.push_back({ {0, 7}, 100.0f });
-		framesSpec.push_back({ {1, 7}, 100.0f });
-		framesSpec.push_back({ {2, 7}, 100.0f });
-
-		playerLeftAnimation.Load(framesSpec);
-	}
-
-	{
-		playerUpAnimation.Tag = "UpAnimation";
-		playerUpAnimation.SpriteSize = { 16,16 };
-		playerUpAnimation.SpriteSheet = spriteSheet;
-		playerUpAnimation.Repeat = true;
-
-		std::vector<FrameSpecification> framesSpec;
-		framesSpec.push_back({ {6, 7}, 100.0f });
-		framesSpec.push_back({ {7, 7}, 100.0f });
-		framesSpec.push_back({ {0, 6}, 100.0f });
-
-		playerUpAnimation.Load(framesSpec);
-	}
-
-	{
-		playerDownAnimation.Tag = "DownAnimation";
-		playerDownAnimation.SpriteSize = { 16,16 };
-		playerDownAnimation.SpriteSheet = spriteSheet;
-		playerDownAnimation.Repeat = true;
-
-		std::vector<FrameSpecification> framesSpec;
-		framesSpec.push_back({ {3, 7}, 100.0f });
-		framesSpec.push_back({ {4, 7}, 100.0f });
-		framesSpec.push_back({ {5, 7}, 100.0f });
-		framesSpec.push_back({ {4, 7}, 100.0f });
-
-		playerDownAnimation.Load(framesSpec);
-	}
-	// Player dead animation
-	{
-		playerDeadAnimation.Tag = "PlayerDead";
-		playerDeadAnimation.SpriteSize = { 16,16 };
-		playerDeadAnimation.SpriteSheet = spriteSheet;
-		//m_PlayerDead.Animation.emplace_back(FrameData{ nullptr,glm::vec4(0.0f), 300.0f });
-
-		std::vector<FrameSpecification> framesSpec;
-		framesSpec.push_back({ { 1, 6 }, 300.0f });
-		framesSpec.push_back({ { 2, 6 }, 300.0f });
-		framesSpec.push_back({ { 3, 6 }, 300.0f });
-		framesSpec.push_back({ { 4, 6 }, 300.0f });
-		framesSpec.push_back({ { 5, 6 }, 300.0f });
-		framesSpec.push_back({ { 6, 6 }, 300.0f });
-		framesSpec.push_back({ { 7, 6 }, 300.0f });
-		framesSpec.push_back({ {}, 300.0f, true });
-
-		playerDeadAnimation.Load(framesSpec);
-	}
-	m_PlayerAnimator.Add(playerLeftAnimation);
-	m_PlayerAnimator.Add(playerUpAnimation);
-	m_PlayerAnimator.Add(playerDownAnimation);
-	m_PlayerAnimator.Add(playerDeadAnimation);
+	m_PlayerAnimator.Add(ResourceManager::RequestAnimation("PlayerLeftAnimation"));
+	m_PlayerAnimator.Add(ResourceManager::RequestAnimation("PlayerUpAnimation"));
+	m_PlayerAnimator.Add(ResourceManager::RequestAnimation("PlayerDownAnimation"));
+	m_PlayerAnimator.Add(ResourceManager::RequestAnimation("PlayerDeadAnimation"));
 
 	///////////////////////////////////////////////////////////////////
 	////////////////////     Player Physics     ///////////////////////
@@ -112,93 +51,167 @@ float pms;
 float timer1 = pms;
 float timer2 = 0;
 
+KeyCode m_LastKey;
+KeyCode m_PressedKey;
+
 void Player::OnUpdate(Timestep ts)
 {
 	m_PlayerAnimator.OnUpdate(ts);
 
 	if (m_PlayerData.Health <= 0 && m_Alive)
 	{
+		m_AnimationState = PlayerAnimationState::DEAD;
 		m_Alive = false;
-
-		m_PlayerAnimator.Switch("PlayerDead");
+		m_PlayerAnimator.Play("PlayerDead");
 	}
 
 	if (!m_Alive)
 		return;
 
+	m_IsMoving = m_LastPosition != m_Transform->Translation;
+
+	if (m_IsMoving)
+	{
+		m_LastPosition = m_Transform->Translation;
+	}
+
 	m_PlayerData.Direction = { 0, 0 };
 
+	// Movement Movement Movement Movement Movement Movement Movement Movement Movement
+	// Movement Movement Movement Movement Movement Movement Movement Movement Movement
+	// Movement Movement Movement Movement Movement Movement Movement Movement Movement 
 	if (Input::IsKeyPressed(Key::W))
 	{
 		m_PlayerData.Direction.y = 1;
 		m_PlayerData.Rotated = false;
 		m_Transform->Scale.x = glm::abs(m_Transform->Scale.x);
 
-		if (m_PlayerAnimator.GetActiveAnimation().Tag != "UpAnimation")
-			m_PlayerAnimator.Switch("UpAnimation");
+		m_PressedKey = Key::W;
 	}
+
 	if (Input::IsKeyPressed(Key::D))
 	{
-		timer1 += ts;
-		if (timer1 >= pms)
-		{
-			timer1 = 0;
-			//	AudioManager::Play(AudioType::PLAYER_HORIZONTAL_MOVEMENT);
-		}
-
 		m_PlayerData.Direction.x = 1;
 		if (!m_PlayerData.Rotated)
 		{
 			m_PlayerData.Rotated = true;
 			m_Transform->Scale.x *= (-1);
 		}
-
-		if (m_PlayerAnimator.GetActiveAnimation().Tag != "LeftAnimation")
-			m_PlayerAnimator.Switch("LeftAnimation");
-	}
+		m_PressedKey = Key::D;
+	} 
 
 	if (Input::IsKeyPressed(Key::S))
 	{
 		m_PlayerData.Direction.y = -1;
 		m_PlayerData.Rotated = false;
 		m_Transform->Scale.x = glm::abs(m_Handle.GetComponent<TransformComponent>().Scale.x);
-
-		if (m_PlayerAnimator.GetActiveAnimation().Tag != "DownAnimation")
-		{
-			m_PlayerAnimator.Switch("DownAnimation");
-		}
-	}
+		m_PressedKey = Key::S;
+	} 
+	
 	if (Input::IsKeyPressed(Key::A))
 	{
-		timer1 += ts;
-		if (timer1 >= pms)
-		{
-			timer1 = 0;
-			//	AudioManager::Play(AudioType::PLAYER_HORIZONTAL_MOVEMENT);
-		}
-
 		m_PlayerData.Direction.x = -1;
 		m_PlayerData.Rotated = false;
 		m_Transform->Scale.x = glm::abs(m_Handle.GetComponent<TransformComponent>().Scale.x);
-
-		if (m_PlayerAnimator.GetActiveAnimation().Tag != "LeftAnimation")
-			m_PlayerAnimator.Switch("LeftAnimation");
+		m_PressedKey = Key::A;
 	}
+
+	if (m_PressedKey != m_LastKey)
+		switch (m_PressedKey)
+		{
+			case Key::W:
+			{
+				m_AnimationState = PlayerAnimationState::UP;
+				m_PlayerAnimator.Play("UpAnimation");
+				m_LastKey = Key::W;
+				break;
+			}
+			case Key::S:
+			{
+				m_AnimationState = PlayerAnimationState::DOWN;
+				m_PlayerAnimator.Play("DownAnimation");
+				m_LastKey = Key::S;
+				break;
+			}
+			case Key::A:
+			{
+				m_AnimationState = PlayerAnimationState::LEFT;
+				m_PlayerAnimator.Play("LeftAnimation");
+				m_LastKey = Key::A;
+				break;
+			}
+			case Key::D:
+			{
+				m_AnimationState = PlayerAnimationState::RIGHT;
+				m_PlayerAnimator.Play("LeftAnimation");
+				m_LastKey = Key::D;
+				break;
+			}
+			default:
+			{
+				//m_PlayerData.Velocity.x = 0;
+				//m_PlayerData.Velocity.y = 0;
+				break;
+			}
+		}
 
 	if (m_PlayerData.Direction.x == 0 && m_PlayerData.Direction.y == 0)
 	{
-		m_PlayerAnimator.Stop();
+		m_AnimationState = PlayerAnimationState::IDLE;
+		m_Handle.GetComponent<SpriteRendererComponent>().SubTexture = m_IdleAnimation; // <--- TODO: replace by an animation
+		m_PlayerAnimator.Pause();
+		m_LastKey = 0;
 	}
 
 	m_PlayerData.Velocity.x = m_PlayerData.Direction.x * m_PlayerData.Speed;
 	m_PlayerData.Velocity.y = m_PlayerData.Direction.y * m_PlayerData.Speed;
 
 	auto body = (b2Body*)m_Handle.GetComponent<Rigidbody2DComponent>().RuntimeBody;
-	body->SetLinearVelocity({ m_PlayerData.Velocity.x,m_PlayerData.Velocity.y });
+
+	if (glm::abs(m_PlayerData.Velocity.x) == 1 && glm::abs(m_PlayerData.Velocity.y) == 1)
+	{
+		switch (m_LastKey)
+		{
+		case Key::W:
+			m_PlayerData.Velocity.x = 0;
+			break;
+		case Key::S:
+			m_PlayerData.Velocity.x = 0;
+			break;
+		case Key::A:
+			m_PlayerData.Velocity.y = 0;
+			break;
+		case Key::D:
+			m_PlayerData.Velocity.y = 0;
+			break;
+		default:
+		{
+			m_PlayerData.Velocity.x = 0;
+			m_PlayerData.Velocity.y = 0;
+			break;
+		}
+		}
+	}
+	body->SetLinearVelocity({ m_PlayerData.Velocity.x, m_PlayerData.Velocity.y });
 }
 
 void Player::OnKeyPressed(KeyPressedEvent& e)
 {
+	switch (e.GetKeyCode())
+	{
+	case Key::W:
+		break;
+	case Key::S:
+		break;
+	case Key::A:
+		break;
+	case Key::D:
+		break;
+	default:
+		break;
+	}
+
+	//m_LastKey = e.GetKeyCode();
 }
 
 void Player::OnKeyReleased(KeyReleasedEvent& e)

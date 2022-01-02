@@ -1,15 +1,17 @@
 #pragma once
 
-#include "../sceneobjects/Grid.h"
+#include "../animations/FrameAnimator.h"
 #include "../core/Level.h"
-#include "../core/FrameAnimator.h"
 
 #include <Hurikan.h>
 using namespace Hurikan;
 
+// forward declarations
+struct GridNode;
+
 enum class BombState
 {
-	SET = 0, TICKING, EXPLOSION
+	SET = 0, TICKING, EXPLOSION, DONE
 };
 
 enum class BombType
@@ -21,27 +23,22 @@ enum class BombType
 
 struct BombProperties
 {
-	// Bomb
 	glm::vec2 StartPosition = {};
 	BombState State = BombState::SET;
 	BombType Type = BombType::CLASSIC;
 	float ExplosionTime = 2; // in seconds 
 	float Time = 0;
-
 	Level CurrentLevel = {};
-
-	// Spread Explosion
 	int Reach = 2;
-
-	std::vector<std::vector<Entity>> SpreadEntities = {};
-
 };
 
 class Bomb
 {
 public:
+	Bomb() = default;
+	Bomb(const Bomb&) = default;
 	Bomb(const BombProperties& bombprops);
-	~Bomb() = default;
+	~Bomb();
 
 	Entity GetBombEntity() { return m_Handle; }
 
@@ -51,32 +48,24 @@ public:
 
 	const glm::vec3& Position() { return m_Handle.Transform().Translation; }
 private:
-	void Deploy();
 	void WingInit();
 
+	bool SingleWingInit(int index, GridNode* node, float rotation);
+
 	void DestroyItSelf();
-	void Explode() { m_ChainExplosion = true; }
-	bool WingInitialization(int y, int distance, bool condition, float rotationZ, std::vector<Entity>& wing);
-	void AddAnimations(std::vector<Entity>& wing);
+	void Explode();
 private:
 	BombProperties m_Properties;
 
-	std::vector<Entity> m_LeftWing = {};
-	std::vector<Entity> m_UpWing = {};
-	std::vector<Entity> m_RightWing = {};
-	std::vector<Entity> m_DownWing = {};
+	std::vector<Entity> m_SpreadEntities = {};
 
 	Entity m_Handle;
-	GridNode* m_BombPlaced;
+	GridNode* m_BombPlaced = nullptr;
 	bool m_ChainExplosion = false;
 	bool m_AnmCmplt = false;
-private:
-	FrameAnimator m_BombAnimator;
 
-	AnimationBlock 
-		m_BombSpreadCenterAnimation,
-		m_BombSpreadMiddleAnimation,
-		m_BombSpreadEndAnimation;
+	// Exp
+	AnimationDetails a, b, c;
 
 	friend class BombManager;
 };
@@ -90,6 +79,8 @@ public:
 	void Init(const Level& level);
 	bool PlaceBomb(const BombProperties& bomb);
 	void OnUpdate(Timestep ts);
+public:
+	static std::list<Bomb> s_PlacedBombs;
 private:
 	Level m_CurrentLevel;
 };

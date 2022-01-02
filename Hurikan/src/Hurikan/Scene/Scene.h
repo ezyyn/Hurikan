@@ -61,6 +61,7 @@ namespace Hurikan
 		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 
 		b2World* m_PhysicsWorld = nullptr;
+		bool m_PhysicsInitialized = false;
 
 		// Testing
 		std::vector<Entity*> m_PhysicsUserData;
