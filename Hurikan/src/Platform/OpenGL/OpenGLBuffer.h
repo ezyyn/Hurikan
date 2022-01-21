@@ -2,8 +2,8 @@
 
 #include "Hurikan/Renderer/Buffer.h"
 
-namespace Hurikan {
-
+namespace Hurikan 
+{
 	class OpenGLVertexBuffer : public VertexBuffer
 	{
 	public:

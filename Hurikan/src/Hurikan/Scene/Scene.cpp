@@ -38,8 +38,7 @@ namespace Hurikan
 
 	Scene::~Scene()
 	{
-		if(m_PhysicsWorld != nullptr)
-			OnRuntimeStop();
+		OnRuntimeStop();
 	}
 
 	Entity Scene::CreateEntity(const std::string& name)
@@ -91,7 +90,7 @@ namespace Hurikan
 		//}
 		// Destroys RigidBody in b2World too
 
-		if (m_PhysicsInitialized)
+		if (m_PhysicsWorld)
 		{
 			if (entity.HasComponent<Rigidbody2DComponent>())
 				DestroyBody(entity);
@@ -113,19 +112,20 @@ namespace Hurikan
 			Entity entity = { e, this };
 			CreateBody(entity);
 		}
-
-		m_PhysicsInitialized = true;
 	}
 
 	void Scene::OnRuntimeStop()
 	{
-		m_PhysicsInitialized = false;
+		m_DrawOrder.clear();
+		m_DrawOrder.shrink_to_fit();
+		if (m_PhysicsWorld)
+		{
+			for (int i = 0; i < m_PhysicsUserData.size(); i++)
+				delete m_PhysicsUserData[i];
 
-		for (int i = 0; i < m_PhysicsUserData.size(); i++)
-			delete m_PhysicsUserData[i];
-
-		delete m_PhysicsWorld;
-		m_PhysicsWorld = nullptr;
+			delete m_PhysicsWorld;
+			m_PhysicsWorld = nullptr;
+		}
 	}
 
 	void Scene::UpdatePhysics(Timestep ts)
@@ -169,7 +169,7 @@ namespace Hurikan
 			});
 		}
 
-		if (m_PhysicsInitialized)
+		if (m_PhysicsWorld)
 		{
 			m_Registry.view<Rigidbody2DComponent>().each([=](auto entity, auto& rb2d)
 				{
@@ -345,7 +345,7 @@ namespace Hurikan
 		}
 	}
 
-	void Scene::CreateBody(Entity entity)
+	void Scene::CreateBody(Entity& entity)
 	{
 		auto& transform = entity.GetComponent<TransformComponent>();
 		auto& rb2d = entity.GetComponent<Rigidbody2DComponent>();
@@ -412,7 +412,7 @@ namespace Hurikan
 		m_PhysicsWorld->SetContactListener(listener);
 	}
 
-	void Scene::DestroyBody(Entity entity)
+	void Scene::DestroyBody(Entity& entity)
 	{
 		b2Body* rb = (b2Body*)entity.GetComponent<Rigidbody2DComponent>().RuntimeBody;
 
@@ -425,6 +425,8 @@ namespace Hurikan
 		//		m_PhysicsUserData.erase(m_PhysicsUserData.begin() + i);
 		//	}
 		//}
+
+		// TODO: Create a destroy queue for runtime destroying
 		m_PhysicsWorld->DestroyBody(rb);
 	}
 

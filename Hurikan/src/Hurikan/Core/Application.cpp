@@ -9,7 +9,7 @@ namespace Hurikan {
 
 	Application* Application::s_Instance = nullptr;
 
-	Application::Application(ApplicationSpecification specification, ApplicationCommandLineArgs args)
+	Application::Application(const ApplicationSpecification& specification, ApplicationCommandLineArgs args)
 		: m_Specification(specification), m_CommandLineArgs(args)
 	{
 		HU_PROFILE_FUNCTION();

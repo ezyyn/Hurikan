@@ -65,6 +65,13 @@ namespace Hurikan
 			return m_Scene != nullptr && m_EntityHandle != entt::null;
 		}
 
+		inline Entity operator=(const Entity& other)
+		{
+			m_EntityHandle = other.m_EntityHandle;
+			m_Scene = other.m_Scene;
+			return *this;
+		}
+
 		inline TransformComponent& Transform() { return m_Scene->m_Registry.get<TransformComponent>(m_EntityHandle); }
 
 		operator bool() const { return m_EntityHandle != entt::null; }

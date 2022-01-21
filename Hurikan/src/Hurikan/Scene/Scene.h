@@ -49,8 +49,8 @@ namespace Hurikan
 		Entity CreateEntityWithDrawOrder(int order, const std::string & name = std::string());
 		void ChangeDrawIndex(int index, Entity entity);
 
-		void CreateBody(Entity entity);
-		void DestroyBody(Entity entity);
+		void CreateBody(Entity& entity);
+		void DestroyBody(Entity& entity);
 
 		void SetContactListener(b2ContactListener* listener);
 	private:
@@ -61,7 +61,6 @@ namespace Hurikan
 		uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 
 		b2World* m_PhysicsWorld = nullptr;
-		bool m_PhysicsInitialized = false;
 
 		// Testing
 		std::vector<Entity*> m_PhysicsUserData;
@@ -74,5 +73,6 @@ namespace Hurikan
 	public:
 		// TODO: Find better way to do this
 		std::vector<std::pair<int, Entity>> m_DrawOrder = {};
+		std::vector<Entity> m_ToBeDestoyedBodies = {};
 	};
 }

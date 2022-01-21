@@ -38,7 +38,7 @@ namespace Hurikan {
 	class Application
 	{
 	public:
-		Application(ApplicationSpecification specification, ApplicationCommandLineArgs args = ApplicationCommandLineArgs());
+		Application(const ApplicationSpecification& specification, ApplicationCommandLineArgs args = ApplicationCommandLineArgs());
 		virtual ~Application();
 
 		virtual void OnInit() {}
