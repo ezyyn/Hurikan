@@ -195,6 +195,14 @@ namespace Hurikan
 			{
 				case GLFW_PRESS:
 				{
+				/*	double x, y;
+
+					glfwGetCursorPos(window, &x, &y);
+
+					HU_CORE_INFO("{0}, {1}", x, y);
+					glm::orthonormalize(&x, &y);*/
+					
+
 					MouseButtonPressedEvent event(button);
 					data.EventCallback(event);
 					break;

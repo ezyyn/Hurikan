@@ -34,7 +34,11 @@ group "Dependencies"
 	include "Hurikan/vendor/Glad"
 	include "Hurikan/vendor/ImGui"
 	include "Hurikan/vendor/yaml-cpp"
-	include "Hurikan/vendor/HazelAudio"
+	
+	include "Hurikan/vendor/HurikanAudio/vendor/openal-soft"
+	include "Hurikan/vendor/HurikanAudio/vendor/libogg"
+	include "Hurikan/vendor/HurikanAudio/vendor/vorbis"
+	include "Hurikan/vendor/HurikanAudio"
 group ""
 
 include "Hurikan"

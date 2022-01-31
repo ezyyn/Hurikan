@@ -3,8 +3,8 @@
 
 #include <glad/glad.h>
 
-namespace Hurikan {
-
+namespace Hurikan 
+{
 	void OpenGLRendererAPI::Init()
 	{
 		HU_PROFILE_FUNCTION();

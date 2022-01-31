@@ -7,7 +7,6 @@
 #ifdef HU_PLATFORM_WINDOWS
 
 #define _CRTDBG_MAP_ALLOC
-#include <stdio.h>
 #include <stdlib.h>
 #include <crtdbg.h>
 
@@ -22,23 +21,26 @@ int main(int argc, char** argv)
 	//_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
 	//_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDOUT);
 
-	Hurikan::Log::Init();
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	//_CrtSetBreakAlloc(1095);
+	{
+		Hurikan::Log::Init();
 
-	HU_PROFILE_BEGIN_SESSION("Startup", "HurikanProfile-Startup.json");
-	auto app = Hurikan::CreateApplication({argc, argv});
-	HU_PROFILE_END_SESSION();
-	
-	HU_PROFILE_BEGIN_SESSION("Runtime", "HurikanProfile-Runtime.json");
-	app->Run();
-	HU_PROFILE_END_SESSION();
-	
-	HU_PROFILE_BEGIN_SESSION("Shutdown", "HurikanProfile-Shutdown.json");
-	delete app;
+		HU_PROFILE_BEGIN_SESSION("Startup", "HurikanProfile-Startup.json");
+		auto app = Hurikan::CreateApplication({ argc, argv });
+		HU_PROFILE_END_SESSION();
 
-	HU_PROFILE_END_SESSION();
+		HU_PROFILE_BEGIN_SESSION("Runtime", "HurikanProfile-Runtime.json");
+		app->Run();
+		HU_PROFILE_END_SESSION();
 
-	_CrtDumpMemoryLeaks();
-	return 0;
+		HU_PROFILE_BEGIN_SESSION("Shutdown", "HurikanProfile-Shutdown.json");
+		delete app;
+
+		HU_PROFILE_END_SESSION();
+
+		Hurikan::Log::Shutdown();
+	}
 }
 
 #endif

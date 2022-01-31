@@ -14,10 +14,10 @@
 
 #include "Hurikan/Core/Timer.h"
 
-namespace Hurikan {
-
-	namespace Utils {
-
+namespace Hurikan 
+{
+	namespace Utils 
+	{
 		static GLenum ShaderTypeFromString(const std::string& type)
 		{
 			if (type == "vertex")
@@ -68,8 +68,8 @@ namespace Hurikan {
 		{
 			switch (stage)
 			{
-			case GL_VERTEX_SHADER:    return ".cached_opengl.vert";
-			case GL_FRAGMENT_SHADER:  return ".cached_opengl.frag";
+				case GL_VERTEX_SHADER:    return ".cached_opengl.vert";
+				case GL_FRAGMENT_SHADER:  return ".cached_opengl.frag";
 			}
 			HU_CORE_ASSERT(false, "");
 			return "";

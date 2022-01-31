@@ -1,10 +1,10 @@
 #include "hupch.h"
 #include "OpenGLBuffer.h"
 
-#include "glad/glad.h"
+#include <glad/glad.h>
 
-namespace Hurikan {
-
+namespace Hurikan 
+{
 	///////////////////////////////////////////////////////////////////////////////////////////
 	/// VERTEX BUFFER ////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////
@@ -25,7 +25,7 @@ namespace Hurikan {
 	}
 
 
-	Hurikan::OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertices, uint32_t size)
+	OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertices, uint32_t size)
 	{
 		HU_PROFILE_FUNCTION();
 
@@ -34,7 +34,7 @@ namespace Hurikan {
 		glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
 	}
 
-	Hurikan::OpenGLVertexBuffer::~OpenGLVertexBuffer()
+	OpenGLVertexBuffer::~OpenGLVertexBuffer()
 	{
 		HU_PROFILE_FUNCTION();
 
@@ -42,14 +42,14 @@ namespace Hurikan {
 	}
 
 
-	void Hurikan::OpenGLVertexBuffer::Bind() const
+	void OpenGLVertexBuffer::Bind() const
 	{
 		HU_PROFILE_FUNCTION();
 
 		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
 	}
 
-	void Hurikan::OpenGLVertexBuffer::Unbind() const
+	void OpenGLVertexBuffer::Unbind() const
 	{
 		HU_PROFILE_FUNCTION();
 
@@ -59,7 +59,7 @@ namespace Hurikan {
 	///////////////////////////////////////////////////////////////////////////////////////////
 	/// INDEX BUFFER /////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////
-	Hurikan::OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t* indices, uint32_t count) 
+	OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t* indices, uint32_t count) 
 		: m_Count(count)
 	{
 		HU_PROFILE_FUNCTION();
@@ -69,21 +69,21 @@ namespace Hurikan {
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
 	}
 
-	Hurikan::OpenGLIndexBuffer::~OpenGLIndexBuffer()
+	OpenGLIndexBuffer::~OpenGLIndexBuffer()
 	{
 		HU_PROFILE_FUNCTION();
 
 		glDeleteBuffers(1, &m_RendererID);
 	}
 
-	void Hurikan::OpenGLIndexBuffer::Bind() const
+	void OpenGLIndexBuffer::Bind() const
 	{
 		HU_PROFILE_FUNCTION();
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
 	}
 
-	void Hurikan::OpenGLIndexBuffer::Unbind() const
+	void OpenGLIndexBuffer::Unbind() const
 	{
 		HU_PROFILE_FUNCTION();
 

@@ -49,8 +49,8 @@ namespace Hurikan
 		Entity CreateEntityWithDrawOrder(int order, const std::string & name = std::string());
 		void ChangeDrawIndex(int index, Entity entity);
 
-		void CreateBody(Entity entity);
-		void DestroyBody(Entity entity);
+		void CreateBody(Entity& entity);
+		void DestroyBody(Entity& entity);
 
 		void SetContactListener(b2ContactListener* listener);
 	private:
@@ -73,5 +73,6 @@ namespace Hurikan
 	public:
 		// TODO: Find better way to do this
 		std::vector<std::pair<int, Entity>> m_DrawOrder = {};
+		std::vector<Entity> m_ToBeDestoyedBodies = {};
 	};
 }

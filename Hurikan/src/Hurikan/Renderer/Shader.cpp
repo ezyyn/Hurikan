@@ -4,8 +4,8 @@
 #include "Hurikan/Renderer/Renderer.h"
 #include "Platform/OpenGL/OpenGLShader.h"
 
-namespace Hurikan {
-
+namespace Hurikan 
+{
 	Ref<Shader> Shader::Create(const std::string& filepath)
 	{
 		switch (Renderer::GetAPI()) {
@@ -13,7 +13,7 @@ namespace Hurikan {
 			HU_CORE_ASSERT(false, "RendererAPI: None is an invalid API!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
-			return std::make_shared<OpenGLShader>(filepath);
+			return CreateRef<OpenGLShader>(filepath);
 		case RendererAPI::API::Vulkan:
 			HU_CORE_ASSERT(false, "RendererAPI: Vulkan currently not supported!");
 		}
@@ -29,7 +29,7 @@ namespace Hurikan {
 			HU_CORE_ASSERT(false, "RendererAPI: None is an invalid API!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
-			return std::make_shared<OpenGLShader>(name,vertex,fragment);
+			return CreateRef<OpenGLShader>(name, vertex, fragment);
 		case RendererAPI::API::Vulkan:
 			HU_CORE_ASSERT(false, "RendererAPI: Vulkan currently not supported!");
 		}
@@ -50,21 +50,21 @@ namespace Hurikan {
 		m_Shaders[name] = shader;
 	}
 
-	Hurikan::Ref<Hurikan::Shader> ShaderLibrary::Load(const std::string& filepath)
+	Ref<Shader> ShaderLibrary::Load(const std::string& filepath)
 	{
 		auto shader = Shader::Create(filepath);
 		Add(shader);
 		return shader;
 	}
 
-	Hurikan::Ref<Hurikan::Shader> ShaderLibrary::Load(const std::string& name, const std::string& filepath)
+	Ref<Shader> ShaderLibrary::Load(const std::string& name, const std::string& filepath)
 	{
 		auto shader = Shader::Create(filepath);
 		Add(name, shader);
 		return shader;
 	}
 
-	Hurikan::Ref<Hurikan::Shader> ShaderLibrary::Get(const std::string& name)
+	Ref<Shader> ShaderLibrary::Get(const std::string& name)
 	{
 		HU_CORE_ASSERT(m_Shaders.find((name)) != m_Shaders.end(), "Shader not found!");
 		return m_Shaders[name];

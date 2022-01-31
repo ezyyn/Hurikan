@@ -29,7 +29,6 @@ namespace Hurikan
 
 		inline static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount = 0) 
 		{
-
 			uint32_t count = indexCount == 0 ? vertexArray->GetIndexBuffer()->GetCount() : indexCount; 
 			s_RendererAPI->DrawIndexed(vertexArray,count);
 		}

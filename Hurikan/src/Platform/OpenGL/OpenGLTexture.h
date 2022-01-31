@@ -4,7 +4,8 @@
 
 #include <glad/glad.h>
 
-namespace Hurikan {
+namespace Hurikan 
+{
 	class OpenGLTexture2D : public Texture2D
 	{
 	public:
@@ -28,7 +29,7 @@ namespace Hurikan {
 			return m_RendererID == ((OpenGLTexture2D&)other).m_RendererID; 
 		}
 	private:
-		std::string m_Path;
+		std::string m_Path = std::string();
 		bool m_IsLoaded = false;
 		uint32_t m_Width, m_Height;
 		uint32_t m_RendererID;

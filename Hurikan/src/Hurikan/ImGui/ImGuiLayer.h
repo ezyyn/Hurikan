@@ -2,7 +2,8 @@
 
 #include "Hurikan/Core/Layer.h"
 
-namespace Hurikan {
+namespace Hurikan 
+{
 	class  ImGuiLayer : public Layer
 	{
 	public:
