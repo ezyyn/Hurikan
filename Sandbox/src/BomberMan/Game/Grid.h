@@ -2,13 +2,10 @@
 
 #include "BomberMan/Core/Observer.h"
 #include "BomberMan/Core/LevelManager.h"
-#include "BomberMan/UI/Effects.h"
 
 #include <Hurikan/Core/Ref.h>
 #include <Hurikan/Core/Log.h>
 #include <Hurikan/Scene/Entity.h>
-
-class Hurikan::Scene;
 using namespace Hurikan;
 
 enum class EntityType
@@ -49,7 +46,7 @@ struct GridNodeComponent
 class Grid : public Observer, public Observable
 { 
 public:
-	void Create(Hurikan::Scene& scene);
+	void Create(Scene& scene);
 
 	static inline Entity& Get(unsigned int y, unsigned int x) { return m_Grid[y * LevelManager::GetCurrentLevel().Width + x]; }
 
@@ -66,8 +63,6 @@ private:
 	std::vector<Entity> m_AnimationQueue;
 
 	Entity m_PlayerGridPosition;
-
-	Effect* m_DebugEffect;
 
 	Level m_CurrentLevel;
 };

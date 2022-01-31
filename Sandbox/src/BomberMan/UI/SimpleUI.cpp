@@ -145,9 +145,6 @@ void SimpleUI::Init()
 
 void SimpleUI::OnUpdate(Timestep& ts)
 {
-	//if(m_Effect != nullptr)
-	//	m_Effect->OnUpdate(ts);
-
 	if (SaveManager::Data().Score - m_ScoreOnScreen > 0)
 	{
 		OnUpdateScore(ts);
@@ -198,12 +195,6 @@ void SimpleUI::OnGameEvent(GameEvent& e)
 	{
 		m_Head.Transform().Scale.x *= -1;
 		m_HeadAnimator.Play("LeftAnimation");
-		break;
-	}
-	case GameEventType::BREAK_WALL:
-	{
-		auto& GRID_ENTITY = std::any_cast<Entity>(e.Data);
-		
 		break;
 	}
 	}

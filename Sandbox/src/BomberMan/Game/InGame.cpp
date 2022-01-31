@@ -24,7 +24,7 @@ void InGame::Init()
 	}
 
 	m_GameCamera.Create(m_InGameScene.CreateEntity());
-
+	m_FXManager.Init(&m_InGameScene);
 	m_SimpleUI.Init();
 	m_BombManager.Init(&m_InGameScene);
 	m_EnemySpawner.Init(&m_InGameScene);
@@ -45,7 +45,7 @@ void InGame::Load()
 	m_BombManager.Attach(&m_Grid);
 	m_BombManager.Attach(&m_Player);
 	m_BombManager.Attach(&m_EnemySpawner);
-	m_BombManager.Attach(&m_SimpleUI);
+	m_BombManager.Attach(&m_FXManager);
 
 	m_Player.Create(m_InGameScene);
 	m_Grid.Create(m_InGameScene);
@@ -73,6 +73,7 @@ void InGame::OnUpdate(Timestep& ts)
 		Released = Input::IsKeyReleased(Key::B);
 	}
 
+	m_FXManager.OnUpdate(ts);
 	m_EnemySpawner.OnUpdate(ts);
 	m_Grid.OnUpdate(ts);
 	m_BombManager.OnUpdate(ts);

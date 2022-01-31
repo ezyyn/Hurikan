@@ -57,16 +57,16 @@ void ResourceManager::Init_Impl()
 		// Numbers
 		{
 			Ref<Texture2D> fontSpriteSheet = Texture2D::Create(m_Filepath + "/ui/numbers.png");
-			m_SubTextureMap["0"] = SubTexture2D::CreateFromCoords(fontSpriteSheet, { 0, 0 }, { 8, 8 });
-			m_SubTextureMap["1"] = SubTexture2D::CreateFromCoords(fontSpriteSheet, { 1, 0 }, { 8, 8 });
-			m_SubTextureMap["2"] = SubTexture2D::CreateFromCoords(fontSpriteSheet, { 2, 0 }, { 8, 8 });
-			m_SubTextureMap["3"] = SubTexture2D::CreateFromCoords(fontSpriteSheet, { 3, 0 }, { 8, 8 });
-			m_SubTextureMap["4"] = SubTexture2D::CreateFromCoords(fontSpriteSheet, { 4, 0 }, { 8, 8 });
-			m_SubTextureMap["5"] = SubTexture2D::CreateFromCoords(fontSpriteSheet, { 5, 0 }, { 8, 8 });
-			m_SubTextureMap["6"] = SubTexture2D::CreateFromCoords(fontSpriteSheet, { 6, 0 }, { 8, 8 });
-			m_SubTextureMap["7"] = SubTexture2D::CreateFromCoords(fontSpriteSheet, { 7, 0 }, { 8, 8 });
-			m_SubTextureMap["8"] = SubTexture2D::CreateFromCoords(fontSpriteSheet, { 8, 0 }, { 8, 8 });
-			m_SubTextureMap["9"] = SubTexture2D::CreateFromCoords(fontSpriteSheet, { 9, 0 }, { 8, 8 });
+			m_SubTextureMap["0"] = SubTexture2D::CreateFromCoords(fontSpriteSheet, { 0, 0 }, { 9, 9 });
+			m_SubTextureMap["1"] = SubTexture2D::CreateFromCoords(fontSpriteSheet, { 1, 0 }, { 9, 9 });
+			m_SubTextureMap["2"] = SubTexture2D::CreateFromCoords(fontSpriteSheet, { 2, 0 }, { 9, 9 });
+			m_SubTextureMap["3"] = SubTexture2D::CreateFromCoords(fontSpriteSheet, { 3, 0 }, { 9, 9 });
+			m_SubTextureMap["4"] = SubTexture2D::CreateFromCoords(fontSpriteSheet, { 4, 0 }, { 9, 9 });
+			m_SubTextureMap["5"] = SubTexture2D::CreateFromCoords(fontSpriteSheet, { 5, 0 }, { 9, 9 });
+			m_SubTextureMap["6"] = SubTexture2D::CreateFromCoords(fontSpriteSheet, { 6, 0 }, { 9, 9 });
+			m_SubTextureMap["7"] = SubTexture2D::CreateFromCoords(fontSpriteSheet, { 7, 0 }, { 9, 9 });
+			m_SubTextureMap["8"] = SubTexture2D::CreateFromCoords(fontSpriteSheet, { 8, 0 }, { 9, 9 });
+			m_SubTextureMap["9"] = SubTexture2D::CreateFromCoords(fontSpriteSheet, { 9, 0 }, { 9, 9 });
 		}
 
 		Animation

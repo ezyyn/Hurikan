@@ -5,6 +5,7 @@
 #include "BomberMan/Game/Player.h"
 #include "BomberMan/Game/Bomb.h"
 #include "BomberMan/Game/Enemy.h"
+#include "BomberMan/UI/FXManager.h"
 
 #include "BomberMan/UI/SimpleUI.h"
 //#include "BomberMan/Core/Navigation.h"
@@ -29,6 +30,7 @@ private:
 	Player m_Player;
 	BombManager m_BombManager;
 	EnemySpawner m_EnemySpawner;
+	FXManager m_FXManager;
 
 	//Navigation m_Navigation;
 	// Test

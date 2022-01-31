@@ -7,14 +7,10 @@
 #include <Hurikan/Scene/Components.h>
 #include <box2d/b2_body.h>
 
-Hurikan::Scope<Entity[]> Grid::m_Grid;
-
-Scene* s;
+Scope<Entity[]> Grid::m_Grid;
 
 void Grid::Create(Scene& scene)
 {
-	s = &scene;
-
 	// Load level from LevelManager
 
 	m_CurrentLevel = LevelManager::GetCurrentLevel();
@@ -199,9 +195,6 @@ void Grid::OnGameEvent(GameEvent& e)
 		GRID_ENTITY.GetComponent<GridNodeComponent>().Obstacle = false;
 
 		m_AnimationQueue.emplace_back(GRID_ENTITY);
-
-		m_DebugEffect = new Score100Effect(s
-			, FXType::SCORE_100, 100, GRID_ENTITY.Transform().Translation);
 
 		SaveManager::Data().Score += 100;
 	}

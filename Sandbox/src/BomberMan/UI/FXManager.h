@@ -6,8 +6,14 @@
 class FXManager : public Observer
 {
 public:
-	void Init();
+	void Init(Scene* scene);
 	void OnUpdate(Timestep& ts);
 private:
-	std::vector<Effect> m_EffectsList;
+	// Inherited via Observer
+	virtual void OnGameEvent(GameEvent& e) override;
+
+private:
+	std::vector<Effect*> m_PlayingEffects;
+
+	Scene* m_CurrentScene;
 };
