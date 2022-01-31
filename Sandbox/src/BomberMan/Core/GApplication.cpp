@@ -11,7 +11,7 @@ public:
 
 	virtual void OnInit() override
 	{
-		PushLayer(new GameManager());
+		PushLayer(new GameManager);
 	}
 
 };
@@ -19,7 +19,7 @@ public:
 Hurikan::Application* Hurikan::CreateApplication(Hurikan::ApplicationCommandLineArgs args)
 {
 	Hurikan::ApplicationSpecification specification;
-	specification.Name = "BomberMan v0.2";
+	specification.Name = "BomberMan v0.3";
 	specification.WindowWidth = 1600;
 	specification.WindowHeight = 900;
 	specification.StartMaximized = false;

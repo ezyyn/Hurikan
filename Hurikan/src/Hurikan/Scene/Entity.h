@@ -91,7 +91,7 @@ namespace Hurikan
 		//}
 		
 		bool operator==(const Entity& other) const { return m_EntityHandle == other.m_EntityHandle && m_Scene == other.m_Scene; }
-		bool operator!=(const Entity& other) const { return *this == other; }
+		bool operator!=(const Entity& other) const { return (*this == other) == false; }
 	private:
 		entt::entity m_EntityHandle = entt::null;
 		Scene* m_Scene = nullptr;

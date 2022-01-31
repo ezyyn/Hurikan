@@ -7,14 +7,14 @@
 
 static std::vector<Bomb> s_BombList;
 
+////////////////////////////////////////////////////////////////////
+///////////////////////  Bomb Manager //////////////////////////////
+////////////////////////////////////////////////////////////////////
+
 void BombManager::Init(Scene* scene)
 {
 	g_GameScene = scene;
 }
-
-////////////////////////////////////////////////////////////////////
-///////////////////////  Bomb Manager //////////////////////////////
-////////////////////////////////////////////////////////////////////
 bool BombManager::PlaceBomb(BombProps& props)
 {
 	props.GridEntity = m_PlayerGrid;
@@ -27,19 +27,49 @@ bool BombManager::PlaceBomb(BombProps& props)
 
 	HU_CORE_ASSERT(g_GameScene, "Scene is nullptr!");
 
-	DispatchToAll(GameEventType::BOMB_PLACED, m_PlayerGrid);
+	DispatchToAll(GameEventType::BOMB_PLACED, props.GridEntity);
 
-	s_BombList.emplace_back(props, g_GameScene);
+	auto& bomb = s_BombList.emplace_back(props, g_GameScene);
+	bomb.Attach(this);
+	
 	return true;
 }
 
 void BombManager::OnGameEvent(GameEvent& e)
 {
-	if (e.Type == GameEventType::VALUE_PLAYER_CHNG_POS_GRID) // Should be an event from grid
+	if (e.Type == GameEventType::VALUE_PLAYER_CHNG_POS_GRID) 
 	{
-		auto& entity = std::any_cast<Entity>(e.Data);
-		HU_INFO("x: {0}, y: {1}", entity.Transform().Translation.x, entity.Transform().Translation.y);
-		m_PlayerGrid = entity;
+		// Event from GRID
+		
+		// Updates the position of the PLAYER
+
+		auto& GRID_ENTITY = std::any_cast<Entity>(e.Data);
+		//HU_INFO("x: {0}, y: {1}", GRID_ENTITY.Transform().Translation.x, GRID_ENTITY.Transform().Translation.y);
+		m_PlayerGrid = GRID_ENTITY;
+	}
+	else if (e.Type == GameEventType::BOMB_EXPLODED) 
+	{
+		// Event from BOMB to player if explosion hit the player
+
+		// e.Data => m_SpreadEntities
+		
+		DispatchToAll(GameEventType::BOMB_EXPLODED, e.Data);
+	}
+	else if (e.Type == GameEventType::BOMB_VANISHED)
+	{
+		// Event from BOMB
+
+		// Sends info to GRID that BOMB vanished => GRID can now clear the GRID_ENTITY under the bomb
+
+		//auto& GRID_ENTITY = std::any_cast<Entity>(e.Data);
+
+		DispatchToAll(GameEventType::BOMB_VANISHED, e.Data);
+	}
+	else if (e.Type == GameEventType::BREAK_WALL)
+	{
+		// Sends info to GRID that some bomb destroyed a wall, GRID_ENTITY
+
+		DispatchToAll(GameEventType::BREAK_WALL, e.Data);
 	}
 }
 
@@ -48,10 +78,11 @@ void BombManager::OnUpdate(Timestep& ts)
 	auto& itr = s_BombList.begin();
 	while (itr != s_BombList.end())
 	{
-		if (itr->OnTick(ts)) 
+		bool destroyable = itr->OnTick(ts);
+
+		if (destroyable) 
 		{
-			//DispatchToAll(GameEventType::BOMB_ERASED);
-			//itr = s_BombList.erase(itr);
+			itr = s_BombList.erase(itr);
 		}
 		else 
 		{
@@ -90,6 +121,45 @@ Bomb::Bomb(const BombProps& props, Scene* scene)
 
 bool Bomb::OnTick(Timestep& ts)
 {
+	if ((m_Properties.Time >= m_Properties.ExplosionTime && m_Properties.State == BombState::TICKING) || m_ChainExplosion)
+	{
+		m_ChainExplosion = false;
+
+		// Creates the explosion
+		Expand();
+
+		// Send info to BOMB MANAGER and PLAYER that this bomb exploded
+		DispatchToAll(GameEventType::BOMB_EXPLODED, m_SpreadEntities);
+
+		m_Properties.State = BombState::EXPLOSION;
+	}
+
+	if (m_Properties.State == BombState::EXPLOSION)
+	{
+		for (auto& exp : m_SpreadEntities)
+		{
+			auto& frame_animator = exp.GetComponent<Animator>();
+			frame_animator.OnUpdate(ts);
+
+			if (!frame_animator.IsAnyPlaying())
+			{
+				m_AnimationCompletedCount++;
+				//exp.RemoveComponent<SpriteRendererComponent>();
+				//exp.RemoveComponent<Animator>();
+				if (m_AnimationCompletedCount == m_SpreadEntities.size())
+				{
+					// Send info to BOMB MANAGER that this bomb exploded
+					DispatchToAll(GameEventType::BOMB_VANISHED, m_OnTopOfEntity);
+					// ... Then destroy itself
+					DestroyItSelf();
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
 	if (m_Properties.State == BombState::SET)
 	{
 		m_Handle.GetComponent<Animator>().Play("BombTicking");
@@ -102,32 +172,19 @@ bool Bomb::OnTick(Timestep& ts)
 		m_Handle.GetComponent<Animator>().OnUpdate(ts);
 	}
 
-	if ((m_Properties.Time >= m_Properties.ExplosionTime && m_Properties.State == BombState::TICKING)  || m_ChainExplosion)
-	{
-		m_Properties.State = BombState::EXPLOSION;
-
-		Expand();
-	}
-
-	if (m_Properties.State == BombState::EXPLOSION)
-	{
-		for (auto& exp : m_SpreadEntities)
-		{
-			if (exp.HasComponent<Animator>())
-			{
-				auto& frame_animator = exp.GetComponent<Animator>();
-				frame_animator.OnUpdate(ts);
-
-				if (!frame_animator.IsAnyPlaying())
-				{
-					exp.RemoveComponent<SpriteRendererComponent>();
-					exp.RemoveComponent<Animator>();
-				}
-			}
-		}
-	}
-
 	return false;
+}
+
+void Bomb::DestroyItSelf()
+{
+	for (auto& exp : m_SpreadEntities)
+	{
+		g_GameScene->DestroyEntity(exp);
+	}
+
+	m_Properties.State = BombState::DONE;
+
+	m_SpreadEntities.clear();
 }
 
 void Bomb::Explode()
@@ -192,7 +249,6 @@ void Bomb::Expand()
 		if (index_y + j < LevelManager::GetCurrentLevel().Height)
 		{
 			auto downspread = Grid::Get(index_y + j, index_x);
-			//auto downspread = g_GameGrid->Get(index_y + j, index_x);
 
 			bool stop_expanding = WingExpand(j, downspread, 180.0f);
 
@@ -210,12 +266,7 @@ bool Bomb::WingExpand(int index, Entity& entity, float rotation)
 		return true;
 	case EntityType::LOOT_WALL:
 	{
-		entity.GetComponent<Animator>().Play("WallBreakAnimation");
-		entity.GetComponent<EntityTypeComponent>().Type = EntityType::EMPTY;
-
-		auto rb = (b2Body*)entity.GetComponent<Rigidbody2DComponent>().RuntimeBody;
-		rb->SetEnabled(false);
-		entity.GetComponent<GridNodeComponent>().Obstacle = false;
+		DispatchToAll(GameEventType::BREAK_WALL, entity);
 		return true;
 	}
 	case EntityType::EMPTY:
@@ -247,10 +298,9 @@ bool Bomb::WingExpand(int index, Entity& entity, float rotation)
 	{
 		for (auto& other : s_BombList)
 		{
-			if (other.m_Properties.State != BombState::EXPLOSION &&
-				other.m_Handle.Transform().Translation == m_Handle.Transform().Translation)
+			if (*this != other && other.GetState() < BombState::EXPLOSION &&
+				other.m_Handle.Transform().Translation == entity.Transform().Translation)
 			{
-				HU_INFO("EXPLDED");
 				other.Explode();
 			}
 		}

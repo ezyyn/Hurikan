@@ -18,27 +18,34 @@ void InGame::Init()
 
 		auto& src = bckg.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f));
 		src.Texture = ResourceManager::GetTexture("Background");
-		bckg.GetComponent<TransformComponent>().Scale = { 16, 16, 0.0f };
+		bckg.GetComponent<TransformComponent>().Scale = { 32, 32, 0.0f };
 		//bckg.GetComponent<TransformComponent>().Translation = { glm::round(m_CurrentLevel.Width / 2), -glm::round(m_CurrentLevel.Height / 2) - 1, 0 };
-		bckg.GetComponent<SpriteRendererComponent>().TilingFactor = 16.0f;
+		bckg.GetComponent<SpriteRendererComponent>().TilingFactor = 32.0f;
 	}
-	// Camera init
+
 	m_GameCamera.Create(m_InGameScene.CreateEntity());
 
+	m_SimpleUI.Init();
 	m_BombManager.Init(&m_InGameScene);
+	m_EnemySpawner.Init(&m_InGameScene);
 }
 
 void InGame::Load()
 {
-	// Grid's subscribtions
 	m_Grid.Attach(&m_Player);
 	m_Grid.Attach(&m_BombManager);
+	m_Grid.Attach(&m_EnemySpawner);
 
-	// Player's subscribtions
+	// Player => GRID LISTENS TO PLAYER
 	m_Player.Attach(&m_Grid);
+	m_Player.Attach(&m_GameCamera);
+	m_Player.Attach(&m_SimpleUI);
 
-	// Bomb Manager's subscribtions
+	// Bomb manager
 	m_BombManager.Attach(&m_Grid);
+	m_BombManager.Attach(&m_Player);
+	m_BombManager.Attach(&m_EnemySpawner);
+	m_BombManager.Attach(&m_SimpleUI);
 
 	m_Player.Create(m_InGameScene);
 	m_Grid.Create(m_InGameScene);
@@ -66,7 +73,11 @@ void InGame::OnUpdate(Timestep& ts)
 		Released = Input::IsKeyReleased(Key::B);
 	}
 
+	m_EnemySpawner.OnUpdate(ts);
+	m_Grid.OnUpdate(ts);
 	m_BombManager.OnUpdate(ts);
 	m_Player.OnUpdate(ts);
 	m_InGameScene.OnUpdateRuntime(ts);
+
+	m_SimpleUI.OnUpdate(ts);
 }

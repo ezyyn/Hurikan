@@ -6,9 +6,9 @@
 #include <Hurikan/Scene/Entity.h>
 using namespace Hurikan;
 
-enum class BombState
+enum class BombState : unsigned short
 {
-	SET = 0, TICKING, EXPLOSION, DONE
+	SET = 0, TICKING, EDGE, EXPLOSION, DONE
 };
 
 enum class BombType
@@ -41,14 +41,20 @@ public:
 	bool OnTick(Timestep& ts);
 public:
 	inline const glm::vec3& Position() { return m_Handle.Transform().Translation; }
+	inline const BombState& GetState() { return m_Properties.State; }
 private:
 	void Explode();
 	void Expand();
 	bool WingExpand(int index, Entity& entity, float rotation);
+	void DestroyItSelf();
+
+	inline bool operator==(Bomb& other) { return m_Handle == other.m_Handle; }
+	inline bool operator!=(Bomb& other) { return !(*this == other); }
 private:
 	std::list<Entity> m_SpreadEntities;
 	bool m_ChainExplosion = false;
 	bool amn_cmlpt = true;
+	int m_AnimationCompletedCount = 0;
 
 	BombProps m_Properties;
 	Entity m_OnTopOfEntity; // Entity from grid array that the object is on top of

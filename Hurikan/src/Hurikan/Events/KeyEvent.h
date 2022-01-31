@@ -3,8 +3,8 @@
 
 #include "Hurikan/Core/KeyCodes.h"
 
-namespace Hurikan {
-
+namespace Hurikan 
+{
 	class KeyEvent : public Event
 	{
 	public:

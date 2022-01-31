@@ -11,6 +11,7 @@ class ResourceManager
 public:
 	static inline void Init() { s_Instance.Init_Impl(); }
 	static inline const Ref<SubTexture2D>& GetSubTexture(const std::string& tag) { return s_Instance.m_SubTextureMap[tag]; }
+	static inline const Ref<SubTexture2D>& GetSubTexture(char tag) { return s_Instance.m_SubTextureMap[std::string(1, tag)]; }
 	static inline const Ref<Texture2D>& GetTexture(const std::string& tag) { return s_Instance.m_TextureMap[tag]; }
 	static inline const Animation& GetAnimation(const std::string& tag) { return s_Instance.m_AnimationMap[tag]; }
 private:

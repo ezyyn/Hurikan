@@ -3,7 +3,8 @@
 #include "Hurikan/Debug/Instrumentor.h"
 #include "Hurikan/Core/Base.h"
 
-namespace Hurikan {
+namespace Hurikan 
+{
 
 	enum class EventType
 	{

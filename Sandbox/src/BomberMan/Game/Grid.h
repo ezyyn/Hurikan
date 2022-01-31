@@ -2,6 +2,7 @@
 
 #include "BomberMan/Core/Observer.h"
 #include "BomberMan/Core/LevelManager.h"
+#include "BomberMan/UI/Effects.h"
 
 #include <Hurikan/Core/Ref.h>
 #include <Hurikan/Core/Log.h>
@@ -55,12 +56,18 @@ public:
 	inline const int GetLevelHeight() const { return m_CurrentLevel.Height; }
 	inline const int GetLevelWidth()  const { return m_CurrentLevel.Width; }
 
+	static void ClearNodes();
+
 	virtual void OnGameEvent(GameEvent& e) override;
+	void OnUpdate(Timestep& ts);
 private:
 	static Scope<Entity[]> m_Grid;
-	std::vector<Entity> m_DestroyableWalls;
+
+	std::vector<Entity> m_AnimationQueue;
 
 	Entity m_PlayerGridPosition;
+
+	Effect* m_DebugEffect;
 
 	Level m_CurrentLevel;
 };
