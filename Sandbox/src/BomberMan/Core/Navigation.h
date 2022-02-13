@@ -3,8 +3,11 @@
 #include <Hurikan/Core/Log.h>
 #include <Hurikan/Scene/Entity.h>
 
+#include "BomberMan/Game/Grid.h"
+
 #include <vector>
 #include <chrono>
+#include <random>
 #include <time.h>
 
 namespace Navigation
@@ -114,7 +117,7 @@ namespace Navigation
 		};
 		auto heuristic = [distance](Entity& a, Entity& b)
 		{
-			return /*distance(a, b)*/ 1;
+			return /*distance(a, b)*/ 1.0f;
 		};
 
 		// Algorithm starts on the position of the enemy
@@ -174,7 +177,7 @@ namespace Navigation
 
 		Entity p = target;
 
-		while (p.GetComponent<GridNodeComponent>().Parent)//
+		while (p.GetComponent<GridNodeComponent>().Parent)
 		{
 			/*if (!p.HasComponent<SpriteRendererComponent>())
 			{
@@ -189,16 +192,164 @@ namespace Navigation
 			path.push_front(p);
 			p = p.GetComponent<GridNodeComponent>().Parent;
 		}
-
+		
+		if (path.front() == start)
+		{
+			// Successfully found a path to target
+			return path;
+		}
+		
 		//path.push_front({ start.Transform().Translation.x, start.Transform().Translation.y, 0 });
 
-		//	HU_INFO("-------------");
-		return path;
+		return {};
 	}
+
+	enum class Direction
+	{
+		UP = 0,
+		DOWN,
+		LEFT,
+		RIGHT
+	};
+
+
 	static inline std::list<Entity> RandomPath(Entity& start)
 	{
-		auto& discovered_path = Discover(start);
-		int random_n = rand() % (discovered_path.size());
-		return Navigate(start, discovered_path[random_n]);
+		HU_CORE_ASSERT(start, "");
+
+		std::vector<Entity> full_path;
+		std::list<Entity> random_path;
+
+		Entity tested = start;
+		// Available directions
+		std::vector<Direction> dir_available;
+
+		for (auto& neighbour : start.GetComponent<GridNodeComponent>().Neighbours)
+		{
+			if (neighbour.GetComponent<GridNodeComponent>().Obstacle)
+				continue;
+
+			auto& start_pos = start.Transform().Translation;
+			auto& neightbour_pos = neighbour.Transform().Translation;
+
+			if (neightbour_pos.y > start_pos.y)// UP
+			{
+				dir_available.push_back(Direction::UP);
+			}
+			else if (neightbour_pos.y < start_pos.y) // DOWN
+			{
+				dir_available.push_back(Direction::DOWN);
+			}
+			else if (neightbour_pos.x > start_pos.x) // RIGHT
+			{
+				dir_available.push_back(Direction::RIGHT);
+			}
+			else if(neightbour_pos.x < start_pos.x) // LEFT
+			{
+				dir_available.push_back(Direction::LEFT);
+			}
+		}
+
+		if (dir_available.size() == 0)
+			return {};
+
+		auto s = dir_available.size() - 1;
+
+		int random = Utils::Random(0, s);
+
+		auto& random_direction = dir_available[random];
+
+		while(!tested.GetComponent<GridNodeComponent>().Obstacle)
+		{
+			auto& tested_pos = tested.Transform().Translation;
+
+			for (auto& neighbour : tested.GetComponent<GridNodeComponent>().Neighbours)
+			{
+				auto& neightbour_pos = neighbour.Transform().Translation;
+
+				if (random_direction == Direction::UP && neightbour_pos.y > tested_pos.y)// UP
+				{
+					full_path.push_back(neighbour);
+					tested = neighbour;
+					break;
+				}
+				else if (random_direction == Direction::DOWN && neightbour_pos.y < tested_pos.y) // DOWN
+				{
+					full_path.push_back(neighbour);
+					tested = neighbour;
+					break;
+				}
+				else if (random_direction == Direction::RIGHT && neightbour_pos.x > tested_pos.x) // RIGHT
+				{
+					full_path.push_back(neighbour);
+					tested = neighbour;
+					break;
+				}
+				else if (random_direction == Direction::LEFT && neightbour_pos.x < tested_pos.x) // LEFT
+				{
+					full_path.push_back(neighbour);
+					tested = neighbour;
+					break;
+				}
+			}
+		}
+		
+		if (full_path.empty())
+		{
+			return {};
+		}
+
+		int random_length = Utils::Random(1, full_path.size());
+
+		for (int i = 0; i < random_length; ++i)
+		{
+			random_path.push_back(full_path[i]);
+		}
+
+		return random_path;
+	}
+
+	static inline std::list<Entity> DirPath(int dir, int length, const Entity& start)
+	{
+		std::list<Entity> full_path;
+
+		Entity tested = start;
+
+		while (!tested.GetComponent<GridNodeComponent>().Obstacle)
+		{
+			auto& tested_pos = tested.Transform().Translation;
+
+			for (auto& neighbour : tested.GetComponent<GridNodeComponent>().Neighbours)
+			{
+				auto& neightbour_pos = neighbour.Transform().Translation;
+
+				if ((Direction)dir == Direction::UP && neightbour_pos.y > tested_pos.y)// UP
+				{
+					full_path.push_back(neighbour);
+					tested = neighbour;
+					break;
+				}
+				else if ((Direction)dir == Direction::DOWN && neightbour_pos.y < tested_pos.y) // DOWN
+				{
+					full_path.push_back(neighbour);
+					tested = neighbour;
+					break;
+				}
+				else if ((Direction)dir == Direction::RIGHT && neightbour_pos.x > tested_pos.x) // RIGHT
+				{
+					full_path.push_back(neighbour);
+					tested = neighbour;
+					break;
+				}
+				else if ((Direction)dir == Direction::LEFT && neightbour_pos.x < tested_pos.x) // LEFT
+				{
+					full_path.push_back(neighbour);
+					tested = neighbour;
+					break;
+				}
+			}
+		}
+
+		return full_path;
 	}
 }

@@ -24,7 +24,11 @@ Hurikan::Application* Hurikan::CreateApplication(Hurikan::ApplicationCommandLine
 	specification.WindowHeight = 900;
 	specification.StartMaximized = false;
 	specification.VSync = true;
+#ifdef HU_DEBUG
+	specification.EnableImGui = true;
+#else
 	specification.EnableImGui = false;
+#endif
 	specification.Resizable = false;
 
 	return new GApplication(specification, args);

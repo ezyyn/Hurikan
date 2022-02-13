@@ -56,7 +56,7 @@ namespace Hurikan
 		return entity;
 	}
 
-	void Scene::DestroyEntity(Entity entity)
+	void Scene::DestroyEntity(Entity& entity)
 	{
 		// Removes it from draw order
 
@@ -67,6 +67,7 @@ namespace Hurikan
 			if (it->second == entity)
 			{
 				it = m_DrawOrder.erase(it);
+				break;
 			}
 			else
 			{
@@ -74,22 +75,7 @@ namespace Hurikan
 			}
 		}
 
-		/*for (int i = 0; i < m_DrawOrder.size(); ++i)
-		{
-			if (entity == m_DrawOrder[i].second)
-			{
-				m_DrawOrder.erase(m_DrawOrder.begin() + i);
-			}
-		}*/
-		// If entity has any children attached to it, remove them as well
-		//for (auto& child : entity.GetChildren())
-		//{
-		//	if (child.HasComponent<Rigidbody2DComponent>())
-		//		DestroyBody(child);
-		//	m_Registry.destroy(child);
-		//}
 		// Destroys RigidBody in b2World too
-
 		if (m_PhysicsWorld)
 		{
 			if (entity.HasComponent<Rigidbody2DComponent>())
@@ -116,13 +102,8 @@ namespace Hurikan
 
 	void Scene::OnRuntimeStop()
 	{
-		m_DrawOrder.clear();
-		m_DrawOrder.shrink_to_fit();
 		if (m_PhysicsWorld)
 		{
-			for (int i = 0; i < m_PhysicsUserData.size(); i++)
-				delete m_PhysicsUserData[i];
-
 			delete m_PhysicsWorld;
 			m_PhysicsWorld = nullptr;
 		}
@@ -130,7 +111,24 @@ namespace Hurikan
 
 	void Scene::UpdatePhysics(Timestep ts)
 	{
-		// Physics
+		// Changes and creates bodies at runtime to not cause any trouble for Box2D
+		if (!m_PhysicsWorld->IsLocked())
+		{
+			while (!m_CreateBodiesPool.empty())
+			{
+				CreateBody(m_CreateBodiesPool.front());
+				m_CreateBodiesPool.pop_front();
+			}
+
+			while (!m_ChangeBodiesPool.empty())
+			{
+				auto& rb2d = m_ChangeBodiesPool.front().GetComponent<Rigidbody2DComponent>();
+				b2Body* body = (b2Body*)rb2d.RuntimeBody;
+				body->SetEnabled(rb2d.Enabled);
+				m_ChangeBodiesPool.pop_front();
+			}
+		}
+
 		constexpr int32_t velocityIterations = 6;
 		constexpr int32_t positionIterations = 2;
 		m_PhysicsWorld->Step(ts, velocityIterations, positionIterations);
@@ -171,21 +169,6 @@ namespace Hurikan
 
 		if (m_PhysicsWorld)
 		{
-			m_Registry.view<Rigidbody2DComponent>().each([=](auto entity, auto& rb2d)
-				{
-					if (rb2d.RuntimeBody == nullptr)
-					{
-						for (size_t i = 0; i < m_CreateB2BodyQueue.size(); i++)
-						{
-							if (!m_PhysicsWorld->IsLocked())
-							{
-								CreateBody(m_CreateB2BodyQueue[i]);
-								m_CreateB2BodyQueue.erase(m_CreateB2BodyQueue.begin() + i);
-							}
-						}
-					}
-				});
-
 			UpdatePhysics(ts);
 		}
 
@@ -412,19 +395,16 @@ namespace Hurikan
 		m_PhysicsWorld->SetContactListener(listener);
 	}
 
+	void Scene::ChangeBody(Entity& entity)
+	{
+		HU_CORE_ASSERT(entity.HasComponent<Rigidbody2DComponent>(), "");
+
+		m_ChangeBodiesPool.push_back(entity);
+	}
+
 	void Scene::DestroyBody(Entity& entity)
 	{
 		b2Body* rb = (b2Body*)entity.GetComponent<Rigidbody2DComponent>().RuntimeBody;
-
-		// Deleting heap allocated b2UserData
-		//for (int i = 0; i < m_PhysicsUserData.size(); i++)
-		//{
-		//	if (entity == *m_PhysicsUserData[i])
-		//	{
-		//		delete m_PhysicsUserData[i];
-		//		m_PhysicsUserData.erase(m_PhysicsUserData.begin() + i);
-		//	}
-		//}
 
 		// TODO: Create a destroy queue for runtime destroying
 		m_PhysicsWorld->DestroyBody(rb);
@@ -466,6 +446,10 @@ namespace Hurikan
 	template<>
 	void Scene::OnComponentAdded<Rigidbody2DComponent>(Entity entity, Rigidbody2DComponent& component)
 	{
+		if (m_PhysicsWorld)
+		{
+			m_CreateBodiesPool.push_back(entity);
+		}
 	}
 
 	template<>

@@ -25,12 +25,28 @@ public:
 
 	void OnUpdate(Timestep& ts);
 
+	void UpdateUI();
+
 	void OnKeyPressed(KeyPressedEvent& e);
 private:
-	Entity m_ArrowHead, m_Camera;
+	Entity 
+		m_ArrowHead, 
+		m_Camera, 
+		m_Logo,
+		m_LevelText,
+		m_LevelCount;
 
-	MenuOption m_SelectedOption = MenuOption::NEW_GAME,
-			   m_ConfirmedOption;
+	Entity 
+		m_NewGame,
+		m_Continue,
+		m_Settings,
+		m_Score,
+		m_Exit;
+
+	MenuOption 
+		m_SelectedOption = MenuOption::NEW_GAME,
+		m_ConfirmedOption;
+
 
 	Scene m_MenuScene;
 };

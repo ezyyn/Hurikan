@@ -12,6 +12,8 @@
 
 extern Hurikan::Application* Hurikan::CreateApplication(ApplicationCommandLineArgs args);
 
+#ifdef HU_DEBUG
+
 int main(int argc, char** argv) 
 {
 	//_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
@@ -20,6 +22,7 @@ int main(int argc, char** argv)
 	//_CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDOUT);
 	//_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
 	//_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDOUT);
+
 
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	//_CrtSetBreakAlloc(1095);
@@ -42,5 +45,30 @@ int main(int argc, char** argv)
 		Hurikan::Log::Shutdown();
 	}
 }
+
+#elif HU_RELEASE
+
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow)
+{
+	{
+		//Hurikan::Log::Init();
+
+		HU_PROFILE_BEGIN_SESSION("Startup", "HurikanProfile-Startup.json");
+		auto app = Hurikan::CreateApplication({ /*argc, argv*/ });
+		HU_PROFILE_END_SESSION();
+
+		HU_PROFILE_BEGIN_SESSION("Runtime", "HurikanProfile-Runtime.json");
+		app->Run();
+		HU_PROFILE_END_SESSION();
+
+		HU_PROFILE_BEGIN_SESSION("Shutdown", "HurikanProfile-Shutdown.json");
+		delete app;
+
+		HU_PROFILE_END_SESSION();
+
+		//Hurikan::Log::Shutdown();
+	}
+}
+#endif
 
 #endif

@@ -24,11 +24,11 @@ project "Sandbox"
 		"%{wks.location}/Hurikan/vendor/imgui",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.entt}",
-		"%{IncludeDir.HurikanAudio}",
+		--"%{IncludeDir.HurikanAudio}",
 	}
 	links 
 	{
-		"HurikanAudio",
+		--"HurikanAudio",
 		"Box2D",
 		"Hurikan"
 	}

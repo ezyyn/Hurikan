@@ -21,7 +21,7 @@ namespace Hurikan
 
 		Entity CreateEntity(const std::string& name = std::string());
 		Entity CreateEntitywithUUID(UUID uuid, const std::string& name = std::string());
-		void DestroyEntity(Entity entity);
+		void DestroyEntity(Entity& entity);
 
 		void OnRuntimeStart();
 		void OnRuntimeStop();
@@ -50,6 +50,7 @@ namespace Hurikan
 		void ChangeDrawIndex(int index, Entity entity);
 
 		void CreateBody(Entity& entity);
+		void ChangeBody(Entity& entity);
 		void DestroyBody(Entity& entity);
 
 		void SetContactListener(b2ContactListener* listener);
@@ -62,17 +63,12 @@ namespace Hurikan
 
 		b2World* m_PhysicsWorld = nullptr;
 
-		// Testing
-		std::vector<Entity*> m_PhysicsUserData;
-		// Queue for "to be created in PhysicsWorld" entities
-		std::vector<Entity> m_CreateB2BodyQueue;
-
 		friend class Entity;
 		friend class SceneSerializer;
 		friend class SceneHierarchyPanel;
 	public:
 		// TODO: Find better way to do this
-		std::vector<std::pair<int, Entity>> m_DrawOrder = {};
-		std::vector<Entity> m_ToBeDestoyedBodies = {};
+		std::vector<std::pair<int, Entity>> m_DrawOrder;
+		std::list<Entity> m_DestroyBodiesPool, m_CreateBodiesPool, m_ChangeBodiesPool;
 	};
 }

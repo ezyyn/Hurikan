@@ -1,19 +1,13 @@
 #include "Enemy.h"
 
-#include "BomberMan/Game/Grid.h"
-#include "BomberMan/Core/ResourceManager.h"
-
 #include "BomberMan/Core/Navigation.h"
 
-namespace MyMath
-{
-	static inline float Lerp(float start, float end, float maxDistanceDelta)
-	{
-		if (glm::abs(end - start) <= maxDistanceDelta)
-			return end;
+#include "BomberMan/Game/EnemyClasses/RegularEnemy.h"
+#include "BomberMan/Game/EnemyClasses/RareEnemy.h"
 
-		return start + glm::sign(end - start) * maxDistanceDelta;
-	}
+EnemySpawner::~EnemySpawner()
+{
+	CleanUp();
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -25,23 +19,23 @@ void EnemySpawner::Init(Scene* scene)
 	g_GameScene = scene;
 }
 
-void EnemySpawner::Spawn(EnemyProps& props)
+void EnemySpawner::Spawn(Entity& grid_entity)
 {
-	if (props.Type == EnemyType::REGULAR)
+	if (grid_entity.GetComponent<EntityTypeComponent>().Type == EntityType::ENEMY_REGULAR)
 	{
 		auto& e = g_GameScene->CreateEntityWithDrawOrder(1);
 
-		auto& enemy = m_Enemies.emplace_back(e, props);
-		enemy.Attach(this);
+		auto enemy = new RegularEnemy(e, grid_entity);
+		m_Enemies.push_back(enemy);
+		enemy->Attach(this);
 	}
 	else
 	{
 		auto& e = g_GameScene->CreateEntityWithDrawOrder(1);
 
-		auto& enemy = m_Enemies.emplace_back(e, props);
-		enemy.Attach(this);
-
-		//HU_CORE_ASSERT(false, "Not implemented yet!");
+		auto enemy = new RareEnemy(e, grid_entity);
+		m_Enemies.push_back(enemy); // todo: polymorphism
+		enemy->Attach(this);
 	}
 }
 
@@ -49,9 +43,8 @@ void EnemySpawner::OnGameEvent(GameEvent& e)
 {
 	if (e.Type == GameEventType::CREATE_NEW_ENEMY) // From grid
 	{
-		auto& PROPS = std::any_cast<EnemyProps>(e.Data);
-
-		Spawn(PROPS);
+		auto data = std::any_cast<Entity>(e.Data);
+		Spawn(data);
 	}
 	else if (e.Type == GameEventType::VALUE_PLAYER_CHNG_POS_GRID)
 	{
@@ -59,55 +52,74 @@ void EnemySpawner::OnGameEvent(GameEvent& e)
 
 		m_PlayedGridPosition = PLAYER_GRID_ENTITY;
 
-		UpdatePaths(e.Type);
+		for(auto& enemy : m_Enemies)
+		{
+			if (enemy->GetProperties().Intelligence > AI::DUMB)
+			{
+				enemy->Follow(Navigation::Navigate(enemy->GetLastPositionOnGrid(), m_PlayedGridPosition));
+			}
+		}
+	}
+	else if (e.Type == GameEventType::ENEMY_DEAD)
+	{
+		auto& dead_enemy = std::any_cast<Entity>(e.Data);
+
+		auto& it = m_Enemies.begin();
+
+		while (it != m_Enemies.end())
+		{
+			if ((*it)->SameAs(dead_enemy))
+			{
+				Dispatch(GameEventType::ENEMY_DEAD, dead_enemy);
+				g_GameScene->DestroyEntity(dead_enemy);
+				m_ErasePool.push_back(*it);
+				it = m_Enemies.erase(it);
+				SaveManager::AddScore(100);
+			} else 
+			{
+				++it;
+			}
+		}
 	}
 	else if (e.Type == GameEventType::ENEMY_GRID_MOVEMENT)
 	{
-		//DispatchToAll(GameEventType::ENEMY_GRID_MOVEMENT, e.Data);
+		Dispatch(GameEventType::ENEMY_GRID_MOVEMENT, e.Data);
 	}
-	else if (e.Type == GameEventType::BOMB_PLACED)
+	else 
 	{
-		// Bomb is placed so path must be updated
-		UpdatePaths(e.Type);
-	}
-	else if (e.Type == GameEventType::BOMB_VANISHED)
-	{
-		// Bomb exploded so path must be updated
-
-		UpdatePaths(e.Type);
+		// BOMB_PLACED, BOMB_EXPLODED, BOMB_VANISHED
+		for (auto& enemy : m_Enemies)
+		{
+			enemy->OnGameEvent(e);
+		}
 	}
 }
 
 void EnemySpawner::OnUpdate(Timestep& ts)
 {
-	for (auto& enemy : m_Enemies)
+	while (!m_ErasePool.empty())
 	{
-		enemy.OnUpdate(ts);
+		delete m_ErasePool.front();
+		m_ErasePool.pop_front();
+	}
+
+	for (size_t i = 0; i < m_Enemies.size(); ++i)
+	{
+		m_Enemies[i]->OnUpdate(ts);
 	}
 }
 
-void EnemySpawner::UpdatePaths(GameEventType& type)
+void EnemySpawner::CleanUp()
 {
-	for (auto& enemy : m_Enemies)
+	while (!m_ErasePool.empty())
 	{
-		if (type != GameEventType::VALUE_PLAYER_CHNG_POS_GRID && enemy.GetProperties().Intelligence == AI::DUMB)
-		{
-			//auto& path = Navigation::RandomPath(enemy.LastPosition());
+		delete m_ErasePool.front();
+		m_ErasePool.pop_front();
+	}
 
-			/*for (auto& p : path)
-			{
-				HU_INFO("[!] {0} {1}", p.Transform().Translation.x, p.Transform().Translation.y);
-			}*/
-			//enemy.Follow(path);
-			continue;
-		}
-
-
-		if (enemy.GetProperties().Intelligence == AI::SMART)
-		{
-			auto& path = Navigation::Navigate(enemy.LastPosition(), m_PlayedGridPosition);
-			enemy.Follow(path);
-		}
+	for (auto enemy : m_Enemies)
+	{
+		delete enemy;
 	}
 }
 
@@ -115,39 +127,14 @@ void EnemySpawner::UpdatePaths(GameEventType& type)
 ////////////////////////// Enemy ///////////////////////////////////
 ////////////////////////////////////////////////////////////////////
 
-Enemy::Enemy(Entity& handle, const EnemyProps& props) : m_Handle(handle), m_Props(props)
+Enemy::Enemy(Entity& handle, Entity& grid_entity) : m_Handle(handle), m_LastPositionOnGrid(grid_entity)
 {
-	m_Handle.Transform().Translation = m_Props.SpawnPoint.Transform().Translation;
-
-	HU_INFO("Spawned!");
-
-	m_Handle.AddComponent<SpriteRendererComponent>(glm::vec4(0.3f, 0.3f, 0.3f, 1.0f)).SubTexture = ResourceManager::GetSubTexture("PlayerIdle");
-	// Setings up animations
-	//auto& fa = m_Handle.AddCustomComponent<FrameAnimator>(m_Handle);
+	m_Handle.Transform().Translation = m_LastPositionOnGrid.Transform().Translation;
 
 	constexpr float scale = 0.96f;
 	auto& scale_cmp = m_Handle.GetComponent<TransformComponent>().Scale;
 	scale_cmp.x = scale;
 	scale_cmp.y = scale;
-
-	m_LastPos = m_Props.SpawnPoint;
-
-	auto& fa = m_Handle.AddCustomComponent<Animator>();
-	fa.Add(ResourceManager::GetAnimation("PlayerLeftAnimation"));
-	fa.Add(ResourceManager::GetAnimation("PlayerUpAnimation"));
-	fa.Add(ResourceManager::GetAnimation("PlayerDownAnimation"));
-
-	fa.SetTarget(m_Handle);
-
-	//auto& rb2d = m_Handle.AddComponent<Rigidbody2DComponent>();
-	//rb2d.Gravity = false;
-	//rb2d.FixedRotation = true;
-	//rb2d.Type = Rigidbody2DComponent::BodyType::Dynamic;
-	//
-	//auto& cc2d = m_Handle.AddComponent<CircleCollider2DComponent>();
-	//cc2d.Radius = scale / 2.0f;
-	//cc2d.Friction = 0.0f;
-	//cc2d.IsSensor = true;
 }
 
 void Enemy::Follow(const std::list<Entity>& path)
@@ -156,108 +143,14 @@ void Enemy::Follow(const std::list<Entity>& path)
 	{
 		m_Path = path;
 	}
-	else 
+	else
 	{
 		m_Path.clear();
 
-		m_Path.push_back(m_LastPos);
+		m_Path.push_back(m_LastPositionOnGrid);
 		for (auto& p : path)
 		{
 			m_Path.push_back(p);
 		}
-	}
-
-	/*if (!m_Path.empty())
-	{
-		HU_INFO(m_Path.front().x);
-		HU_INFO(m_Path.front().y);
-	}*/
-}
-
-void Enemy::OnUpdate(Timestep& ts)
-{
-	if (!m_Path.empty() && m_Path.front().GetComponent<GridNodeComponent>().Obstacle)
-	{
-		HU_INFO("IS OBSTACLE");
-		// Find new random path
-		m_Path.clear();
-	}
-
-	if (m_Path.empty() && m_Props.Intelligence == AI::DUMB)
-	{
-	//	auto& path = Navigation::RandomPath(m_LastPos);
-
-		//Follow(path); // TODO: searching for a path to random point is not probably the best idea
-
-	/*	for (auto& neighbour : m_LastPos.GetComponent<GridNodeComponent>().Neighbours)
-		{
-			auto& gnc = neighbour.GetComponent<GridNodeComponent>();
-
-			if (!gnc.Obstacle)
-			{
-				m_Path.push_back(neighbour);
-			}
-		}*/
-	}
-
-	if (m_Path.empty())
-		return;
-
-	auto& transform = m_Handle.Transform();
-
-	m_LastPos = m_Path.front();
-
-	prev_x = transform.Translation.x;
-	prev_y = transform.Translation.y;
-
-	transform.Translation.x = MyMath::Lerp(m_Handle.Transform().Translation.x, m_Path.front().Transform().Translation.x, ts * 3);
-	transform.Translation.y = MyMath::Lerp(m_Handle.Transform().Translation.y, m_Path.front().Transform().Translation.y, ts * 3);
-
-	if (prev_x < transform.Translation.x && m_CurrentDirection != Direction::RIGHT)
-	{
-		m_CurrentDirection = Direction::RIGHT;
-		if(!rotated)
-			m_Handle.Transform().Scale.x *= -1;
-		rotated = true;
-		m_Handle.GetComponent<Animator>().Play("LeftAnimation");
-		//HU_INFO("RIGHT");
-	} else if(prev_x > transform.Translation.x && m_CurrentDirection != Direction::LEFT)
-	{
-		m_CurrentDirection = Direction::LEFT;
-		m_Handle.Transform().Scale.x = glm::abs(m_Handle.Transform().Scale.x);
-		rotated = false;
-		m_Handle.GetComponent<Animator>().Play("LeftAnimation");
-		//HU_INFO("LEFT");
-	}
-
-	if (prev_y < transform.Translation.y && m_CurrentDirection != Direction::UP)
-	{
-		m_CurrentDirection = Direction::UP;
-		//HU_INFO("UP");
-		rotated = false;
-		m_Handle.Transform().Scale.x = glm::abs(m_Handle.Transform().Scale.x);
-		m_Handle.GetComponent<Animator>().Play("UpAnimation");
-	}
-	else if (prev_y > transform.Translation.y && m_CurrentDirection != Direction::DOWN)
-	{
-		m_CurrentDirection = Direction::DOWN;
-		m_Handle.Transform().Scale.x = glm::abs(m_Handle.Transform().Scale.x);
-		rotated = false;
-		m_Handle.GetComponent<Animator>().Play("DownAnimation");
-		//HU_INFO("DOWn");
-
-	}
-
-	m_Handle.GetComponent<Animator>().OnUpdate(ts);
-
-	if (transform.Translation.x == m_Path.front().Transform().Translation.x && transform.Translation.y == m_Path.front().Transform().Translation.y)
-	{
-		//HU_INFO("CHANGED GRID LOC! {0} {1}", m_LastPos.Transform().Translation.x, m_LastPos.Transform().Translation.y);
-		
-		m_CurrentDirection = Direction::NONE;
-	//	m_Handle.GetComponent<Animator>().Pause();
-
-		DispatchToAll(GameEventType::ENEMY_GRID_MOVEMENT, m_Handle); // TODO: Replace with m_Path.front();
-		m_Path.pop_front();
 	}
 }

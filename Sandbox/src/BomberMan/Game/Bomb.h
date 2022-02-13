@@ -42,6 +42,10 @@ public:
 public:
 	inline const glm::vec3& Position() { return m_Handle.Transform().Translation; }
 	inline const BombState& GetState() { return m_Properties.State; }
+	inline Entity& GetParent() { return m_Parent; }
+	inline bool PhysicsEnabled() { return m_PhysicsEnabled; }
+	void EnablePhysics();
+	void SetKickPath(const std::list<Entity>& path);
 private:
 	void Explode();
 	void Expand();
@@ -53,11 +57,12 @@ private:
 private:
 	std::list<Entity> m_SpreadEntities;
 	bool m_ChainExplosion = false;
-	bool amn_cmlpt = true;
 	int m_AnimationCompletedCount = 0;
+	bool m_PhysicsEnabled = false;
+	bool m_Kicked = false;
 
 	BombProps m_Properties;
-	Entity m_OnTopOfEntity; // Entity from grid array that the object is on top of
+	Entity m_Parent; 
 	Entity m_Handle;
 private:
 	Scene* g_GameScene;
@@ -66,10 +71,13 @@ private:
 class BombManager : public Observer, public Observable
 {
 public:
+	~BombManager();
+
 	void Init(Scene* g_GameScene);
-	bool PlaceBomb(BombProps& props);
 	void OnGameEvent(GameEvent& e) override;
 	void OnUpdate(Timestep& ts);
+private:
+	bool PlaceBomb(BombProps& props);
 private:
 	Scene* g_GameScene;
 	Entity m_PlayerGrid; // Entity behind the player right now

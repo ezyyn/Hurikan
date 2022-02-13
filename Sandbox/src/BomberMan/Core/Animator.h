@@ -49,6 +49,7 @@ public:
 	~Animator();
 
 	void SetTarget(Entity& e);
+	inline void SetColor(const glm::vec4& color) { m_Color = color; }
 	void OnUpdate(Timestep ts);
 	void Add(const Animation& animation);
 	inline void SetDebugTag(const std::string& tag) { m_DebugTag = tag; }
@@ -63,6 +64,7 @@ public:
 private:
 	size_t m_PlayingAnimationIndex = NO_PLAYING_ANIMATION;
 	Entity m_TargetEntity;
+	glm::vec4 m_Color = glm::vec4(1.0f);
 
 	std::vector<Animation> m_AnimationList = {};
 

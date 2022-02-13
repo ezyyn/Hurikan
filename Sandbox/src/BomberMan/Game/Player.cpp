@@ -1,6 +1,7 @@
 #include "Player.h"
 
 #include "BomberMan/Core/ResourceManager.h"
+#include "BomberMan/Game/Bomb.h"
 
 #include <box2d/b2_body.h>
 #include <Hurikan/Core/Input.h>
@@ -45,7 +46,30 @@ void Player::Create(Hurikan::Scene& scene)
 void Player::OnUpdate(Timestep& ts)
 {
 	m_PlayerAnimator.OnUpdate(ts);
-	OnUpdateMovement();
+
+	if (m_Alive)
+	{
+		static bool Released = true;
+
+		if (Released && Input::IsKeyPressed(Key::B))
+		{
+			Released = false;
+
+			if (m_PlayerData.AvailableBombs)
+			{
+				BombProps props;
+				props.ExplosionTime = 3.0f;
+				props.Reach = 1;
+				props.Type = BombType::CLASSIC;
+
+				Dispatch(GameEventType::DEPLOY_BOMB, props);
+				m_PlayerData.AvailableBombs--;
+			}
+		}
+
+		Released = Input::IsKeyReleased(Key::B);
+		OnUpdateMovement();
+	}
 }
 
 void Player::OnGameEvent(GameEvent& e)
@@ -55,8 +79,17 @@ void Player::OnGameEvent(GameEvent& e)
 		//HU_INFO("{0}", std::any_cast<glm::vec3>(e.Data).x);
 		m_Handle.Transform().Translation = std::any_cast<glm::vec3>(e.Data);
 	}
-	else if (e.Type == GameEventType::BOMB_EXPLODED)
+	else if (e.Type == GameEventType::BOMB_EXPLODED || e.Type == GameEventType::BOMB_EXPLODING)
 	{
+		float range = 0.8f;
+		if (e.Type == GameEventType::BOMB_EXPLODING)
+			range = 0.5f;
+
+		if (e.Type == GameEventType::BOMB_EXPLODED)
+		{
+			m_PlayerData.AvailableBombs++;
+		}
+
 		// Check if the player is dead or not
 		auto& explosion = std::any_cast<std::list<Entity>>(e.Data);
 
@@ -65,15 +98,57 @@ void Player::OnGameEvent(GameEvent& e)
 			auto& player = m_Handle.Transform().Translation;
 			auto& expl = exp.Transform().Translation;
 
-			HU_INFO("{0}", glm::distance(player, expl));
+			//HU_INFO("{0}", glm::distance(player, expl));
 
-			if (glm::distance(player, expl) < 1.0f)
+			if (glm::distance(player, expl) < range)
 			{
-				HU_INFO("PLAYER HIT!")
+				m_Health = 0;
 
+				m_Alive = false;
+				m_PlayerAnimator.Play("PlayerDead");
+
+				auto body = static_cast<b2Body*>(m_Handle.GetComponent<Rigidbody2DComponent>().RuntimeBody);
+				body->SetLinearVelocity({ 0, 0 });
+
+				Dispatch(GameEventType::GAME_LOST);
 				// Player dead animation
 			}
 		}
+	}
+	else if (e.Type == GameEventType::ENEMY_GRID_MOVEMENT)
+	{
+		auto& entity = std::any_cast<Entity>(e.Data);
+
+		if (glm::distance(entity.Transform().Translation, m_Handle.Transform().Translation) < 0.8f)
+		{
+			if (m_Alive)
+			{
+				m_Health--;
+
+				if (m_Health == 0)
+				{
+					m_Alive = false;
+					m_PlayerAnimator.Play("PlayerDead");
+
+					auto body = static_cast<b2Body*>(m_Handle.GetComponent<Rigidbody2DComponent>().RuntimeBody);
+					body->SetLinearVelocity({ 0, 0 });
+
+					Dispatch(GameEventType::GAME_LOST);
+				}
+			}
+		}
+	}
+	else if (e.Type == GameEventType::DEPLOY_BOMB_UNSUCCESSFUL)
+	{
+		m_PlayerData.AvailableBombs++;
+	}
+	else if (e.Type == GameEventType::GAME_WON)
+	{
+		auto body = static_cast<b2Body*>(m_Handle.GetComponent<Rigidbody2DComponent>().RuntimeBody);
+		body->SetLinearVelocity({ 0, 0 });
+		m_Handle.GetComponent<SpriteRendererComponent>().Color = glm::vec4(0.0f);
+		m_PlayerAnimator.Pause();
+		m_Alive = false;
 	}
 }
 
@@ -141,7 +216,7 @@ void Player::OnUpdateMovement()
 		{
 			m_AnimationState = PlayerAnimationState::UP;
 			m_PlayerAnimator.Play("UpAnimation");
-			DispatchToAll(GameEventType::PLAYER_DIR_UP);
+			Dispatch(GameEventType::PLAYER_DIR_UP);
 			m_LastKey = kkey_up;
 			break;
 		}
@@ -149,7 +224,7 @@ void Player::OnUpdateMovement()
 		{
 			m_AnimationState = PlayerAnimationState::DOWN;
 			m_PlayerAnimator.Play("DownAnimation");
-			DispatchToAll(GameEventType::PLAYER_DIR_DOWN);
+			Dispatch(GameEventType::PLAYER_DIR_DOWN);
 
 			m_LastKey = kkey_down;
 			break;
@@ -158,7 +233,7 @@ void Player::OnUpdateMovement()
 		{
 			m_AnimationState = PlayerAnimationState::LEFT;
 			m_PlayerAnimator.Play("LeftAnimation");
-			DispatchToAll(GameEventType::PLAYER_DIR_LEFT);
+			Dispatch(GameEventType::PLAYER_DIR_LEFT);
 
 			m_LastKey = kkey_left;
 			break;
@@ -167,7 +242,7 @@ void Player::OnUpdateMovement()
 		{
 			m_AnimationState = PlayerAnimationState::RIGHT;
 			m_PlayerAnimator.Play("LeftAnimation");
-			DispatchToAll(GameEventType::PLAYER_DIR_RIGHT);
+			Dispatch(GameEventType::PLAYER_DIR_RIGHT);
 
 			m_LastKey = kkey_right;
 			break;
@@ -183,7 +258,7 @@ void Player::OnUpdateMovement()
 	if (m_PlayerData.Direction.x == 0 && m_PlayerData.Direction.y == 0)
 	{
 		m_AnimationState = PlayerAnimationState::IDLE;
-		DispatchToAll(GameEventType::PLAYER_IDLE);
+		Dispatch(GameEventType::PLAYER_IDLE);
 		m_Handle.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("PlayerIdle");
 		m_PlayerAnimator.Pause();
 		m_LastKey = 0;
@@ -212,12 +287,14 @@ void Player::OnUpdateMovement()
 		}
 	}
 
-	// Dispatch to all observers that player has moved
-	if (m_PlayerData.Velocity.x || m_PlayerData.Velocity.y)
-	{
-		DispatchToAll(GameEventType::VALUE_PLAYER_MOVING, m_Handle.Transform().Translation);
-	}
-
 	body->SetLinearVelocity({ m_PlayerData.Velocity.x, m_PlayerData.Velocity.y });
+
+
+	// Dispatch to all observers that player has moved
+	if(m_PlayerData.Velocity.x != 0 || m_PlayerData.Velocity.y != 0)
+	{
+		//HU_INFO("DAMN: {0}, {1}", m_PlayerData.Velocity.x, m_PlayerData.Velocity.y);
+		Dispatch(GameEventType::VALUE_PLAYER_MOVING, m_Handle.Transform().Translation);
+	}
 }
 

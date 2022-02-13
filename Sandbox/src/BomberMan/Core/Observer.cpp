@@ -9,7 +9,7 @@ void Observable::Detach(Observer* obs)
 	m_Observers.remove(obs);
 }
 
-void Observable::DispatchToAll(GameEventType type, const std::any& data/*= std::any()*/)
+void Observable::Dispatch(GameEventType type, const std::any& data/*= std::any()*/)
 {
 	for (auto itr = m_Observers.begin(); itr != m_Observers.end(); ++itr)
 	{

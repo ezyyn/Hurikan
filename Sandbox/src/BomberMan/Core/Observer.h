@@ -8,14 +8,18 @@ enum class GameEventType : unsigned short
 	BOMB_PLACED = 0, 
 	VALUE_PLAYER_CHNG_POS_GRID, 
 	VALUE_PLAYER_MOVING, 
-	PLAYER_DEAD, 
+	GAME_LOST, 
 	BOMB_EXPLODED,
+	BOMB_EXPLODING,
 	BOMB_VANISHED, 
 	VALUE_PLAYER_START_POS,
 	BREAK_WALL,
 	NEW_PATH_TO_PLAYER,
 	CREATE_NEW_ENEMY,
 	ENEMY_GRID_MOVEMENT,
+	ENEMY_DEAD,
+	DEPLOY_BOMB,
+	DEPLOY_BOMB_UNSUCCESSFUL,
 
 	PLAYER_IDLE,
 	PLAYER_DIR_UP,
@@ -23,9 +27,23 @@ enum class GameEventType : unsigned short
 	PLAYER_DIR_LEFT,
 	PLAYER_DIR_RIGHT,
 
-	SCORE_UPDATE, 
+	SCORE_UPDATE,
+	GAME_PAUSE,
+	GAME_UNPAUSE,
 
-	NEW_GAME_CONFIRMED
+	NEW_GAME_CONFIRMED,
+	CONTINUE_CONFIRMED,
+	SETTINGS_CONFIRMED,
+	SCORE_CONFIMED,
+	EXIT_CONFIRMED,
+
+	RETURN_TO_MAIN_MENU,
+
+	SAVE_GAME,
+
+	KEY_OBTAINED,
+	GAME_WON,
+	DISPLAY_KEY_FIRST
 };
 
 struct GameEvent
@@ -57,7 +75,7 @@ public:
 	void Attach(Observer* obs);
 	void Detach(Observer* obs);
 protected:
-	void DispatchToAll(GameEventType type, const std::any& data = std::any());
+	void Dispatch(GameEventType type, const std::any& data = std::any());
 private:
 	std::list<Observer*> m_Observers;
 };

@@ -1,12 +1,13 @@
 #pragma once
 
 #include "BomberMan/Core/Observer.h"
-#include "BomberMan/Core/LevelManager.h"
+#include "BomberMan/Core/Utils.h"
 
 #include <Hurikan/Core/Ref.h>
 #include <Hurikan/Core/Log.h>
 #include <Hurikan/Scene/Entity.h>
 using namespace Hurikan;
+
 
 enum class EntityType
 {
@@ -14,8 +15,30 @@ enum class EntityType
 	BOMB,
 	EMPTY,
 	WALL,
-	LOOT_WALL,
-	ENEMY
+	BREAKABLE_WALL,
+	ENEMY_REGULAR,
+	ENEMY_RARE,
+	ENEMY_BOSS,
+};
+
+enum class Loot
+{
+	EXIT = 0, // requires killing all of the monsters
+	BOMB_UPGRADE_POWER,
+	BOMB_UPGRADE_COUNT,
+	HEALTH_POINT,
+	KEY
+};
+
+struct LootComponent
+{
+	Loot Type;
+	Entity LootHandle;
+	bool Obtainable = true;
+
+	LootComponent() = default;
+	LootComponent(const LootComponent&) = default;
+	LootComponent(const Loot& type) : Type(type) {}
 };
 
 struct EntityTypeComponent
@@ -46,12 +69,14 @@ struct GridNodeComponent
 class Grid : public Observer, public Observable
 { 
 public:
+	~Grid();
+
 	void Create(Scene& scene);
 
-	static inline Entity& Get(unsigned int y, unsigned int x) { return m_Grid[y * LevelManager::GetCurrentLevel().Width + x]; }
+	static Entity& Get(unsigned int y, unsigned int x);
 
-	inline const int GetLevelHeight() const { return m_CurrentLevel.Height; }
-	inline const int GetLevelWidth()  const { return m_CurrentLevel.Width; }
+	const int GetLevelHeight() const; 
+	const int GetLevelWidth() const;  
 
 	static void ClearNodes();
 
@@ -62,7 +87,10 @@ private:
 
 	std::vector<Entity> m_AnimationQueue;
 
-	Entity m_PlayerGridPosition;
+	bool m_KeyObtained = false;
 
-	Level m_CurrentLevel;
+	Entity 
+		m_PlayerGridPosition, 
+		m_KeyGridEntity;
+	Scene* g_GameScene;
 };

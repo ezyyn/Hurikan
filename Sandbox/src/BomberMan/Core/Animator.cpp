@@ -85,8 +85,11 @@ void Animator::OnUpdate(Timestep ts)
 
 	auto& playing_anim = m_AnimationList[m_PlayingAnimationIndex];
 
-	if(playing_anim.m_Playing)
+	if (playing_anim.m_Playing)
+	{
 		playing_anim.OnUpdate(&m_TargetEntity.GetComponent<SpriteRendererComponent>(), ts);
+		m_TargetEntity.GetComponent<SpriteRendererComponent>().Color = m_Color;
+	}
 }
 
 void Animator::Add(const Animation& animation)
@@ -96,7 +99,7 @@ void Animator::Add(const Animation& animation)
 
 void Animator::Play(size_t index)
 {
-	HU_CORE_ASSERT(m_TargetEntity, "Entity is not valid");
+	HU_CORE_ASSERT(m_TargetEntity, "Entity is not valid!");
 	HU_CORE_ASSERT(index < m_AnimationList.size(), "Index out of range!");
 
 	if (m_PlayingAnimationIndex != NO_PLAYING_ANIMATION)

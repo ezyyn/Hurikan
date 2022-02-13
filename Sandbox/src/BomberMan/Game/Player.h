@@ -14,6 +14,7 @@ struct PlayerData
 	glm::vec2 Velocity = { 0, 0 };
 	bool Rotated = false;
 	float Speed = 5.0f;
+	unsigned int AvailableBombs = 5;
 };
 
 enum class PlayerAnimationState
@@ -32,6 +33,9 @@ private:
 	void OnUpdateMovement();
 private:
 	unsigned short m_PressedKey, m_LastKey;
+
+	int m_Health = 1;
+	bool m_Alive = true;
 
 	PlayerData m_PlayerData;
 	TransformComponent* m_PlayerTransform;

@@ -1,21 +1,22 @@
 #pragma once
 
-#include "BomberMan/Game/InGame.h"
+#include "BomberMan/UI/MainMenu.h"
 
 #include <Hurikan/Core/Layer.h>
 #include <Hurikan/Events/KeyEvent.h>
 using namespace Hurikan;
 
+class InGame;
+
 enum class SceneType
 {
 	MAIN_MENU = 0,
+	RETURN_TO_MAIN_MENU,
 	LOADING_LEVEL,
 	IN_GAME,
-	FAIL_LEVEL,
-	SUCCESS_LEVEL
+	LEVEL_FAIL,
+	LEVEL_SUCCESS
 };
-
-class MainMenu;
 
 class GameManager : public Layer, public Observer
 {
@@ -26,6 +27,9 @@ public:
 	void OnDetach() override;
 
 	void OnUpdate(Timestep& ts) override;
+	void WaitAndSwitch(SceneType type, Timestep& ts);
+	void LoadLevel(Timestep& ts);
+
 	void OnImGuiRender() override;
 
 	void OnEvent(Event& e) override;
@@ -35,8 +39,14 @@ public:
 
 	void OnGameEvent(GameEvent& e) override;
 private:
-	InGame m_Game;
-	MainMenu* m_MainMenu;
+	InGame* m_Game = nullptr;
+	MainMenu m_MainMenu;
 
-	SceneType m_CurrentScreen = SceneType::MAIN_MENU;
+	unsigned short m_KeyPressed = 0;
+
+	
+	Entity m_LevelCount;
+	Scene m_LoadLevelScene;
+
+	SceneType m_CurrentScreen;
 };

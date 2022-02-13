@@ -246,6 +246,7 @@ namespace Hurikan
 
 		for (auto&& [stage, data] : shaderData)
 			Reflect(stage, data);
+
 	}
 
 	void OpenGLShader::CompileOrGetOpenGLBinaries()

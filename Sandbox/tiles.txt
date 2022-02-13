@@ -1,0 +1,11 @@
+# -> Unbreakable Wall
+B -> Breakable Wall
+M -> Regular Monster
+R -> Rare Monster
+S -> Boss Monster
+U -> Exit door under wall
+L -> Loot under Breakable Wall
+E -> visible Exit 
+P -> Player start position
+K -> Key(always under breakable wall)
+- -> Empty space
