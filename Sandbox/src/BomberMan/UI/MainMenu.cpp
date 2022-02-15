@@ -8,8 +8,6 @@
 #include <Hurikan/Core/Input.h>
 #include <Hurikan/Core/KeyCodes.h>
 
-
-
 void MainMenu::Init()
 {
 	glm::vec4 color;
@@ -204,6 +202,7 @@ void MainMenu::OnKeyPressed(KeyPressedEvent& e)
 			// dialog confirm
 			Dispatch(GameEventType::NEW_GAME_CONFIRMED);
 			SaveManager::Data().AlreadyPlayed = true;
+			SaveManager::ResetProgress();
 			SaveManager::Save();
 			
 			UpdateUI();

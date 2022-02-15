@@ -11,14 +11,12 @@
 
 void GameManager::OnAttach()
 {
-	if (SaveManager::Init())
-	{
-		// New Game
-	}
-
+	SaveManager::Init();
 	ResourceManager::Init();
+	AudioManager::Init();
 
 	m_MainMenu.Attach(this);
+	m_MainMenu.Attach(&m_AudioAssistant);
 
 	m_MainMenu.Init(); 
 
@@ -61,6 +59,8 @@ void GameManager::OnAttach()
 
 void GameManager::OnDetach()
 {
+	AudioManager::Shutdown();
+
 	if (m_Game)
 		delete m_Game;
 }
@@ -120,7 +120,7 @@ void GameManager::WaitAndSwitch(SceneType type, Timestep& ts)
 	{
 		m_Game->OnUpdate(ts);
 
-		static float wait = 2.0f;
+		static float wait = 3.0f;
 		wait -= ts;
 
 		if (wait > 0.0f)
@@ -128,7 +128,6 @@ void GameManager::WaitAndSwitch(SceneType type, Timestep& ts)
 
 		wait = 2.0f;
 	}
-
 	delete m_Game;
 	m_Game = nullptr;
 	m_CurrentScreen = type;
@@ -140,7 +139,7 @@ void GameManager::LoadLevel(Timestep& ts)
 		// Display 
 		m_LoadLevelScene.OnUpdateRuntime(ts);
 
-		static float wait1 = 2.0f;
+		static float wait1 = 3.0f;
 		wait1 -= ts;
 
 		if (wait1 > 0.0f)
@@ -155,7 +154,6 @@ void GameManager::LoadLevel(Timestep& ts)
 	m_Game->Load();
 	//Switch
 	m_CurrentScreen = SceneType::IN_GAME;
-
 }
 
 extern float HeadCoords[2];
@@ -255,5 +253,6 @@ void GameManager::OnGameEvent(GameEvent& e)
 	{
 		m_CurrentScreen = SceneType::RETURN_TO_MAIN_MENU;
 		SaveManager::ResetCurrentLevel();
+		m_LevelCount.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("m" + std::to_string(SaveManager::GetCurrentLevel().ID));
 	}
 }

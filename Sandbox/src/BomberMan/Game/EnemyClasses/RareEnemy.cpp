@@ -11,7 +11,7 @@ RareEnemy::RareEnemy(Entity& handle, Entity& grid_entity) : Enemy(handle, grid_e
 
 	m_Handle.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f));
 
-	m_Properties.Health = 1;
+	m_Properties.Health = 3;
 	m_Properties.Intelligence = AI::DUMB;
 	m_Properties.Name = "Bob";
 
@@ -27,6 +27,27 @@ void RareEnemy::OnUpdate(Timestep& ts)
 {
 	auto& fa = m_Handle.GetComponent<Animator>();
 	fa.OnUpdate(ts);
+
+	if (m_Hit)
+	{
+		m_PulseColor.g = Utils::Lerp(m_PulseColor.g, 0.0f, ts * 2);
+		m_PulseColor.b = Utils::Lerp(m_PulseColor.b, 0.0f, ts * 2);
+
+		if (m_PulseColor.g == 0.0f)
+		{
+			m_Hit = false;
+		} 
+		fa.SetColor(m_PulseColor);
+	} else 
+	{
+		if (m_PulseColor.g != 1.0f)
+		{
+			m_PulseColor.g = Utils::Lerp(m_PulseColor.g, 1.0f, ts * 2);
+			m_PulseColor.b = Utils::Lerp(m_PulseColor.b, 1.0f, ts * 2);
+
+			fa.SetColor(m_PulseColor);
+		}
+	}
 
 	// Checking enemy's health
 	if (!m_Alive)
@@ -111,6 +132,7 @@ void RareEnemy::OnGameEvent(GameEvent& e)
 					m_Handle.GetComponent<Animator>().Play("AngryBallDead");
 					break;
 				}
+				m_Hit = true;
 				// Play hit animation 
 			}
 		}

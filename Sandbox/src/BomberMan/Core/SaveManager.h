@@ -74,6 +74,7 @@ private:
 	Level GenerateRandomMap(const Level& level);
 private:
 	bool m_NewGame = false;
+	bool m_Loaded = false;
 
 	std::vector<Level> m_Levels;
 

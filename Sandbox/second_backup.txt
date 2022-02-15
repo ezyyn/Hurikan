@@ -3,11 +3,11 @@ Level=1
 Time=200
 R
 }
-}
 {
 Level=2
 Time=645
 R
+}
 {
 Level=3
 Time=458

@@ -253,9 +253,7 @@ namespace Navigation
 		if (dir_available.size() == 0)
 			return {};
 
-		auto s = dir_available.size() - 1;
-
-		int random = Utils::Random(0, s);
+		int random = Utils::Random(0, (int)(dir_available.size() - 1));
 
 		auto& random_direction = dir_available[random];
 
@@ -299,7 +297,7 @@ namespace Navigation
 			return {};
 		}
 
-		int random_length = Utils::Random(1, full_path.size());
+		int random_length = Utils::Random(1, (int)full_path.size());
 
 		for (int i = 0; i < random_length; ++i)
 		{

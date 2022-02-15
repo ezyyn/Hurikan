@@ -1,15 +1,18 @@
 #include "SaveManager.h"
 #include "BomberMan/Core/Utils.h"
 
-SaveManager SaveManager::s_Instance;
+#include <Hurikan/Core/Log.h>
 
+#include <stdio.h>
+#include <filesystem>
 #include <fstream>
+#include <iostream>
 #include <algorithm>
+
+SaveManager SaveManager::s_Instance;
 
 bool SaveManager::Init_Impl()
 {
-	LoadLevels();
-
 	// Checks the overall progress of the player
 	std::fstream progress;
 
@@ -27,22 +30,12 @@ bool SaveManager::Init_Impl()
 	{
 		progress.close();
 
-		/*levels_file.open("progress.data", std::ios::out | std::ios::binary);
-
-		GameData buffer;
-		buffer.CurrentLevel = 0;
-		buffer.Score = 0;
-		buffer.Upgrades = 0;
-		levels_file.write((const char*)&buffer, sizeof(buffer));
-		levels_file.close();
-
-		m_GameData = buffer;*/
-		m_CurrentLevel = m_Levels[0];
-		Save();
+		Save_Impl();
 		m_NewGame = true;
+		LoadLevels();
 		return true;
 	}
-
+	LoadLevels();
 	// Successfully found the file and now reading from it
 	//progress.open("progress.data", std::ios::in | std::ios::binary);
 
@@ -61,6 +54,7 @@ bool SaveManager::Init_Impl()
 
 void SaveManager::Reset_Impl()
 {
+	m_NewGame = true;
 	m_CurrentLevel = m_Levels[0];
 	m_GameData.CurrentLevel = 0;
 	m_GameData.Upgrades = 0;
@@ -84,14 +78,6 @@ void SaveManager::Save_Impl()
 {
 	std::fstream progress;
 
-	/*levels_file.open("progress.data", std::ios::in | std::ios::binary);
-	levels_file.read((char*)&m_GameData, sizeof(GameData));
-	levels_file.close();*/
-
-	//m_GameData.CurrentLevel = LevelManager::GetCurrentLevel().ID;
-	//m_GameData.Score = 200;
-	//m_GameData.Upgrades = 45;
-
 	progress.open("progress.data", std::ios::out | std::ios::binary | std::ios::trunc);
 	progress.write((const char*)(&m_GameData), sizeof(GameData));
 	progress.close();
@@ -100,22 +86,31 @@ void SaveManager::Save_Impl()
 void SaveManager::ResetCurrentLevel_Impl()
 {
 	m_CurrentLevel.CurrentTime = m_CurrentLevel.Time;
+	m_GameData.Score = 0;
+	m_GameData.Upgrades = 0;
 }
 
 void SaveManager::LoadLevels()
 {
 	std::vector<Level> levels;
 
-	Level firstLevel;
-
 	std::fstream levels_file;
 
-	levels_file.open("levels.data", std::ios::in);
-
-	if (levels_file.fail())
+	if (m_NewGame)
 	{
-		levels_file.close();
-		__debugbreak(); // File do not exist what now lol
+		levels_file.open("default_levels.data", std::ios::in);
+		if (levels_file.fail())
+		{
+			levels_file.close();
+			throw("Default levels were not found!");
+		}
+	}
+	else {
+		levels_file.open("levels.data", std::ios::in);
+		if (levels_file.fail())
+		{
+			levels_file.open("default_levels.data", std::ios::in);
+		}
 	}
 
 	// Reading a file
@@ -145,9 +140,10 @@ void SaveManager::LoadLevels()
 			// Map
 			while (std::getline(levels_file, line))
 			{
-				if (line[0] == 'R')
+				if (m_NewGame && line[0] == 'R')
 				{
 					read_level = GenerateRandomMap(read_level);
+					std::getline(levels_file, line);
 					break;
 				}
 
@@ -155,7 +151,7 @@ void SaveManager::LoadLevels()
 					break;
 
 				read_level.Height++;
-				read_level.Width = line.size();
+				read_level.Width = (int)line.size();
 				read_level.MapSkeleton += line;
 			}
 
@@ -226,13 +222,12 @@ Level SaveManager::GenerateRandomMap(const Level& level)
 		map += line;
 	}
 
-	Position player_pos =	emptyTiles[Utils::Random(0, emptyTiles.size() - 1)];
+	Position player_pos =	emptyTiles[Utils::Random(0, (int)emptyTiles.size() - 1)];
 	emptyTiles.erase(std::remove(emptyTiles.begin(), emptyTiles.end(), player_pos), emptyTiles.end());
-	Position key_pos =		emptyTiles[Utils::Random(0, emptyTiles.size() - 1)];
+	Position key_pos =		emptyTiles[Utils::Random(0, (int)emptyTiles.size() - 1)];
 	emptyTiles.erase(std::remove(emptyTiles.begin(), emptyTiles.end(), key_pos), emptyTiles.end());
-	Position exit_pos =		emptyTiles[Utils::Random(0, emptyTiles.size() - 1)];
+	Position exit_pos =		emptyTiles[Utils::Random(0, (int)emptyTiles.size() - 1)];
 	emptyTiles.erase(std::remove(emptyTiles.begin(), emptyTiles.end(), exit_pos), emptyTiles.end());
-
 
 	for (int y = 0; y < random_level.Height; ++y)
 	{
@@ -267,10 +262,13 @@ Level SaveManager::GenerateRandomMap(const Level& level)
 					{
 						map[y * random_level.Width + x] = 'M';
 						random_number_enemies_per_line--;
-					} else 
+					} else
+					if (Utils::Random(0, 10) > 7)
 					{
-						map[y * random_level.Width + x] = 'R';
-						random_number_enemies_per_line--;
+						map[y * random_level.Width + x] = 'A';
+
+						if (map[y * random_level.Width + x] != 'M')
+							random_number_enemies_per_line--;
 					}
 				}
 			}
@@ -301,8 +299,62 @@ Level SaveManager::GenerateRandomMap(const Level& level)
 				replace(map[(y-1) * random_level.Width + x+1]);
 				replace(map[(y+1) * random_level.Width + x-1]);
 			}
+			std::cout << map[y * random_level.Width + x];
 		}
+		std::cout << "\n";
 	}
+
+	std::fstream stream;
+	if (!m_Loaded)
+	{
+		m_Loaded = true;
+		stream.open("default_levels.data", std::ios::in);
+	}
+	else
+	{
+		stream.open("levels.data", std::ios::in);
+	}
+
+	std::string copy_levels;
+	
+	int r_position = 0;
+	int seek_pos = 0;
+	char cc;
+	while (stream.get(cc))
+	{
+		seek_pos++;
+
+		if (!r_position && cc == 'R')
+		{
+			r_position = seek_pos;
+		}
+		copy_levels += cc;
+	}
+
+	stream.close();
+
+	stream.open("levels.data", std::ios::out | std::ios::trunc);
+
+	char c = copy_levels[r_position - 1];
+
+	copy_levels.replace(copy_levels.begin() + (r_position - 1), copy_levels.begin() + (r_position), "");
+	int mh = 0;
+	int mw = 0;
+	while (mh < random_level.Height)
+	{
+		while (mw < random_level.Width * (mh + 1))
+		{
+			copy_levels.insert(copy_levels.begin() + (r_position - 1 + mw + mh), map[mw]);
+			++mw;
+		}
+		if (mh == random_level.Height - 1)
+			break;
+		copy_levels.insert(copy_levels.begin() + (r_position - 1 + mw + mh), '\n');
+		++mh;
+	}
+
+	stream.write(copy_levels.c_str(), copy_levels.size());
+	stream.close();
 
 	random_level.MapSkeleton = map;
 

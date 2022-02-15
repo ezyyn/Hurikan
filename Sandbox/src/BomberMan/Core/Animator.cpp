@@ -12,7 +12,7 @@ void Animation::Create(const Ref<Texture2D>& spritesheet, const glm::vec2& sprit
 	m_Frames.reserve(frames.size());
 	for (auto& frame : frames)
 	{
-		m_Frames.emplace_back(SubTexture2D::CreateFromCoords2(spritesheet, frame.Coords, spritesize), frame.Color);
+		m_Frames.emplace_back(SubTexture2D::CreateFromCoords(spritesheet, frame.Coords, spritesize), frame.Color);
 	}
 
 	m_Timer = Delay;
@@ -40,7 +40,8 @@ void Animation::OnUpdate(SpriteRendererComponent* src, Timestep ts)
 		}
 
 		auto& [frame, color] = m_Frames[m_AnimationIndex];
-		src->SubTexture = CreateRef<SubTexture2D>(frame);
+		src->SubTexture.reset();
+		src->SubTexture = frame;
 		src->Color = m_Frames[m_AnimationIndex].second;
 
 		if (m_AnimationIndex == m_Frames.size() - 1 && Repeat)

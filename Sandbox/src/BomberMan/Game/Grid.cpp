@@ -31,9 +31,9 @@ Grid::~Grid()
 
 */
 
-void Grid::Create(Scene& scene)
+void Grid::Create(Scene* const scene)
 {
-	g_GameScene = &scene;
+	g_GameScene = scene;
 
 	m_Grid = CreateScope<Entity[]>(GetLevelWidth() * GetLevelHeight());
 
@@ -43,7 +43,7 @@ void Grid::Create(Scene& scene)
 	{
 		for (int x = 0; x < GetLevelWidth(); ++x)
 		{
-			auto& gridEntity = scene.CreateEntityWithDrawOrder(2);
+			auto& gridEntity = g_GameScene->CreateEntityWithDrawOrder(2);
 			m_Grid[y * GetLevelWidth() + x] = gridEntity;
 
 			gridEntity.AddCustomComponent<EntityTypeComponent>().Type = EntityType::EMPTY;
@@ -80,7 +80,7 @@ void Grid::Create(Scene& scene)
 			case 'L': 
 			{
 				{
-					auto& loot = scene.CreateEntityWithDrawOrder(1);
+					auto& loot = g_GameScene->CreateEntityWithDrawOrder(1);
 					loot.AddComponent<SpriteRendererComponent>(glm::vec4(0.0f)).SubTexture = ResourceManager::GetSubTexture("MoreBombUpgrade");
 					loot.Transform().Translation = gridEntity.Transform().Translation;
 					loot.Transform().Scale *= 0.8f;
@@ -99,10 +99,9 @@ void Grid::Create(Scene& scene)
 			case 'K':
 			{
 				{
-					auto& loot = scene.CreateEntityWithDrawOrder(1);
+					auto& loot = g_GameScene->CreateEntityWithDrawOrder(1);
 					loot.AddComponent<SpriteRendererComponent>(glm::vec4(0.0f)).SubTexture = ResourceManager::GetSubTexture("Key");
 					loot.Transform().Translation = gridEntity.Transform().Translation;
-					//loot.Transform().Scale *= 0.8f;
 					auto& lc = gridEntity.AddCustomComponent<LootComponent>(Loot::KEY);
 					lc.LootHandle = loot;
 					lc.Obtainable = false;
@@ -123,7 +122,7 @@ void Grid::Create(Scene& scene)
 			}
 			case 'E':
 			{
-				auto& exit = scene.CreateEntityWithDrawOrder(1);
+				auto& exit = scene->CreateEntityWithDrawOrder(1);
 				exit.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f)).SubTexture = ResourceManager::GetSubTexture("ExitDoor");
 				exit.AddCustomComponent<LootComponent>().Type = Loot::EXIT;
 				exit.Transform().Translation = gridEntity.Transform().Translation;
@@ -136,7 +135,7 @@ void Grid::Create(Scene& scene)
 			case 'U':
 			{
 				{
-					auto& exit = scene.CreateEntityWithDrawOrder(1);
+					auto& exit = scene->CreateEntityWithDrawOrder(1);
 					exit.AddComponent<SpriteRendererComponent>(glm::vec4(0.0f)).SubTexture = ResourceManager::GetSubTexture("ExitDoor");
 					exit.Transform().Translation = gridEntity.Transform().Translation;
 					gridEntity.AddCustomComponent<LootComponent>(Loot::EXIT).LootHandle = exit;
@@ -169,7 +168,7 @@ void Grid::Create(Scene& scene)
 				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::EMPTY;
 				break;
 			}
-			case 'R': // RARE MONSTER SPAWN POINT
+			case 'A': // RARE MONSTER SPAWN POINT
 			{
 				gridEntity.GetComponent<BoxCollider2DComponent>().IsSensor = true;
 				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::ENEMY_RARE;
@@ -289,7 +288,7 @@ void Grid::OnGameEvent(GameEvent& e)
 
 				}
 
-				HU_INFO("x: {0} | y: {1}", player_position.x, player_position.y)
+				//HU_INFO("x: {0} | y: {1}", player_position.x, player_position.y)
 
 				Dispatch(GameEventType::VALUE_PLAYER_CHNG_POS_GRID, m_PlayerGridPosition);
 
@@ -346,7 +345,11 @@ void Grid::OnGameEvent(GameEvent& e)
 
 void Grid::OnUpdate(Timestep& ts)
 {
-	if (!m_KeyGridEntity.GetComponent<LootComponent>().Obtainable && SaveManager::Data().Score >= 1000)
+	//HU_INFO(SaveManager::Data().CurrentLevel);
+
+	if (m_KeyGridEntity.HasComponent<LootComponent>() && 
+		!m_KeyGridEntity.GetComponent<LootComponent>().Obtainable 
+		&& SaveManager::Data().Score >= 1000 * SaveManager::Data().CurrentLevel + 1)
 	{
 		m_KeyGridEntity.GetComponent<LootComponent>().Obtainable = true;
 		m_KeyGridEntity.GetComponent<LootComponent>().LootHandle.GetComponent<SpriteRendererComponent>().Color = glm::vec4(1.0f);

@@ -23,14 +23,13 @@ void InGame::Init()
 		if (SaveManager::GetCurrentLevel().Width > SaveManager::GetCurrentLevel().Height)
 		{
 			bckg.GetComponent<TransformComponent>().Scale = { SaveManager::GetCurrentLevel().Width, SaveManager::GetCurrentLevel().Width, 0.0f };
-			bckg.GetComponent<SpriteRendererComponent>().TilingFactor = SaveManager::GetCurrentLevel().Width;
+			bckg.GetComponent<SpriteRendererComponent>().TilingFactor = (float)SaveManager::GetCurrentLevel().Width;
 		} 
 		else
 		{
 			bckg.GetComponent<TransformComponent>().Scale = { SaveManager::GetCurrentLevel().Height, SaveManager::GetCurrentLevel().Height, 0.0f };
-			bckg.GetComponent<SpriteRendererComponent>().TilingFactor = SaveManager::GetCurrentLevel().Height;
+			bckg.GetComponent<SpriteRendererComponent>().TilingFactor = (float)SaveManager::GetCurrentLevel().Height;
 		}
-	
 	}
 
 	m_FXManager.Init(&m_InGameScene);
@@ -43,6 +42,13 @@ void InGame::Init()
 
 void InGame::Load()
 {
+	/*HU_INFO(sizeof(Player));
+	HU_INFO(sizeof(Grid));
+	HU_INFO(sizeof(BombManager));
+	HU_INFO(sizeof(EnemySpawner));
+	HU_INFO(sizeof(SimpleUI));
+	HU_INFO(sizeof(Scene));*/
+	Attach(&m_AudioAssistant);
 	// Grid's listeners
 	m_Grid.Attach(&m_Player);
 	m_Grid.Attach(&m_BombManager);
@@ -50,6 +56,7 @@ void InGame::Load()
 	m_Grid.Attach(&m_FXManager);
 	m_Grid.Attach(&m_GameCamera);
 	m_Grid.Attach(&m_SimpleUI);
+	m_Grid.Attach(&m_AudioAssistant);
 	m_Grid.Attach(this);
 
 	// Player's listeners
@@ -57,6 +64,7 @@ void InGame::Load()
 	m_Player.Attach(&m_GameCamera);
 	m_Player.Attach(&m_BombManager);
 	m_Player.Attach(&m_SimpleUI);
+	m_Player.Attach(&m_AudioAssistant);
 	m_Player.Attach(this);
 
 	// BombManagers's listeners
@@ -64,17 +72,22 @@ void InGame::Load()
 	m_BombManager.Attach(&m_Player);
 	m_BombManager.Attach(&m_EnemySpawner);
 	m_BombManager.Attach(&m_FXManager);
+	m_BombManager.Attach(&m_AudioAssistant);
 	// EnemySpawner's listeners
 	m_EnemySpawner.Attach(&m_Player);
 	m_EnemySpawner.Attach(&m_FXManager);
+	m_EnemySpawner.Attach(&m_AudioAssistant);
 
 	// Inititializing
 	m_Player.Create(m_InGameScene);
-	m_Grid.Create(m_InGameScene);
+	m_Grid.Create(&m_InGameScene);
 
 	// SimpleUI's listeners
 	m_SimpleUI.Attach(this);
+	m_SimpleUI.Attach(&m_AudioAssistant);
 	m_InGameScene.OnRuntimeStart();
+
+	Dispatch(GameEventType::GAME_LOADED);
 }
 
 void InGame::OnGameEvent(GameEvent& e)
@@ -90,6 +103,10 @@ void InGame::OnGameEvent(GameEvent& e)
 	else if (e.Type == GameEventType::RETURN_TO_MAIN_MENU)
 	{
 		Dispatch(GameEventType::RETURN_TO_MAIN_MENU);
+	}
+	else if (e.Type == GameEventType::GAME_LOADED)
+	{
+		Dispatch(GameEventType::GAME_LOADED);
 	}
 }
 

@@ -25,7 +25,7 @@ Hurikan::Application* Hurikan::CreateApplication(Hurikan::ApplicationCommandLine
 	specification.StartMaximized = false;
 	specification.VSync = true;
 #ifdef HU_DEBUG
-	specification.EnableImGui = true;
+	specification.EnableImGui = false;
 #else
 	specification.EnableImGui = false;
 #endif

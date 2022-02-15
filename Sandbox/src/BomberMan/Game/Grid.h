@@ -71,7 +71,7 @@ class Grid : public Observer, public Observable
 public:
 	~Grid();
 
-	void Create(Scene& scene);
+	void Create(Scene* const scene);
 
 	static Entity& Get(unsigned int y, unsigned int x);
 

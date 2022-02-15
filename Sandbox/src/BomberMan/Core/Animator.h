@@ -36,7 +36,7 @@ private:
 	bool m_Playing = false;
 	int m_AnimationIndex = 0;
 	float m_Timer = 0.0f;
-	std::vector<std::pair<SubTexture2D, glm::vec4>> m_Frames; // coords, color
+	std::vector<std::pair<Ref<SubTexture2D>, glm::vec4>> m_Frames; // coords, color
 
 	friend class Animator;
 };

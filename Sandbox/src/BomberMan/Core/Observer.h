@@ -30,6 +30,7 @@ enum class GameEventType : unsigned short
 	SCORE_UPDATE,
 	GAME_PAUSE,
 	GAME_UNPAUSE,
+	GAME_LOADED,
 
 	NEW_GAME_CONFIRMED,
 	CONTINUE_CONFIRMED,

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BomberMan/UI/MainMenu.h"
+#include "BomberMan/Core/AudioManager.h"
 
 #include <Hurikan/Core/Layer.h>
 #include <Hurikan/Events/KeyEvent.h>
@@ -41,10 +42,10 @@ public:
 private:
 	InGame* m_Game = nullptr;
 	MainMenu m_MainMenu;
+	AudioAssistant m_AudioAssistant;
 
 	unsigned short m_KeyPressed = 0;
 
-	
 	Entity m_LevelCount;
 	Scene m_LoadLevelScene;
 

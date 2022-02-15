@@ -275,22 +275,6 @@ void SimpleUI::OnGameEvent(GameEvent& e)
 
 		break;
 	}
-	/*case GameEventType::GAME_PAUSE:
-	{
-		m_Paused = true;
-		break;
-	}
-	case GameEventType::GAME_UNPAUSE:
-	{
-		m_Paused = false;
-		break;
-	}
-	case GameEventType::GAME_LOST:
-	case GameEventType::GAME_WON:
-	{
-		m_Paused = true;
-		break;
-	}*/
 	}
 }
 
@@ -300,12 +284,14 @@ void SimpleUI::DisplayPauseMenu()
 	m_SelectedOption = PauseMenuOption::SETTINGS;
 	m_ConfirmedOption = PauseMenuOption::NONE;
 	m_PauseMenuArrowHead.GetComponent<SpriteRendererComponent>().Color = glm::vec4(1.0f);
+	Dispatch(GameEventType::GAME_PAUSE);
 }
 
 void SimpleUI::HidePauseMenu()
 {
 	m_PauseMenu.GetComponent<SpriteRendererComponent>().Color = glm::vec4(0.0f);
 	m_PauseMenuArrowHead.GetComponent<SpriteRendererComponent>().Color = glm::vec4(0.0f);
+	Dispatch(GameEventType::GAME_UNPAUSE);
 }
 
 void SimpleUI::OnUpdateScore(Timestep& ts)
