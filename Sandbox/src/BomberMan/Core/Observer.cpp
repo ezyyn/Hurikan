@@ -1,4 +1,4 @@
-#include "Observer.h"
+#include "Observer.hpp"
 
 void Observable::Attach(Observer* obs)
 {
@@ -11,8 +11,10 @@ void Observable::Detach(Observer* obs)
 
 void Observable::Dispatch(GameEventType type, const std::any& data/*= std::any()*/)
 {
+	auto& e = GameEvent(type, data);
+
 	for (auto itr = m_Observers.begin(); itr != m_Observers.end(); ++itr)
 	{
-		(*itr)->OnGameEvent(GameEvent(type, data));
+		(*itr)->OnGameEvent(e);
 	}
 }

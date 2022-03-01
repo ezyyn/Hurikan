@@ -1,8 +1,8 @@
-#include "MainMenu.h"
+#include "MainMenu.hpp"
 
-#include "BomberMan/Core/ResourceManager.h"
-#include "BomberMan/Core/SaveManager.h"
-#include "BomberMan/Core/Utils.h"
+#include "BomberMan/Core/ResourceManager.hpp"
+#include "BomberMan/Core/SaveLoadSystem.hpp"
+#include "BomberMan/Core/Utils.hpp"
 
 #include <Hurikan/Core/Application.h>
 #include <Hurikan/Core/Input.h>
@@ -12,7 +12,7 @@ void MainMenu::Init()
 {
 	glm::vec4 color;
 
-	if (SaveManager::AlreadyPlayed())
+	if (SaveLoadSystem::AlreadyPlayed())
 	{
 		color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	}
@@ -20,7 +20,6 @@ void MainMenu::Init()
 	{
 		color = glm::vec4(0.0f);
 	}
-
 
 	{
 		m_LevelText = m_MenuScene.CreateEntityWithDrawOrder(3);
@@ -32,10 +31,11 @@ void MainMenu::Init()
 		m_LevelText.Transform().Scale.y *= 0.4f;
 	}
 
+	HU_INFO("{0}", SaveLoadSystem::GetCurrentLevel().ID);
 	{
 		// Level counter, gets data from SaveManager
 		m_LevelCount = m_MenuScene.CreateEntityWithDrawOrder(3);
-		m_LevelCount.AddComponent<SpriteRendererComponent>(color).SubTexture = ResourceManager::GetSubTexture("m" + std::to_string(SaveManager::GetCurrentLevel().ID));
+		m_LevelCount.AddComponent<SpriteRendererComponent>(color).SubTexture = ResourceManager::GetSubTexture("m" + std::to_string(SaveLoadSystem::GetCurrentLevel().ID));
 
 		m_LevelCount.Transform().Translation.x = 3.8f;
 		m_LevelCount.Transform().Translation.y = -1.1f;
@@ -46,7 +46,7 @@ void MainMenu::Init()
 	{
 		// Arror Head
 		m_ArrowHead = m_MenuScene.CreateEntityWithDrawOrder(2);
-		m_ArrowHead.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f)).Texture = ResourceManager::GetTexture("ArrowHead");
+		m_ArrowHead.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f)).SubTexture = ResourceManager::GetSubTexture("ArrowHead");
 
 		m_ArrowHead.Transform().Translation.x = -3.2f;
 		m_ArrowHead.Transform().Scale.x *= 0.6f;
@@ -74,7 +74,7 @@ void MainMenu::Init()
 		m_Continue = m_MenuScene.CreateEntityWithDrawOrder(2);
 
 		glm::vec4 color;
-		if (SaveManager::AlreadyPlayed())
+		if (SaveLoadSystem::AlreadyPlayed())
 			color = glm::vec4(1.0f);
 		else
 			color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
@@ -109,7 +109,7 @@ void MainMenu::Init()
 			auto& bckg = m_MenuScene.CreateEntityWithDrawOrder(0);
 
 			auto& src = bckg.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f));
-			src.Texture = ResourceManager::GetTexture("Background2");
+			src.Texture = ResourceManager::GetTexture("MainMenu_Background");
 			bckg.GetComponent<TransformComponent>().Scale = { 18, 18, 0.0f };
 			//bckg.GetComponent<TransformComponent>().Translation = { glm::round(m_CurrentLevel.Width / 2), -glm::round(m_CurrentLevel.Height / 2) - 1, 0 };
 			bckg.GetComponent<SpriteRendererComponent>().TilingFactor = 18.0f;
@@ -119,7 +119,7 @@ void MainMenu::Init()
 			auto& square = m_MenuScene.CreateEntityWithDrawOrder(1);
 
 			auto& src = square.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f, 1.0f, 1.0f, 0.5f));
-			src.Texture = ResourceManager::GetTexture("Background_UnderText");
+			src.SubTexture = ResourceManager::GetSubTexture("Background_UnderText");
 			square.Transform().Scale *= 13.0f;
 			//square.GetComponent<TransformComponent>().Scale = { 18, 18, 0.0f };
 			//bckg.GetComponent<TransformComponent>().Translation = { glm::round(m_CurrentLevel.Width / 2), -glm::round(m_CurrentLevel.Height / 2) - 1, 0 };
@@ -141,6 +141,9 @@ void MainMenu::Init()
 
 		m_Logo.Transform().Translation.y = 2.0f;
 	}
+
+	m_MMSettings.Init(&m_MenuScene, m_ArrowHead);
+	m_MMSettings.Attach(this);
 }
 
 void MainMenu::OnUpdate(Timestep& ts)
@@ -151,8 +154,8 @@ void MainMenu::OnUpdate(Timestep& ts)
 
 void MainMenu::UpdateUI()
 {
-	m_LevelCount.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("m" + std::to_string(SaveManager::GetCurrentLevel().ID));
-	if (SaveManager::AlreadyPlayed())
+	m_LevelCount.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("m" + std::to_string(SaveLoadSystem::GetCurrentLevel().ID));
+	if (SaveLoadSystem::AlreadyPlayed())
 	{
 		m_Continue.GetComponent<SpriteRendererComponent>().Color = glm::vec4(1.0f);
 		m_LevelText.GetComponent<SpriteRendererComponent>().Color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
@@ -164,11 +167,17 @@ void MainMenu::OnKeyPressed(KeyPressedEvent& e)
 {
 	KeyCode currentKey = e.GetKeyCode();
 
+	if (m_MMSettings.IsDisplayed())
+	{
+		m_MMSettings.OnKeyPressed(currentKey);
+		return;
+	}
+
 	if (currentKey == Key::Up)
 	{
 		if (m_SelectedOption > MenuOption::NEW_GAME)
 		{
-			if (!SaveManager::AlreadyPlayed() && m_SelectedOption == MenuOption::SETTINGS)
+			if (!SaveLoadSystem::AlreadyPlayed() && m_SelectedOption == MenuOption::SETTINGS)
 			{
 				m_SelectedOption = (MenuOption)((int)m_SelectedOption - 2);
 				m_ArrowHead.Transform().Translation.y+=2;
@@ -183,7 +192,7 @@ void MainMenu::OnKeyPressed(KeyPressedEvent& e)
 	{
 		if (m_SelectedOption < MenuOption::EXIT)
 		{
-			if (!SaveManager::AlreadyPlayed() && m_SelectedOption == MenuOption::NEW_GAME)
+			if (!SaveLoadSystem::AlreadyPlayed() && m_SelectedOption == MenuOption::NEW_GAME)
 			{
 				m_SelectedOption = (MenuOption)((int)m_SelectedOption + 2);
 				m_ArrowHead.Transform().Translation.y -= 2;
@@ -200,27 +209,40 @@ void MainMenu::OnKeyPressed(KeyPressedEvent& e)
 		{
 		case MenuOption::NEW_GAME:
 			// dialog confirm
-			Dispatch(GameEventType::NEW_GAME_CONFIRMED);
-			SaveManager::Data().AlreadyPlayed = true;
-			SaveManager::ResetProgress();
-			SaveManager::Save();
+			Dispatch(GameEventType::GAME_NEW);
+
+			SaveLoadSystem::EraseDataAndDeserialize();
+			/*ProgressManager::Data().AlreadyPlayed = true;
+			ProgressManager::ResetProgress();
+			ProgressManager::Save();*/
 			
 			UpdateUI();
 			break;
 		case MenuOption::CONTINUE:
-			Dispatch(GameEventType::CONTINUE_CONFIRMED);
+			Dispatch(GameEventType::GAME_CONTINUE);
 			break;
 		case MenuOption::SETTINGS:
-			//DispatchToAll(GameEventType::CONTINUE_CONFIRMED);
+			m_MMSettings.Show(true);
+			m_ArrowHead.Transform().Translation.x = 2.5f;
 			break;
 		case MenuOption::SCORE:
 			break;
 		case MenuOption::EXIT:
-			Dispatch(GameEventType::EXIT_CONFIRMED);
+			Dispatch(GameEventType::GAME_EXIT);
 			break;
 		default:
 			break;
 		}
+	}
+}
+
+void MainMenu::OnGameEvent(GameEvent& e)
+{
+	if (e.Type == GameEventType::RETURN_FROM_MM_SETTINGS)
+	{
+		m_MMSettings.Show(false);
+		m_ArrowHead.Transform().Translation.x = -3.2f;
+		m_ArrowHead.Transform().Translation.y = -2.0f;
 	}
 }
 

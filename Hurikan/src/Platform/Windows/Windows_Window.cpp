@@ -10,6 +10,7 @@
 #include "Platform/OpenGL/OpenGLContext.h"
 
 #include <glad/glad.h>
+#include <stb_image.h>
 
 namespace Hurikan 
 {
@@ -135,6 +136,16 @@ namespace Hurikan
 		}
 
 		glfwSetWindowPos(m_Window, m_Data.DefaultPosition[0], m_Data.DefaultPosition[1]);
+
+		glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+
+		{
+			GLFWimage images[1]; 
+			images[0].pixels = stbi_load("assets/textures/icon.png", &images[0].width, &images[0].height, 0, 4); 
+			glfwSetWindowIcon(m_Window, 1, images); 
+
+			stbi_image_free(images[0].pixels);
+		}
 
 		m_Context = new OpenGLContext(m_Window);
 		m_Context->Init();

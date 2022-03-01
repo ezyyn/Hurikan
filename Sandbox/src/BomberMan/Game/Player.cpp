@@ -1,22 +1,29 @@
-#include "Player.h"
+#include "Player.hpp"
 
-#include "BomberMan/Core/ResourceManager.h"
-#include "BomberMan/Game/Bomb.h"
+#include "BomberMan/Core/ResourceManager.hpp"
+#include "BomberMan/Core/SaveLoadSystem.hpp"
+#include "BomberMan/Game/Bomb.hpp"
+#include "BomberMan/Core/Utils.hpp"
 
 #include <box2d/b2_body.h>
 #include <Hurikan/Core/Input.h>
 #include <Hurikan/Core/KeyCodes.h>
 
-#include <iostream>
+extern GameData g_InGameData;
 
 void Player::Create(Hurikan::Scene& scene)
 {
+	m_PlayerData.AvailableBombs += g_InGameData.BombPowerUpgrade;
+	m_PlayerData.Speed += g_InGameData.SpeedUpgrade;
+	m_PlayerData.Power += g_InGameData.BombPowerUpgrade;
+
 	m_Handle = scene.CreateEntityWithDrawOrder(3, "Player");
-	m_Handle.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f)).SubTexture = ResourceManager::GetSubTexture("PlayerIdle");
+	m_Handle.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f));
 	// PLAYER ANIMATIONS
 	m_PlayerAnimator.SetDebugTag("Player");
 	m_PlayerAnimator.SetTarget(m_Handle);
-	//
+	
+	m_PlayerAnimator.Add(ResourceManager::GetAnimation("PlayerIdleAnimation"));
 	m_PlayerAnimator.Add(ResourceManager::GetAnimation("PlayerLeftAnimation"));
 	m_PlayerAnimator.Add(ResourceManager::GetAnimation("PlayerUpAnimation"));
 	m_PlayerAnimator.Add(ResourceManager::GetAnimation("PlayerDownAnimation"));
@@ -30,7 +37,7 @@ void Player::Create(Hurikan::Scene& scene)
 	rb2d.Gravity = false;
 	rb2d.FixedRotation = true;
 
-	float scale = 0.96f;
+	constexpr float scale = 0.96f;
 	auto& scale_cmp = m_Handle.GetComponent<TransformComponent>().Scale;
 	scale_cmp.x = scale;
 	scale_cmp.y = scale;
@@ -41,40 +48,80 @@ void Player::Create(Hurikan::Scene& scene)
 	cc2d.IsSensor = false;
 
 	m_PlayerTransform = &m_Handle.Transform();
+	m_PlayerAnimator.Play("PlayerIdle");
 }
 
 void Player::OnUpdate(Timestep& ts)
 {
 	m_PlayerAnimator.OnUpdate(ts);
 
-	if (m_Alive)
-	{
-		static bool Released = true;
+/* DEBUG
+	static bool r = false;
 
-		if (Released && Input::IsKeyPressed(Key::B))
+	if (!r && Input::IsKeyPressed(Key::T))
+	{
+		r = true;
+		m_PlayerHit = true;
+	}
+	if (Input::IsKeyReleased(Key::T))
+	{
+		r = false;
+	}*/
+
+	if (m_PlayerData.Health != 0)
+	{
+		if (m_PlayerHit) {
+
+			m_HitPulseColor.g = Utils::Lerp(m_HitPulseColor.g, 0.5f, ts * 2);
+			m_HitPulseColor.b = Utils::Lerp(m_HitPulseColor.b, 0.5f, ts * 2);
+			m_PlayerAnimator.SetColor(m_HitPulseColor);
+
+			if (m_HitPulseColor.b == 0.5f) {
+				m_PlayerHit = false;
+			}
+		}
+		else
 		{
-			Released = false;
+			if (m_HitPulseColor.g != 1.0f)
+			{
+				m_HitPulseColor.g = Utils::Lerp(m_HitPulseColor.g, 1.0f, ts * 2);
+				m_HitPulseColor.b = Utils::Lerp(m_HitPulseColor.b, 1.0f, ts * 2);
+
+				m_PlayerAnimator.SetColor(m_HitPulseColor);
+			}
+		}
+
+		if (m_BReleased && Input::IsKeyPressed(Key::B))
+		{
+			m_BReleased = false;
 
 			if (m_PlayerData.AvailableBombs)
 			{
 				BombProps props;
 				props.ExplosionTime = 3.0f;
-				props.Reach = 1;
+				props.Reach = m_PlayerData.Power;
 				props.Type = BombType::CLASSIC;
 
-				Dispatch(GameEventType::DEPLOY_BOMB, props);
+				Dispatch(GameEventType::BOMB_DEPLOY, props);
 				m_PlayerData.AvailableBombs--;
 			}
 		}
 
-		Released = Input::IsKeyReleased(Key::B);
+		if (m_PlayerData.Invincibility != 0.0f)
+		{
+			m_PlayerData.Invincibility = Utils::Lerp(m_PlayerData.Invincibility, 0.0f, ts);
+		}
+		m_BReleased = Input::IsKeyReleased(Key::B);
 		OnUpdateMovement();
 	}
 }
 
 void Player::OnGameEvent(GameEvent& e)
 {
-	if (e.Type == GameEventType::VALUE_PLAYER_START_POS)
+	if (!m_PlayerData.Health)
+		return;
+
+	if (e.Type == GameEventType::PLAYER_START_POSITION)
 	{
 		//HU_INFO("{0}", std::any_cast<glm::vec3>(e.Data).x);
 		m_Handle.Transform().Translation = std::any_cast<glm::vec3>(e.Data);
@@ -98,60 +145,82 @@ void Player::OnGameEvent(GameEvent& e)
 			auto& player = m_Handle.Transform().Translation;
 			auto& expl = exp.Transform().Translation;
 
-			//HU_INFO("{0}", glm::distance(player, expl));
-
 			if (glm::distance(player, expl) < range)
 			{
-				m_Health = 0;
+				// Bomb damage equals insta kill
+				m_PlayerData.Health = 0;
 
-				m_Alive = false;
 				m_PlayerAnimator.Play("PlayerDead");
 
 				auto body = static_cast<b2Body*>(m_Handle.GetComponent<Rigidbody2DComponent>().RuntimeBody);
 				body->SetLinearVelocity({ 0, 0 });
 
-				Dispatch(GameEventType::GAME_LOST);
-				// Player dead animation
+				Dispatch(GameEventType::PLAYER_GONE);
 			}
 		}
 	}
-	else if (e.Type == GameEventType::ENEMY_GRID_MOVEMENT)
+	else if (e.Type == GameEventType::ENEMY_MOVED)
 	{
+		if (m_PlayerData.Invincibility != 0.0f)
+			return;
+
 		auto& entity = std::any_cast<Entity>(e.Data);
 
 		if (glm::distance(entity.Transform().Translation, m_Handle.Transform().Translation) < 0.8f)
 		{
-			if (m_Alive)
+			if (m_PlayerData.Health != 0) //TODO: invincibility when hit by a monster
 			{
-				m_Health--;
+				m_PlayerData.Health--;
+				m_PlayerData.Invincibility = 3.0f;
 
-				if (m_Health == 0)
+				if (m_PlayerData.Health == 0)
 				{
-					m_Alive = false;
 					m_PlayerAnimator.Play("PlayerDead");
 
 					auto body = static_cast<b2Body*>(m_Handle.GetComponent<Rigidbody2DComponent>().RuntimeBody);
 					body->SetLinearVelocity({ 0, 0 });
 
-					Dispatch(GameEventType::GAME_LOST);
+					Dispatch(GameEventType::PLAYER_GONE);
+					return;
 				}
+				m_PlayerHit = true;
+				Dispatch(GameEventType::PLAYER_HIT, m_PlayerData.Health);
 			}
 		}
 	}
-	else if (e.Type == GameEventType::DEPLOY_BOMB_UNSUCCESSFUL)
+	else if (e.Type == GameEventType::BOMB_DEPLOY_UNSUCCESSFUL)
 	{
 		m_PlayerData.AvailableBombs++;
 	}
-	else if (e.Type == GameEventType::GAME_WON)
+	else if (e.Type == GameEventType::PLAYER_SUCCESS_EXIT)
 	{
 		auto body = static_cast<b2Body*>(m_Handle.GetComponent<Rigidbody2DComponent>().RuntimeBody);
 		body->SetLinearVelocity({ 0, 0 });
 		m_Handle.GetComponent<SpriteRendererComponent>().Color = glm::vec4(0.0f);
+		m_PlayerAnimator.SetColor(glm::vec4(0.0f));
 		m_PlayerAnimator.Pause();
-		m_Alive = false;
+	}
+	else if (e.Type == GameEventType::PLAYER_SPEED_UPGRADE)
+	{
+		m_PlayerData.Speed++;
+		g_InGameData.SpeedUpgrade++;
+	}
+	else if (e.Type == GameEventType::PLAYER_POWER_UPGRADE)
+	{
+		m_PlayerData.Power++;
+		g_InGameData.BombPowerUpgrade++;
+	}
+	else if (e.Type == GameEventType::PLAYER_BOMB_COUNT_UPGRADE)
+	{
+		if (g_InGameData.BombCountUpgrade < MAX_UPGRADE_COUNT_BOMBS)
+		{
+			m_PlayerData.AvailableBombs++;
+			g_InGameData.BombCountUpgrade++;
+		}
 	}
 }
 
+// DEBUG
 #define SIPKY
 
 #ifdef SIPKY
@@ -259,8 +328,7 @@ void Player::OnUpdateMovement()
 	{
 		m_AnimationState = PlayerAnimationState::IDLE;
 		Dispatch(GameEventType::PLAYER_IDLE);
-		m_Handle.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("PlayerIdle");
-		m_PlayerAnimator.Pause();
+		m_PlayerAnimator.Play("PlayerIdle");
 		m_LastKey = 0;
 		m_PressedKey = 0;
 	}
@@ -294,7 +362,7 @@ void Player::OnUpdateMovement()
 	if(m_PlayerData.Velocity.x != 0 || m_PlayerData.Velocity.y != 0)
 	{
 		//HU_INFO("DAMN: {0}, {1}", m_PlayerData.Velocity.x, m_PlayerData.Velocity.y);
-		Dispatch(GameEventType::VALUE_PLAYER_MOVING, m_Handle.Transform().Translation);
+		Dispatch(GameEventType::PLAYER_MOVED, m_Handle.Transform().Translation);
 	}
 }
 

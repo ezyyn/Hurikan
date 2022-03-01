@@ -1,26 +1,27 @@
-#include "Bomb.h"
+#include "Bomb.hpp"
 
-#include "BomberMan/Core/ResourceManager.h"
-#include "BomberMan/Core/SaveManager.h"
-#include "BomberMan/Core/Navigation.h"
+#include "BomberMan/Core/ResourceManager.hpp"
+#include "BomberMan/Core/SaveLoadSystem.hpp"
+#include "BomberMan/Core/Navigation.hpp"
 
-#include "BomberMan/Game/Grid.h"
+#include "BomberMan/Game/Grid.hpp"
 
-#include "Hurikan/Core/Input.h"
-#include "Hurikan/Core/KeyCodes.h"
+#include <Hurikan/Core/Input.h>
+#include <Hurikan/Core/KeyCodes.h>
 
 #include <box2d/b2_body.h>
 
 static std::vector<Bomb> s_BombList;
+
+////////////////////////////////////////////////////////////////////
+///////////////////////  Bomb Manager //////////////////////////////
+////////////////////////////////////////////////////////////////////
 
 BombManager::~BombManager()
 {
 	s_BombList.clear();
 }
 
-////////////////////////////////////////////////////////////////////
-///////////////////////  Bomb Manager //////////////////////////////
-////////////////////////////////////////////////////////////////////
 void BombManager::Init(Scene* scene)
 {
 	g_GameScene = scene;
@@ -47,17 +48,13 @@ bool BombManager::PlaceBomb(BombProps& props)
 
 void BombManager::OnGameEvent(GameEvent& e)
 {
-	if (e.Type == GameEventType::VALUE_PLAYER_CHNG_POS_GRID) 
+	if (e.Type == GameEventType::PLAYER_CHANGED_GRID_POSITION) 
 	{
-		// Event from GRID
-		
 		// Updates the position of the PLAYER
-
 		auto& GRID_ENTITY = std::any_cast<Entity>(e.Data);
-		//HU_INFO("x: {0}, y: {1}", GRID_ENTITY.Transform().Translation.x, GRID_ENTITY.Transform().Translation.y);
 		m_PlayerGrid = GRID_ENTITY;
 	}
-	else if (e.Type == GameEventType::VALUE_PLAYER_MOVING)
+	else if (e.Type == GameEventType::PLAYER_MOVED)
 	{
 		// From player itself
 		auto& PLAYER = std::any_cast<glm::vec3>(e.Data);
@@ -84,20 +81,18 @@ void BombManager::OnGameEvent(GameEvent& e)
 
 		// Sends info to GRID that BOMB vanished => GRID can now clear the GRID_ENTITY under the bomb
 
-		//auto& GRID_ENTITY = std::any_cast<Entity>(e.Data);
-
 		Dispatch(GameEventType::BOMB_VANISHED, e.Data);
 	}
-	else if (e.Type == GameEventType::BREAK_WALL)
+	else if (e.Type == GameEventType::WALL_BREAK)
 	{
 		// Sends info to GRID that some bomb destroyed a wall, GRID_ENTITY
 
-		Dispatch(GameEventType::BREAK_WALL, e.Data);
+		Dispatch(GameEventType::WALL_BREAK, e.Data);
 	}
-	else if (e.Type == GameEventType::DEPLOY_BOMB)
+	else if (e.Type == GameEventType::BOMB_DEPLOY)
 	{
 		if (!PlaceBomb(std::any_cast<BombProps>(e.Data)))
-			Dispatch(GameEventType::DEPLOY_BOMB_UNSUCCESSFUL);
+			Dispatch(GameEventType::BOMB_DEPLOY_UNSUCCESSFUL);
 	}
 }
 
@@ -116,36 +111,10 @@ void BombManager::OnUpdate(Timestep& ts)
 	}
 }
 
-/*
-void BombManager::OnUpdateInput(Bomb& bomb, Timestep& ts)
-{
-	if (bomb.PhysicsEnabled() && bomb.GetState() < BombState::EXPLOSION)
-	{
-		static bool released = true;
-
-		if (Input::IsKeyPressed(Key::Space) && released)
-		{
-			released = false;
-			for (auto& neighbour : m_PlayerGrid.GetComponent<GridNodeComponent>().Neighbours)
-			{
-				if (neighbour.GetComponent<EntityTypeComponent>().Type == EntityType::BOMB)
-				{
-					// Kick the bomb
-					HU_INFO("KICK DA BOMB"); // Player power needed
-					bomb.SetKickPath({bomb.GetParent().GetComponent<GridNodeComponent>().Neighbours[3]});
-				}
-			}
-		}
-		if (Input::IsKeyReleased(Key::Space))
-		{
-			released = true;
-		}
-	}
-}*/
-
 ///////////////////////////////////////////////////////////////////
 ///////////////////////  Bomb  ////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
+
 Bomb::Bomb(const BombProps& props, Scene* scene)
 	: m_Properties(props)
 {
@@ -197,8 +166,6 @@ bool Bomb::OnTick(Timestep& ts)
 			if (!frame_animator.IsAnyPlaying())
 			{
 				m_AnimationCompletedCount++;
-				//exp.RemoveComponent<SpriteRendererComponent>();
-				//exp.RemoveComponent<Animator>();
 				if (m_AnimationCompletedCount == m_SpreadEntities.size())
 				{
 					// Send info to BOMB MANAGER that this bomb exploded
@@ -223,27 +190,6 @@ bool Bomb::OnTick(Timestep& ts)
 	{
 		m_Properties.Time += ts;
 		m_Handle.GetComponent<Animator>().OnUpdate(ts);
-
-		/*if (!m_KickPath.empty())
-		{
-			if (m_KickPath.front().GetComponent<GridNodeComponent>().Obstacle)
-			{
-				m_KickPath.clear();
-				return false;
-			}
-
-			auto& transform = m_Handle.Transform();
-			transform.Translation.x = GameMath::Lerp(transform.Translation.x, m_KickPath.front().Transform().Translation.x, ts * 3);
-			transform.Translation.y = GameMath::Lerp(transform.Translation.y, m_KickPath.front().Transform().Translation.y, ts * 3);
-
-			if (transform.Translation.x == m_KickPath.front().Transform().Translation.x 
-				&& transform.Translation.y == m_KickPath.front().Transform().Translation.y)
-			{
-				m_Parent.GetComponent<EntityTypeComponent>().Type = EntityType::EMPTY;
-				m_Parent = m_KickPath.front();
-				m_KickPath.pop_front();
-			}
-		}*/
 	}
 
 	return false;
@@ -302,9 +248,9 @@ void Bomb::Expand()
 	// Right
 	for (int j = 1; j <= m_Properties.Reach; ++j)
 	{
-		if (index_x + j < SaveManager::GetCurrentLevel().Width)
+		if (index_x + j < SaveLoadSystem::GetCurrentLevel().Width)
 		{
-			auto rightspread = Grid::Get(index_y, index_x + j);
+			auto& rightspread = Grid::Get(index_y, index_x + j);
 
 			bool stop_expanding = WingExpand(j, rightspread, 270.0f);
 
@@ -317,7 +263,7 @@ void Bomb::Expand()
 	{
 		if (index_y - j >= 0)
 		{
-			auto upspread = Grid::Get(index_y - j, index_x);
+			auto& upspread = Grid::Get(index_y - j, index_x);
 
 			bool stop_expanding = WingExpand(j, upspread, 0.0f);
 
@@ -328,9 +274,9 @@ void Bomb::Expand()
 	// Down
 	for (int j = 1; j <= m_Properties.Reach; ++j)
 	{
-		if (index_y + j < SaveManager::GetCurrentLevel().Height)
+		if (index_y + j < SaveLoadSystem::GetCurrentLevel().Height)
 		{
-			auto downspread = Grid::Get(index_y + j, index_x);
+			auto& downspread = Grid::Get(index_y + j, index_x);
 
 			bool stop_expanding = WingExpand(j, downspread, 180.0f);
 
@@ -348,14 +294,14 @@ bool Bomb::WingExpand(int index, Entity& entity, float rotation)
 		return true;
 	case EntityType::BREAKABLE_WALL:
 	{
-		Dispatch(GameEventType::BREAK_WALL, entity);
+		Dispatch(GameEventType::WALL_BREAK, entity);
 		return true;
 	}
 	case EntityType::EMPTY:
 	{
 		Entity spread = g_GameScene->CreateEntityWithDrawOrder(2, "WingEntity");
 
-		spread.AddComponent<SpriteRendererComponent>(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+		spread.AddComponent<SpriteRendererComponent>(glm::vec4(0.0f));
 		spread.GetComponent<TransformComponent>().Translation = entity.Transform().Translation;
 		spread.GetComponent<TransformComponent>().Rotation.z = glm::radians(rotation);
 
@@ -388,9 +334,6 @@ bool Bomb::WingExpand(int index, Entity& entity, float rotation)
 		}
 		return true;
 	}
-
-	default:
-		break;
 	}
 	HU_CORE_ASSERT(false, "");
 	return false;

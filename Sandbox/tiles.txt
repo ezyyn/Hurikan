@@ -8,4 +8,6 @@ L -> Loot under Breakable Wall
 E -> visible Exit 
 P -> Player start position
 K -> Key(always under breakable wall)
+W -> Bomb power upgrade
+D -> Player speed upgrade
 - -> Empty space

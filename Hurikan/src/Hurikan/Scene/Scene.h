@@ -49,6 +49,7 @@ namespace Hurikan
 		Entity CreateEntityWithDrawOrder(int order, const std::string & name = std::string());
 		void ChangeDrawIndex(int index, Entity entity);
 
+		// TODO: Find better way to do this
 		void CreateBody(Entity& entity);
 		void ChangeBody(Entity& entity);
 		void DestroyBody(Entity& entity);

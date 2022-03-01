@@ -1,7 +1,7 @@
-#include "GameManager.h"
+#include "GameManager.hpp"
 
-#include "BomberMan/Core/SaveManager.h"
-#include "BomberMan/Game/InGame.h"
+#include "BomberMan/Core/SaveLoadSystem.hpp"
+#include "BomberMan/Game/InGame.hpp"
 
 #include <Hurikan/Renderer/Renderer2D.h>
 #include <Hurikan/Renderer/RenderCommand.h>
@@ -9,14 +9,17 @@
 
 #include <imgui.h>
 
+extern GameData g_InGameData;
+
 void GameManager::OnAttach()
 {
-	SaveManager::Init();
+	SaveLoadSystem::Init();
 	ResourceManager::Init();
 	AudioManager::Init();
 
 	m_MainMenu.Attach(this);
 	m_MainMenu.Attach(&m_AudioAssistant);
+	Attach(&m_AudioAssistant);
 
 	m_MainMenu.Init(); 
 
@@ -45,7 +48,8 @@ void GameManager::OnAttach()
 		{
 			// Level counter, gets data from SaveManager
 			m_LevelCount = m_LoadLevelScene.CreateEntityWithDrawOrder(3);
-			m_LevelCount.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)).SubTexture = ResourceManager::GetSubTexture("m" + std::to_string(SaveManager::GetCurrentLevel().ID));
+			m_LevelCount.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)).SubTexture = 
+				ResourceManager::GetSubTexture("m" + std::to_string(SaveLoadSystem::GetCurrentLevel().ID));
 
 			m_LevelCount.Transform().Translation.x = 1.0f;
 			//levelcount.Transform().Translation.y = -1.1f;
@@ -94,10 +98,6 @@ void GameManager::OnUpdate(Timestep& ts)
 		break;
 	}
 	case SceneType::LEVEL_FAIL:
-	{
-		WaitAndSwitch(SceneType::LOADING_LEVEL, ts);
-		break;
-	}
 	case SceneType::LEVEL_SUCCESS:
 		WaitAndSwitch(SceneType::LOADING_LEVEL, ts);
 		break;
@@ -108,6 +108,32 @@ void GameManager::OnUpdate(Timestep& ts)
 		m_Game = nullptr;
 
 		m_CurrentScreen = SceneType::MAIN_MENU;
+		break;
+	}
+	case SceneType::GAME_COMPLETED:
+	{
+		{
+			m_Game->OnUpdate(ts);
+
+			static float wait = 3.0f;
+			wait -= ts;
+
+			if (wait > 0.0f)
+				return;
+
+			wait = 3.0f;
+		}
+
+		//Dispatch(GameEventType::AUDIO_LEVEL_SCREEN);
+
+		delete m_Game;
+		m_Game = nullptr;
+		m_CurrentScreen = SceneType::MAIN_MENU;
+		break;
+	}
+	case SceneType::GAME_COMPLETED_SCREEN:
+	{
+
 		break;
 	}
 	default:
@@ -126,8 +152,11 @@ void GameManager::WaitAndSwitch(SceneType type, Timestep& ts)
 		if (wait > 0.0f)
 			return;
 
-		wait = 2.0f;
+		wait = 3.0f;
 	}
+
+	Dispatch(GameEventType::AUDIO_LEVEL_SCREEN);
+
 	delete m_Game;
 	m_Game = nullptr;
 	m_CurrentScreen = type;
@@ -145,18 +174,14 @@ void GameManager::LoadLevel(Timestep& ts)
 		if (wait1 > 0.0f)
 			return;
 		
-		wait1 = 2.0f;
+		wait1 = 3.0f;
 	}
 	m_Game = new InGame;
-
 	m_Game->Attach(this);
-	m_Game->Init();
-	m_Game->Load();
+	m_Game->Init(m_AudioAssistant);
 	//Switch
 	m_CurrentScreen = SceneType::IN_GAME;
 }
-
-extern float HeadCoords[2];
 
 void GameManager::OnImGuiRender()
 {
@@ -170,12 +195,16 @@ void GameManager::OnImGuiRender()
 	ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
 	ImGui::Separator();
 	ImGui::Text("Timestep: %f ms", timestep.GetMilliseconds());
-
 	ImGui::End();
 
-	ImGui::Begin("Draggers and floaters");
 
-	ImGui::DragFloat2("Head: ", HeadCoords, 0.1f, -10, 10);
+	ImGui::Begin("GameData");
+
+	ImGui::Text("Completed Levels: %d", g_InGameData.CompletedLevels);
+	ImGui::Text("Speed Upgrade: %d", (int)g_InGameData.SpeedUpgrade);
+	ImGui::Text("BombCount Upgrade: %d", g_InGameData.BombCountUpgrade);
+	ImGui::Text("BombPower Upgrade: %d", g_InGameData.BombPowerUpgrade);
+	ImGui::Text("Score: %d", g_InGameData.Score);
 
 	ImGui::End();
 }
@@ -191,10 +220,8 @@ bool GameManager::OnKeyPressed(KeyPressedEvent& e)
 {
 	if (m_CurrentScreen == SceneType::IN_GAME && m_Game)
 	{
-		if (m_KeyPressed != Key::Escape && e.GetKeyCode() == Key::Escape)
+		if (m_KeyPressed != Key::Escape && e.GetKeyCode() == Key::Escape) // Player cannot pause while level completed or fail -> WORKING
 		{
-			//Application::Get().Close();
-
 			m_Game->Pause(!m_Game->Paused());
 
 			m_KeyPressed = Key::Escape;
@@ -206,7 +233,6 @@ bool GameManager::OnKeyPressed(KeyPressedEvent& e)
 		m_KeyPressed = Key::F5;
 		Application::Get().SetFullScreen(!Application::Get().FullScreenEnabled());
 	}
-
 
 	if(m_CurrentScreen == SceneType::MAIN_MENU)
 		m_MainMenu.OnKeyPressed(e);
@@ -223,36 +249,49 @@ bool GameManager::OnKeyReleased(KeyReleasedEvent& e)
 
 void GameManager::OnGameEvent(GameEvent& e)
 {
-	if (e.Type == GameEventType::NEW_GAME_CONFIRMED)
+	if (e.Type == GameEventType::GAME_NEW)
 	{
-		SaveManager::ResetProgress();
+		Dispatch(GameEventType::AUDIO_LEVEL_SCREEN);
+
+		SaveLoadSystem::EraseDataAndDeserialize();
 		m_CurrentScreen = SceneType::LOADING_LEVEL;
-		m_LevelCount.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("m" + std::to_string(SaveManager::GetCurrentLevel().ID));
+		m_LevelCount.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("m" + std::to_string(SaveLoadSystem::GetCurrentLevel().ID));
 	}
-	else if (e.Type == GameEventType::CONTINUE_CONFIRMED)
+	else if (e.Type == GameEventType::GAME_CONTINUE)
 	{
+		Dispatch(GameEventType::AUDIO_LEVEL_SCREEN);
+
 		m_CurrentScreen = SceneType::LOADING_LEVEL;
 	}
-	else if (e.Type == GameEventType::EXIT_CONFIRMED)
+	else if (e.Type == GameEventType::GAME_EXIT)
 	{
 		Application::Get().Close();
 	}
-	else if (e.Type == GameEventType::GAME_LOST)
+	else if (e.Type == GameEventType::LEVEL_FAILED)
 	{
+		Dispatch(GameEventType::AUDIO_LEVEL_FAILED);
+
 		m_CurrentScreen = SceneType::LEVEL_FAIL;
-		m_MainMenu.UpdateUI();
-		SaveManager::ResetCurrentLevel();
 	}
-	else if (e.Type == GameEventType::GAME_WON)
+	else if (e.Type == GameEventType::LEVEL_SUCCESS)
 	{
+		Dispatch(GameEventType::AUDIO_LEVEL_SUCCESS);
+
+		if (SaveLoadSystem::GetPreviousLevel().BossLevel)
+		{
+			m_CurrentScreen = SceneType::GAME_COMPLETED;
+			return;
+		}
+
 		m_CurrentScreen = SceneType::LEVEL_SUCCESS;
-		SaveManager::NextLevel();
-		m_LevelCount.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("m" + std::to_string(SaveManager::GetCurrentLevel().ID));
+		m_LevelCount.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("m" + std::to_string(SaveLoadSystem::GetCurrentLevel().ID));
 	}
 	else if (e.Type == GameEventType::RETURN_TO_MAIN_MENU)
 	{
+		// Already dispatched to AudioManager via InGame
+		
 		m_CurrentScreen = SceneType::RETURN_TO_MAIN_MENU;
-		SaveManager::ResetCurrentLevel();
-		m_LevelCount.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("m" + std::to_string(SaveManager::GetCurrentLevel().ID));
+		m_LevelCount.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("m" + std::to_string(SaveLoadSystem::GetCurrentLevel().ID));
+		m_MainMenu.UpdateUI();
 	}
 }

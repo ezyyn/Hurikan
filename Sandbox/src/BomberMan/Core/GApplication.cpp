@@ -1,6 +1,6 @@
-#include <Hurikan/Core/EntryPoint.h>
+#include "BomberMan/Core/GameManager.hpp"
 
-#include "BomberMan/Core/GameManager.h"
+#include <Hurikan/Core/EntryPoint.h>
 
 class GApplication : public Hurikan::Application
 {
@@ -25,7 +25,7 @@ Hurikan::Application* Hurikan::CreateApplication(Hurikan::ApplicationCommandLine
 	specification.StartMaximized = false;
 	specification.VSync = true;
 #ifdef HU_DEBUG
-	specification.EnableImGui = false;
+	specification.EnableImGui = true;
 #else
 	specification.EnableImGui = false;
 #endif

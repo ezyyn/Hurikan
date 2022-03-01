@@ -25,8 +25,13 @@ int main(int argc, char** argv)
 
 
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	/*_CrtSetBreakAlloc(5535);
-	_CrtSetBreakAlloc(8313);*/
+	//_CrtSetBreakAlloc(18908);
+	//_CrtSetBreakAlloc(18832);
+	//_CrtSetBreakAlloc(12195);
+	//_CrtSetBreakAlloc(12196);
+	
+	// AUDIO LEAKS?
+	// Shader leaking 
 	{
 		Hurikan::Log::Init();
 

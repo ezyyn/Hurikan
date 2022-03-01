@@ -1,13 +1,16 @@
- #include "Grid.h"
+ #include "Grid.hpp"
 
-#include "BomberMan/Core/ResourceManager.h"
-#include "BomberMan/Game/Enemy.h"
-#include "BomberMan/Core/SaveManager.h"
+#include "BomberMan/Core/ResourceManager.hpp"
+#include "BomberMan/Game/Enemy.hpp"
 
 #include <Hurikan/Scene/Components.h>
+#include <Hurikan/Core/Input.h>
+#include <Hurikan/Core/KeyCodes.h>
 #include <box2d/b2_body.h>
 
 Scope<Entity[]> Grid::m_Grid;
+
+extern GameData g_InGameData;
 
 Grid::~Grid()
 {
@@ -20,15 +23,16 @@ Grid::~Grid()
 	# -> Unbreakable Wall
 	B -> Breakable Wall
 	M -> Regular Monster
-	R -> Rare Monster
+	F -> Fast Monster
+	T -> Smart monster
 	S -> Boss Monster
 	U -> Exit door under wall
-	L -> Loot under Breakable Wall
-	E -> visible Exit 
 	P -> Player start position
 	K -> Key(always under breakable wall)
+	W -> Bomb power upgrade
+	D -> Player speed upgrade
+	O -> Bomb count upgrade
 	- -> Empty space
-
 */
 
 void Grid::Create(Scene* const scene)
@@ -37,7 +41,7 @@ void Grid::Create(Scene* const scene)
 
 	m_Grid = CreateScope<Entity[]>(GetLevelWidth() * GetLevelHeight());
 
-	float offset_x = -15.5f;
+	constexpr float offset_x = -15.5f;
 
 	for (int y = 0; y < GetLevelHeight(); ++y)
 	{
@@ -53,7 +57,7 @@ void Grid::Create(Scene* const scene)
 			auto& gnc = gridEntity.AddCustomComponent<GridNodeComponent>();
 			gnc.Index = { x, y };
 
-			switch (SaveManager::GetCurrentLevel().MapSkeleton[y * GetLevelWidth() + x])
+			switch (SaveLoadSystem::GetCurrentLevel().MapSkeleton[y * GetLevelWidth() + x])
 			{
 			case '#':
 			{
@@ -75,25 +79,6 @@ void Grid::Create(Scene* const scene)
 				fa.Add(ResourceManager::GetAnimation("WallBreakAnimation"));
 
 				gnc.Obstacle = true;
-				break;
-			}
-			case 'L': 
-			{
-				{
-					auto& loot = g_GameScene->CreateEntityWithDrawOrder(1);
-					loot.AddComponent<SpriteRendererComponent>(glm::vec4(0.0f)).SubTexture = ResourceManager::GetSubTexture("MoreBombUpgrade");
-					loot.Transform().Translation = gridEntity.Transform().Translation;
-					loot.Transform().Scale *= 0.8f;
-					gridEntity.AddCustomComponent<LootComponent>(Loot::BOMB_UPGRADE_COUNT).LootHandle = loot;
-				}
-
-				gridEntity.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f));
-				gridEntity.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("BreakableWall");
-				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::BREAKABLE_WALL;
-				gridEntity.GetComponent<BoxCollider2DComponent>().IsSensor = false;
-				auto& fa = gridEntity.AddCustomComponent<Animator>();
-				fa.SetTarget(gridEntity);
-				fa.Add(ResourceManager::GetAnimation("WallBreakAnimation"));
 				break;
 			}
 			case 'K':
@@ -120,18 +105,6 @@ void Grid::Create(Scene* const scene)
 				m_KeyGridEntity = gridEntity;
 				break;
 			}
-			case 'E':
-			{
-				auto& exit = scene->CreateEntityWithDrawOrder(1);
-				exit.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f)).SubTexture = ResourceManager::GetSubTexture("ExitDoor");
-				exit.AddCustomComponent<LootComponent>().Type = Loot::EXIT;
-				exit.Transform().Translation = gridEntity.Transform().Translation;
-
-				gridEntity.AddCustomComponent<LootComponent>().Type = Loot::EXIT;
-				gridEntity.GetComponent<LootComponent>().LootHandle = gridEntity;
-
-				break;
-			}
 			case 'U':
 			{
 				{
@@ -139,6 +112,7 @@ void Grid::Create(Scene* const scene)
 					exit.AddComponent<SpriteRendererComponent>(glm::vec4(0.0f)).SubTexture = ResourceManager::GetSubTexture("ExitDoor");
 					exit.Transform().Translation = gridEntity.Transform().Translation;
 					gridEntity.AddCustomComponent<LootComponent>(Loot::EXIT).LootHandle = exit;
+					gridEntity.GetComponent<LootComponent>().Obtainable = true;
 				}
 
 				gridEntity.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f));
@@ -157,35 +131,114 @@ void Grid::Create(Scene* const scene)
 			{
 				gridEntity.GetComponent<BoxCollider2DComponent>().IsSensor = true;
 				m_PlayerGridPosition = m_Grid[y * GetLevelWidth() + x];
-				Dispatch(GameEventType::VALUE_PLAYER_START_POS, gridEntity.Transform().Translation);
+				Dispatch(GameEventType::PLAYER_START_POSITION, gridEntity.Transform().Translation);
 				break;
 			}
-			case 'M': // MONSTER SPAWN POINT
+			case 'M': // REGULAR MONSTER SPAWN POINT
 			{
 				gridEntity.GetComponent<BoxCollider2DComponent>().IsSensor = true;
 				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::ENEMY_REGULAR;
-				Dispatch(GameEventType::CREATE_NEW_ENEMY, gridEntity); // Event for enemy spawner
+				Dispatch(GameEventType::ENEMY_CREATE_NEW, gridEntity); // Event for enemy spawner
 				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::EMPTY;
 				break;
 			}
-			case 'A': // RARE MONSTER SPAWN POINT
+			case 'F': // FAST MONSTER SPAWN POINT
 			{
 				gridEntity.GetComponent<BoxCollider2DComponent>().IsSensor = true;
-				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::ENEMY_RARE;
-				Dispatch(GameEventType::CREATE_NEW_ENEMY, gridEntity); // Event for enemy spawner
+				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::ENEMY_FAST;
+				Dispatch(GameEventType::ENEMY_CREATE_NEW, gridEntity); // Event for enemy spawner
 				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::EMPTY;
 				break;
 			}
-			case '-': // EMPTY
+			case 'T': // Smart enemy
+			{
+				gridEntity.GetComponent<BoxCollider2DComponent>().IsSensor = true;
+				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::ENEMY_SMART;
+				Dispatch(GameEventType::ENEMY_CREATE_NEW, gridEntity); // Event for enemy spawner
+				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::EMPTY;
+				break;
+			}
+			case 'D': // Player speed upgrade
+			{
+				{
+					auto& speed = scene->CreateEntityWithDrawOrder(1);
+					speed.AddComponent<SpriteRendererComponent>(glm::vec4(0.0f)).SubTexture = ResourceManager::GetSubTexture("SpeedUpgrade");
+					speed.Transform().Translation = gridEntity.Transform().Translation;
+					gridEntity.AddCustomComponent<LootComponent>(Loot::SPEED_UPGRADE).LootHandle = speed;
+					gridEntity.GetComponent<LootComponent>().Obtainable = true;
+				}
+
+				gridEntity.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f));
+				gridEntity.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("BreakableWall");
+				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::BREAKABLE_WALL;
+				gridEntity.GetComponent<BoxCollider2DComponent>().IsSensor = false;
+				auto& fa = gridEntity.AddCustomComponent<Animator>();
+				fa.SetTarget(gridEntity);
+				fa.Add(ResourceManager::GetAnimation("WallBreakAnimation"));
+
+				gnc.Obstacle = true;
+				break;
+			}
+			case 'W': // Player bomb power upgrade
+			{
+				{
+					auto& power = scene->CreateEntityWithDrawOrder(1);
+					power.AddComponent<SpriteRendererComponent>(glm::vec4(0.0f)).SubTexture = ResourceManager::GetSubTexture("PowerUpgrade");
+					power.Transform().Translation = gridEntity.Transform().Translation;
+					gridEntity.AddCustomComponent<LootComponent>(Loot::BOMB_UPGRADE_POWER).LootHandle = power;
+					gridEntity.GetComponent<LootComponent>().Obtainable = true;
+				}
+
+				gridEntity.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f));
+				gridEntity.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("BreakableWall");
+				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::BREAKABLE_WALL;
+				gridEntity.GetComponent<BoxCollider2DComponent>().IsSensor = false;
+				auto& fa = gridEntity.AddCustomComponent<Animator>();
+				fa.SetTarget(gridEntity);
+				fa.Add(ResourceManager::GetAnimation("WallBreakAnimation"));
+
+				gnc.Obstacle = true;
+				break;
+			}
+			case 'O': // Player bomb count upgrade
+			{
+				{
+					auto& count = scene->CreateEntityWithDrawOrder(1);
+					count.AddComponent<SpriteRendererComponent>(glm::vec4(0.0f)).SubTexture = ResourceManager::GetSubTexture("BombCountUpgrade");
+					count.Transform().Translation = gridEntity.Transform().Translation;
+					gridEntity.AddCustomComponent<LootComponent>(Loot::BOMB_UPGRADE_COUNT).LootHandle = count;
+					gridEntity.GetComponent<LootComponent>().Obtainable = true;
+				}
+
+				gridEntity.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f));
+				gridEntity.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("BreakableWall");
+				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::BREAKABLE_WALL;
+				gridEntity.GetComponent<BoxCollider2DComponent>().IsSensor = false;
+				auto& fa = gridEntity.AddCustomComponent<Animator>();
+				fa.SetTarget(gridEntity);
+				fa.Add(ResourceManager::GetAnimation("WallBreakAnimation"));
+
+				gnc.Obstacle = true;
+				break;
+			}
+
+			case '-': // Empty
 				gridEntity.GetComponent<BoxCollider2DComponent>().IsSensor = true;
 				break;
+			case 'S':
+			{
+				gridEntity.GetComponent<BoxCollider2DComponent>().IsSensor = true;
+				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::ENEMY_BOSS;
+				Dispatch(GameEventType::ENEMY_CREATE_NEW, gridEntity); // Event for enemy spawner
+				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::EMPTY;
+				break;
+			}
 			default:
-				HU_CORE_ASSERT(false, "Invalid tile!");
+				HU_CORE_ASSERT(false, "Invalid tile! {0}", SaveLoadSystem::GetCurrentLevel().MapSkeleton[y * GetLevelWidth() + x]);
 				break;
 			}
 		}
 	}
-	//m_Grid[0].GetComponent<SpriteRendererComponent>().SubTexture = nullptr; // TODO: REMOVE
 
 	for (int y = 0; y < GetLevelHeight(); ++y)
 	{
@@ -212,27 +265,27 @@ void Grid::Create(Scene* const scene)
 		}
 	}
 
-	Dispatch(GameEventType::VALUE_PLAYER_CHNG_POS_GRID, m_PlayerGridPosition);
+	Dispatch(GameEventType::PLAYER_CHANGED_GRID_POSITION, m_PlayerGridPosition);
 }
 
 Entity& Grid::Get(unsigned int y, unsigned int x)
 {
-	return m_Grid[y * SaveManager::GetCurrentLevel().Width + x];
+	return m_Grid[y * SaveLoadSystem::GetCurrentLevel().Width + x];
 }
 
 const int Grid::GetLevelHeight() const
 {
-	return SaveManager::GetCurrentLevel().Height;
+	return SaveLoadSystem::GetCurrentLevel().Height;
 }
 
 const int Grid::GetLevelWidth() const
 {
-	return SaveManager::GetCurrentLevel().Width;
+	return SaveLoadSystem::GetCurrentLevel().Width;
 }
 
 void Grid::ClearNodes()
 {
-	int size = SaveManager::GetCurrentLevel().Width * SaveManager::GetCurrentLevel().Height;
+	int size = SaveLoadSystem::GetCurrentLevel().Width * SaveLoadSystem::GetCurrentLevel().Height;
 
 	for (int i = 0; i < size; ++i) // TODO: Optimize
 	{
@@ -247,8 +300,16 @@ void Grid::ClearNodes()
 
 void Grid::OnGameEvent(GameEvent& e)
 {
-	if (e.Type == GameEventType::VALUE_PLAYER_MOVING)
+	if (e.Type == GameEventType::PLAYER_MOVED)
 	{
+		static bool b = false;
+
+		if(!b && Input::IsKeyPressed(Key::C))
+		{
+			b = true;
+			Dispatch(GameEventType::PLAYER_SUCCESS_EXIT);
+		}
+
 		auto& player_position = std::any_cast<glm::vec3>(e.Data);
 
 		for (int i = 0; i < GetLevelWidth() * GetLevelHeight(); ++i)
@@ -271,7 +332,7 @@ void Grid::OnGameEvent(GameEvent& e)
 						if (m_KeyObtained) {
 							// Won
 							// Play some nice winning music
-							Dispatch(GameEventType::GAME_WON);
+							Dispatch(GameEventType::PLAYER_SUCCESS_EXIT);
 							return;
 						}
 						else {
@@ -281,6 +342,19 @@ void Grid::OnGameEvent(GameEvent& e)
 						}
 
 					}
+					else if (m_PlayerGridPosition.GetComponent<LootComponent>().Type == Loot::BOMB_UPGRADE_POWER)
+					{
+						Dispatch(GameEventType::PLAYER_POWER_UPGRADE);
+					}
+					else if (m_PlayerGridPosition.GetComponent<LootComponent>().Type == Loot::BOMB_UPGRADE_COUNT)
+					{
+						Dispatch(GameEventType::PLAYER_BOMB_COUNT_UPGRADE);
+					}
+					else if (m_PlayerGridPosition.GetComponent<LootComponent>().Type == Loot::SPEED_UPGRADE)
+					{
+						Dispatch(GameEventType::PLAYER_SPEED_UPGRADE);
+					}
+
 
 					g_GameScene->DestroyEntity(m_PlayerGridPosition.GetComponent<LootComponent>().LootHandle);
 					m_PlayerGridPosition.RemoveComponent<LootComponent>();
@@ -290,10 +364,10 @@ void Grid::OnGameEvent(GameEvent& e)
 
 				//HU_INFO("x: {0} | y: {1}", player_position.x, player_position.y)
 
-				Dispatch(GameEventType::VALUE_PLAYER_CHNG_POS_GRID, m_PlayerGridPosition);
+				Dispatch(GameEventType::PLAYER_CHANGED_GRID_POSITION, m_PlayerGridPosition);
 
 				return;
-			}
+			} 
 		}
 	}
 	else if (e.Type == GameEventType::BOMB_PLACED) 
@@ -321,39 +395,40 @@ void Grid::OnGameEvent(GameEvent& e)
 		GRID_ENTITY.GetComponent<EntityTypeComponent>().Type = EntityType::EMPTY;
 		GRID_ENTITY.GetComponent<GridNodeComponent>().Obstacle = false;
 	}
-	else if (e.Type == GameEventType::BREAK_WALL)
+	else if (e.Type == GameEventType::WALL_BREAK)
 	{
 		auto& GRID_ENTITY = std::any_cast<Entity>(e.Data);
-
-		GRID_ENTITY.GetComponent<Animator>().Play("WallBreakAnimation");
 		GRID_ENTITY.GetComponent<EntityTypeComponent>().Type = EntityType::EMPTY;
+		GRID_ENTITY.GetComponent<Animator>().Play("WallBreakAnimation");
 		auto rb = (b2Body*)GRID_ENTITY.GetComponent<Rigidbody2DComponent>().RuntimeBody;
 		rb->SetEnabled(false);
 		GRID_ENTITY.GetComponent<GridNodeComponent>().Obstacle = false;
 
 		m_AnimationQueue.emplace_back(GRID_ENTITY);
 
-		if (GRID_ENTITY.HasComponent<LootComponent>() && GRID_ENTITY.GetComponent<LootComponent>().Obtainable)
+		if (GRID_ENTITY.HasComponent<LootComponent>() 
+			&& GRID_ENTITY.GetComponent<LootComponent>().Obtainable && 
+			GRID_ENTITY.GetComponent<LootComponent>().Type != Loot::KEY)
 		{
 			GRID_ENTITY.GetComponent<LootComponent>().LootHandle.GetComponent<SpriteRendererComponent>().Color = glm::vec4(1.0f);
 		}
-
-		//SaveManager::Data().Score += 100;
 	}
 }
 
 
 void Grid::OnUpdate(Timestep& ts)
 {
-	//HU_INFO(SaveManager::Data().CurrentLevel);
+	//HU_INFO(g_InGameData.Score);
 
-	if (m_KeyGridEntity.HasComponent<LootComponent>() && 
-		!m_KeyGridEntity.GetComponent<LootComponent>().Obtainable 
-		&& SaveManager::Data().Score >= 1000 * SaveManager::Data().CurrentLevel + 1)
-	{
-		m_KeyGridEntity.GetComponent<LootComponent>().Obtainable = true;
-		m_KeyGridEntity.GetComponent<LootComponent>().LootHandle.GetComponent<SpriteRendererComponent>().Color = glm::vec4(1.0f);
-	}
+	const auto& value = 1000 * (SaveLoadSystem::GetGameData().CompletedLevels + 1);
+
+	if (m_KeyGridEntity && m_KeyGridEntity.HasComponent<LootComponent>())
+			if(g_InGameData.Score >= value && m_KeyGridEntity.GetComponent<LootComponent>().Obtainable == false)
+			{
+				HU_INFO("asdsad");
+				m_KeyGridEntity.GetComponent<LootComponent>().Obtainable = true;
+				m_KeyGridEntity.GetComponent<LootComponent>().LootHandle.GetComponent<SpriteRendererComponent>().Color = glm::vec4(1.0f);
+			}
 
 	for (size_t i = 0; i < m_AnimationQueue.size(); i++)
 	{

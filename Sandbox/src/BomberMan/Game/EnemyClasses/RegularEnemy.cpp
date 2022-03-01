@@ -1,9 +1,9 @@
-#include "RegularEnemy.h"
+#include "RegularEnemy.hpp"
 
-#include "BomberMan/Game/Grid.h"
+#include "BomberMan/Game/Grid.hpp"
 
-#include "BomberMan/Core/Navigation.h"
-#include "BomberMan/Core/ResourceManager.h"
+#include "BomberMan/Core/Navigation.hpp"
+#include "BomberMan/Core/ResourceManager.hpp"
 
 RegularEnemy::RegularEnemy(Entity& handle, Entity& grid_entity) : Enemy(handle, grid_entity)
 {
@@ -12,8 +12,9 @@ RegularEnemy::RegularEnemy(Entity& handle, Entity& grid_entity) : Enemy(handle, 
 	m_Handle.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f));
 
 	m_Properties.Health = 1;
-	m_Properties.Intelligence = AI::DUMB;
+	m_Properties.Intelligence = AI::RANDOM;
 	m_Properties.Name = "Dingus";
+	m_Properties.Speed = 2.0f;
 
 	auto& fa = m_Handle.AddCustomComponent<Animator>();
 	fa.Add(ResourceManager::GetAnimation("BaloonMovingAnimation"));
@@ -40,7 +41,7 @@ void RegularEnemy::OnUpdate(Timestep& ts)
 		return;
 	}
 
-	Dispatch(GameEventType::ENEMY_GRID_MOVEMENT, m_Handle);
+	Dispatch(GameEventType::ENEMY_MOVED, m_Handle);
 
 	if (EnemyLogic(ts))
 	{
@@ -51,22 +52,24 @@ void RegularEnemy::OnUpdate(Timestep& ts)
 
 		m_PreviousPosition = transform.Translation;
 
-		transform.Translation.x = Utils::Lerp(m_Handle.Transform().Translation.x, m_Path.front().Transform().Translation.x, ts * 3);
-		transform.Translation.y = Utils::Lerp(m_Handle.Transform().Translation.y, m_Path.front().Transform().Translation.y, ts * 3);
+		transform.Translation.x = Utils::Lerp(m_Handle.Transform().Translation.x, m_Path.front().Transform().Translation.x, ts * m_Properties.Speed);
+		transform.Translation.y = Utils::Lerp(m_Handle.Transform().Translation.y, m_Path.front().Transform().Translation.y, ts * m_Properties.Speed);
 
 		if (m_PreviousPosition.x < transform.Translation.x && m_CurrentDirection != Direction::RIGHT)
 		{
 			m_CurrentDirection = Direction::RIGHT;
 			m_Handle.Transform().Scale.x = glm::abs(m_Handle.Transform().Scale.x);
-			m_IsRotated = true;
+			m_IsRotated = false;
 			m_Handle.GetComponent<Animator>().Play("BaloonMoving");
 		}
 		else if (m_PreviousPosition.x > transform.Translation.x && m_CurrentDirection != Direction::LEFT)
 		{
 			m_CurrentDirection = Direction::LEFT;
 			if (!m_IsRotated)
+			{
 				m_Handle.Transform().Scale.x *= -1;
-			m_IsRotated = false;
+				m_IsRotated = true;
+			}
 			m_Handle.GetComponent<Animator>().Play("BaloonMoving");
 		}
 
@@ -98,9 +101,8 @@ void RegularEnemy::OnGameEvent(GameEvent& e)
 	{
 		auto& spread = std::any_cast<std::list<Entity>>(e.Data);
 
-		float range = 0.8f;
-		if (e.Type == GameEventType::BOMB_EXPLODING)
-			range = 0.5f;
+		constexpr float range = 0.8f;
+
 		for (auto& explosion : spread)
 		{
 			if (glm::distance(m_Handle.Transform().Translation, explosion.Transform().Translation) < range)
@@ -121,11 +123,6 @@ void RegularEnemy::OnGameEvent(GameEvent& e)
 	else if (e.Type == GameEventType::BOMB_VANISHED)
 	{
 	}
-}
-
-const EnemyProps& RegularEnemy::GetProperties()
-{
-	return m_Properties;
 }
 
 bool RegularEnemy::EnemyLogic(Timestep& ts)
@@ -158,7 +155,6 @@ bool RegularEnemy::EnemyLogic(Timestep& ts)
 
 			// Find new random path
 			Follow(Navigation::RandomPath(m_LastPositionOnGrid));
-
 			return false;
 		}
 	}
