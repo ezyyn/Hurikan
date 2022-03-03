@@ -24,7 +24,7 @@ void FXManager::OnUpdate(Timestep& ts)
 
 	while (it != m_PlayingEffects.end())
 	{
-		if ((*it)->OnUpdateInternal(ts))
+		if ((*it)->OnUpdate(ts))
 		{
 			delete *it;
 			it = m_PlayingEffects.erase(it);

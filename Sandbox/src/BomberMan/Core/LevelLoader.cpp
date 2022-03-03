@@ -20,17 +20,18 @@ struct Position
 
 void LevelLoader::Deserialize(std::vector<Level>& levels)
 {
-	bool default_loaded = false;
+	// Custom level loader
+	bool custom_loaded = false;
 
 	std::fstream levels_file;
 
-	levels_file.open("levels.data", std::ios::in);
+	levels_file.open("data//levels.data", std::ios::in);
 
 	if (levels_file.fail())
 	{
 		levels_file.close();
-		levels_file.open("default_levels.data", std::ios::in);
-		default_loaded = true;
+		levels_file.open("assets//custom_levels.data", std::ios::in);
+		custom_loaded = true;
 	}
 
 	// Reading a file
@@ -89,7 +90,7 @@ void LevelLoader::Deserialize(std::vector<Level>& levels)
 	}
 	levels_file.close();
 
-	if (default_loaded)
+	if (custom_loaded)
 	{
 		SerializeLevels(levels);
 	}
@@ -267,7 +268,7 @@ void LevelLoader::GetLevelWithGeneratedMap(Level& level)
 
 void LevelLoader::SerializeLevels(std::vector<Level>& levels)
 {
-	std::fstream stream("levels.data", std::ios_base::out | std::ios_base::trunc);
+	std::fstream stream("data//levels.data", std::ios_base::out | std::ios_base::trunc);
 
 	for (auto& level : levels)
 	{
@@ -291,7 +292,7 @@ void LevelLoader::SerializeLevels(std::vector<Level>& levels)
 
 void LevelLoader::EraseLevelsFile()
 {
-	std::remove("levels.data");
+	std::remove("data//levels.data");
 }
 
 void LevelLoader::GetBossLevel(Level& level)

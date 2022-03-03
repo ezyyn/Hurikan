@@ -51,6 +51,7 @@ void InGame::Init(AudioAssistant& assistant)
 
 		// Camera's listeners
 		m_GameCamera.Attach(&assistant);
+		m_GameCamera.Attach(&m_EnemySpawner);
 
 		// Grid's listeners
 		m_Grid.Attach(&m_Player);

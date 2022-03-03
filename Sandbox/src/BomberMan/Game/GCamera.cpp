@@ -79,16 +79,14 @@ void GCamera::OnUpdate(Timestep& ts)
 
 		auto& transform = m_CutSceneCamera.Transform();
 		transform.Translation.x = Utils::Lerp(transform.Translation.x, m_BossEntity.Transform().Translation.x, ts * 4);
-		transform.Translation.y = Utils::Lerp(transform.Translation.y, m_BossEntity.Transform().Translation.y, ts * 4);
+		//transform.Translation.y = Utils::Lerp(transform.Translation.y, m_BossEntity.Transform().Translation.y, ts * 4);
 
 		m_BlackSquare.Transform().Translation = transform.Translation;
 
 		auto& camera = m_CutSceneCamera.GetComponent<CameraComponent>().Camera;
 		camera.SetOrthographicSize(Utils::Lerp(camera.GetOrthographicSize(), 6, ts * 5));
 
-		if (transform.Translation.x == m_BossEntity.Transform().Translation.x 
-			&& transform.Translation.y == m_BossEntity.Transform().Translation.y 
-			&& camera.GetOrthographicSize() == 6)
+		if (transform.Translation.x == m_BossEntity.Transform().Translation.x && camera.GetOrthographicSize() == 6)
 		{
 			auto& color = m_BlackSquare.GetComponent<SpriteRendererComponent>().Color;
 
@@ -117,8 +115,9 @@ void GCamera::OnUpdate(Timestep& ts)
 		{
 			color.a = Utils::Lerp(color.a, 0.0f, ts);
 		}
-		else if (color.a == 1.0f)
-		{
+		else if (color.a == 0.0f)
+		{ 
+			m_BossFight = false;
 			Dispatch(GameEventType::CUTSCENE_COMPLETED);
 		}
 	}

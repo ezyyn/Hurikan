@@ -3,11 +3,14 @@
 #include <Hurikan/Core/Log.h>
 
 #include <fstream>
+#include <filesystem>
 
 SaveLoadSystem SaveLoadSystem::s_Instance;
 
 void SaveLoadSystem::Init_Impl()
 {
+	std::filesystem::create_directory("data");
+
 	LoadData_Impl();
 	LoadUserSettings_Impl();
 
@@ -16,7 +19,7 @@ void SaveLoadSystem::Init_Impl()
 
 void SaveLoadSystem::LoadData_Impl()
 {
-	std::fstream stream("progress.data", std::ios_base::in | std::ios_base::binary);
+	std::fstream stream(m_FilePath + "progress.data", std::ios_base::in | std::ios_base::binary);
 
 	if (stream.fail())
 	{
@@ -40,7 +43,7 @@ void SaveLoadSystem::CreateDataAndFile_Impl()
 	m_GameData.BombPowerUpgrade = 0;
 	m_GameData.Score = 0;
 
-	std::fstream stream("progress.data", std::ios_base::trunc | std::ios_base::out | std::ios_base::binary);
+	std::fstream stream(m_FilePath + "progress.data", std::ios_base::trunc | std::ios_base::out | std::ios_base::binary);
 	stream.write((const char*)(&m_GameData), sizeof(GameData));
 	stream.close();
 }
@@ -49,7 +52,7 @@ void SaveLoadSystem::LoadDataFromFile_Impl()
 {
 	HU_INFO("Loaded data from file!");
 
-	std::fstream stream("progress.data", std::ios_base::in | std::ios_base::binary);
+	std::fstream stream(m_FilePath + "progress.data", std::ios_base::in | std::ios_base::binary);
 	stream.read((char*)&m_GameData, sizeof(GameData));
 	stream.close();
 }
@@ -58,7 +61,7 @@ void SaveLoadSystem::SaveData_Impl()
 {
 	HU_INFO("Saved data to file!");
 
-	std::fstream stream("progress.data", std::ios_base::trunc | std::ios_base::out | std::ios_base::binary);
+	std::fstream stream(m_FilePath + "progress.data", std::ios_base::trunc | std::ios_base::out | std::ios_base::binary);
 	stream.write((const char*)(&m_GameData), sizeof(GameData));
 	stream.close();
 }
@@ -83,7 +86,7 @@ void SaveLoadSystem::SaveUserSettings_Impl(float music, float sfx)
 	m_UserSettings.SfxVolume = sfx;
 
 	// check if file exist
-	std::fstream stream("usersettings.data", std::ios_base::out | std::ios_base::trunc);
+	std::fstream stream(m_FilePath + "usersettings.data", std::ios_base::out | std::ios_base::trunc);
 
 	stream << "Music=" << std::to_string((int)(m_UserSettings.MusicVolume * 100)) << "\n";
 	stream << "Sfx=" << std::to_string((int)(m_UserSettings.SfxVolume * 100));
@@ -94,14 +97,14 @@ void SaveLoadSystem::SaveUserSettings_Impl(float music, float sfx)
 void SaveLoadSystem::LoadUserSettings_Impl()
 {
 	// check if file exist
-	std::fstream stream("usersettings.data", std::ios_base::in | std::ios_base::out);
+	std::fstream stream(m_FilePath + "usersettings.data", std::ios_base::in | std::ios_base::out);
 
 	// If file not exist
 	if (stream.fail())
 	{
 		stream.close();
 
-		stream.open("usersettings.data", std::ios_base::out | std::ios_base::trunc);
+		stream.open(m_FilePath + "usersettings.data", std::ios_base::out | std::ios_base::trunc);
 
 		stream << "Music=100\n";
 		stream << "Sfx=100";

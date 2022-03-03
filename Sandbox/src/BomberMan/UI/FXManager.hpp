@@ -12,7 +12,6 @@ public:
 	void OnUpdate(Timestep& ts);
 private:
 	virtual void OnGameEvent(GameEvent& e) override;
-
 private:
 	std::vector<Effect*> m_PlayingEffects;
 

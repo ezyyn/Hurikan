@@ -1,118 +1,27 @@
 #include "SmartEnemy.hpp"
 
-#include "BomberMan/Core/Navigation.hpp"
-#include "BomberMan/Core/ResourceManager.hpp"
-#include "BomberMan/Game/Grid.hpp"
-
 SmartEnemy::SmartEnemy(Entity& handle, Entity& grid_entity) : Enemy(handle, grid_entity)
 {
 	m_Handle.AddCustomComponent<EntityTypeComponent>().Type = EntityType::ENEMY_SMART;
 
-	m_Handle.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f));
-
 	m_Properties.Health = 3;
-	m_Properties.Intelligence = AI::SMART;
+	m_Properties.Intelligence = AI::FOLLOW_RANGE;
 	m_Properties.Name = "George";
 	m_Properties.Speed = 3.0f;
 
-	auto& fa = m_Handle.AddCustomComponent<Animator>();
-	fa.Add(ResourceManager::GetAnimation("BlueIceCreamMoveAnimation"));
-	fa.Add(ResourceManager::GetAnimation("BlueIceCreamDeadAnimation"));
+	m_Animator->Add(ResourceManager::GetAnimation("BlueIceCreamMoveAnimation"));
+	m_Animator->Add(ResourceManager::GetAnimation("BlueIceCreamDeadAnimation"));
 
-	fa.SetTarget(m_Handle);
-	fa.Play("BlueIceCreamMove");
+	m_Animator->Play("BlueIceCreamMove");
 }
 
-void SmartEnemy::OnUpdate(Timestep& ts)
+void SmartEnemy::OnUpdateInternal(Timestep& ts)
 {
-	auto& fa = m_Handle.GetComponent<Animator>();
-	fa.OnUpdate(ts);
+}
 
-	if (m_Hit)
-	{
-		m_HitColor.g = Utils::Lerp(m_HitColor.g, 0.0f, ts * 2);
-		m_HitColor.b = Utils::Lerp(m_HitColor.b, 0.0f, ts * 2);
-
-		if (m_HitColor.g == 0.0f)
-		{
-			m_Hit = false;
-		}
-		fa.SetColor(m_HitColor);
-	}
-	else
-	{
-		if (m_HitColor.g != 1.0f)
-		{
-			m_HitColor.g = Utils::Lerp(m_HitColor.g, 1.0f, ts * 2);
-			m_HitColor.b = Utils::Lerp(m_HitColor.b, 1.0f, ts * 2);
-
-			fa.SetColor(m_HitColor);
-		}
-	}
-
-	// Checking enemy's health
-	if (!m_Alive)
-	{
-		if (!fa.IsAnyPlaying())
-		{
-			Dispatch(GameEventType::ENEMY_DEAD, m_Handle);
-		}
-		return;
-	}
-
-	Dispatch(GameEventType::ENEMY_MOVED, m_Handle);
-
-	if (EnemyLogic(ts))
-	{
-		// Movement and animation
-		auto& transform = m_Handle.Transform();
-
-		m_LastPositionOnGrid = m_Path.front();
-
-		m_PreviousPosition = transform.Translation;
-
-		transform.Translation.x = Utils::Lerp(m_Handle.Transform().Translation.x, m_Path.front().Transform().Translation.x, ts * m_Properties.Speed);
-		transform.Translation.y = Utils::Lerp(m_Handle.Transform().Translation.y, m_Path.front().Transform().Translation.y, ts * m_Properties.Speed);
-
-		if (m_PreviousPosition.x < transform.Translation.x && m_CurrentDirection != Direction::RIGHT)
-		{
-			m_CurrentDirection = Direction::RIGHT;
-			m_Handle.Transform().Scale.x = glm::abs(m_Handle.Transform().Scale.x);
-			m_IsRotated = false;
-			m_Handle.GetComponent<Animator>().Play("BlueIceCreamMove");
-		}
-		else if (m_PreviousPosition.x > transform.Translation.x && m_CurrentDirection != Direction::LEFT)
-		{
-			m_CurrentDirection = Direction::LEFT;
-			if (!m_IsRotated)
-			{
-				m_Handle.Transform().Scale.x *= -1;
-				m_IsRotated = true;
-			}
-			m_Handle.GetComponent<Animator>().Play("BlueIceCreamMove");
-		}
-
-		if (m_PreviousPosition.y < transform.Translation.y && m_CurrentDirection != Direction::UP)
-		{
-			m_CurrentDirection = Direction::UP;
-			m_IsRotated = false;
-			m_Handle.Transform().Scale.x = glm::abs(m_Handle.Transform().Scale.x);
-			m_Handle.GetComponent<Animator>().Play("BlueIceCreamMove");
-		}
-		else if (m_PreviousPosition.y > transform.Translation.y && m_CurrentDirection != Direction::DOWN)
-		{
-			m_CurrentDirection = Direction::DOWN;
-			m_Handle.Transform().Scale.x = glm::abs(m_Handle.Transform().Scale.x);
-			m_IsRotated = false;
-			m_Handle.GetComponent<Animator>().Play("BlueIceCreamMove");
-		}
-
-		if (transform.Translation.x == m_Path.front().Transform().Translation.x && transform.Translation.y == m_Path.front().Transform().Translation.y)
-		{
-			Dispatch(GameEventType::ENEMY_MOVED, m_Handle);
-			m_Path.pop_front();
-		}
-	}
+void SmartEnemy::OnChangeDirection(Direction& dir)
+{
+	m_Animator->Play("BlueIceCreamMove");
 }
 
 void SmartEnemy::OnGameEvent(GameEvent& e)
@@ -191,7 +100,14 @@ bool SmartEnemy::EnemyLogic(Timestep& ts)
 		if (m_Path.front().GetComponent<GridNodeComponent>().Obstacle)
 		{
 			// Find new random path
-			Follow(Navigation::RandomPath(GetLastPositionOnGrid()));
+
+			auto path = Navigation::RandomPath(GetLastPositionOnGrid());
+
+			if (!path.empty() && m_Path.front().GetComponent<EntityTypeComponent>().Type == EntityType::BOMB)
+			{
+				path = Navigation::RandomPath(GetLastPositionOnGrid());
+			}
+			Follow(path);
 
 			return false;
 		}

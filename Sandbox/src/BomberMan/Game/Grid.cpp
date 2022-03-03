@@ -324,7 +324,7 @@ void Grid::OnGameEvent(GameEvent& e)
 				{
 					if (m_PlayerGridPosition.GetComponent<LootComponent>().Type == Loot::KEY && m_PlayerGridPosition.GetComponent<LootComponent>().Obtainable)
 					{
-						//DispatchToAll(GameEventType::KEY_OBTAINED, m_PlayerGridPosition);
+						Dispatch(GameEventType::KEY_OBTAINED);
 						m_KeyObtained = true;
 					}
 					else if (m_PlayerGridPosition.GetComponent<LootComponent>().Type == Loot::EXIT)
@@ -362,17 +362,14 @@ void Grid::OnGameEvent(GameEvent& e)
 
 				}
 
-				//HU_INFO("x: {0} | y: {1}", player_position.x, player_position.y)
-
 				Dispatch(GameEventType::PLAYER_CHANGED_GRID_POSITION, m_PlayerGridPosition);
-
 				return;
 			} 
 		}
 	}
 	else if (e.Type == GameEventType::BOMB_PLACED) 
 	{
-		// Bomb is placed so the @e under the bomb is now occupied
+		// Bomb is placed so the entity under the bomb is now occupied
 
 		auto& GRID_ENTITY = std::any_cast<Entity>(e.Data);
 
@@ -418,14 +415,11 @@ void Grid::OnGameEvent(GameEvent& e)
 
 void Grid::OnUpdate(Timestep& ts)
 {
-	//HU_INFO(g_InGameData.Score);
-
 	const auto& value = 1000 * (SaveLoadSystem::GetGameData().CompletedLevels + 1);
 
 	if (m_KeyGridEntity && m_KeyGridEntity.HasComponent<LootComponent>())
-			if(g_InGameData.Score >= value && m_KeyGridEntity.GetComponent<LootComponent>().Obtainable == false)
+			if(g_InGameData.Score >= value && !m_KeyGridEntity.GetComponent<LootComponent>().Obtainable)
 			{
-				HU_INFO("asdsad");
 				m_KeyGridEntity.GetComponent<LootComponent>().Obtainable = true;
 				m_KeyGridEntity.GetComponent<LootComponent>().LootHandle.GetComponent<SpriteRendererComponent>().Color = glm::vec4(1.0f);
 			}

@@ -55,11 +55,12 @@ public:
 	static inline void SaveLevel(const GameData& data) { Get().Save_Impl(data); }
 
 	static inline const Level& GetCurrentLevel() { return Get().m_Levels[Get().m_GameData.CompletedLevels]; }
-	static inline const Level& GetPreviousLevel() 
+	static inline const Level GetPreviousLevel()
 	{ 
 		if(Get().m_GameData.CompletedLevels > 0)
 			return Get().m_Levels[Get().m_GameData.CompletedLevels - 1]; 
 
+		__debugbreak();
 		return {};
 	}
 
@@ -78,7 +79,6 @@ private:
 	void SaveUserSettings_Impl(float music, float sfx);
 	void LoadUserSettings_Impl();
 	void Save_Impl(const GameData& data);
-
 	void SaveData_Impl();
 private:
 	bool m_DataFilePresent = false;
@@ -89,6 +89,8 @@ private:
 	UserSettings m_UserSettings;
 
 	bool m_FirstTimePlayed = false;
+
+	const std::string m_FilePath = "data//";
 
 	static SaveLoadSystem s_Instance;
 };

@@ -2,7 +2,6 @@
 --Sandbox
 
 project "Sandbox"
-	kind "ConsoleApp"
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "off"
@@ -42,6 +41,7 @@ project "Sandbox"
 		}
 
 		filter "configurations:Debug"
+			kind "ConsoleApp"
 			defines "HU_DEBUG"
 			runtime "Debug"
 			symbols "on"
@@ -52,11 +52,13 @@ project "Sandbox"
 			}
 
 		filter "configurations:Release"
+			kind "WindowedApp"
 			defines "HU_RELEASE"
 			runtime "Release"
 			optimize "on"
 
 		filter "configurations:Dist"
+			kind "WindowedApp"
 			defines "HU_DIST"
 			runtime "Release"
 			optimize "on"

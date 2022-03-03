@@ -265,6 +265,22 @@ void ResourceManager::Init_Impl()
 
 	// Enemy animations
 	{
+		Animation bossIdle;
+		{
+			bossIdle.Tag = "BossIdle";
+			bossIdle.Repeat = true;
+			bossIdle.Delay = 100.0f;
+
+			std::vector<Frame> frames;
+			frames.reserve(4);
+			frames.emplace_back(glm::vec2{ 0, 0 }, glm::vec4(1.0f));
+			frames.emplace_back(glm::vec2{ 1, 0 }, glm::vec4(1.0f));
+			frames.emplace_back(glm::vec2{ 2, 0 }, glm::vec4(1.0f));
+			frames.emplace_back(glm::vec2{ 1, 0 }, glm::vec4(1.0f));
+
+			bossIdle.Create(Texture2D::Create(m_Filepath + "boss/robot_boss.png"), {128, 128}, frames);
+			m_AnimationMap["BossIdleAnimation"] = bossIdle;
+		}
 		// Regular
 		Animation baloonAnimation, baloonDeadAnimation;
 		{

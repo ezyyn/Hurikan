@@ -52,7 +52,8 @@ private:
 		m_TopPanel,
 		m_Head,
 		m_PauseMenu,
-		m_PauseMenuArrowHead;
+		m_PauseMenuArrowHead,
+		m_Key;
 
 	float 
 		m_ClockTimer = 1.0f,

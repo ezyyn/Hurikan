@@ -2,18 +2,20 @@
 
 #include "BomberMan/Core/Observer.hpp"
 #include "BomberMan/Core/SaveLoadSystem.hpp"
-
-#include <string>
+#include "BomberMan/Core/ResourceManager.hpp"
+#include "BomberMan/Core/Navigation.hpp"
 
 #include <Hurikan/Core/Log.h>
 #include <Hurikan/Scene/Entity.h>
 using namespace Hurikan;
 
+#include <string>
+
 enum class AI : unsigned short
 {
 	RANDOM = 0,
-	SMART,
-	BOSS
+	FOLLOW_RANGE,
+	FOLLOW
 };
 
 struct EnemyProps
@@ -47,20 +49,30 @@ public:
 	virtual void Follow(const std::list<Entity>& path);
 	inline const EnemyProps& GetProperties() { return m_Properties; };
 
-	virtual void OnUpdate(Timestep & ts) = 0;
+	void OnUpdate(Timestep & ts);
 	virtual void OnGameEvent(GameEvent& e) = 0;
+	virtual void OnChangeDirection(Direction& dir) = 0;
+	virtual void OnHitUpdate(Timestep& ts);
+protected:
+	virtual void OnUpdateInternal(Timestep& ts) = 0;
 private:
 	virtual bool EnemyLogic(Timestep& ts) = 0;
 protected:
 	Entity m_LastPositionOnGrid;
 	std::list<Entity> m_Path;
+
 	Direction m_CurrentDirection;
 	glm::vec3 m_PreviousPosition;
+
 	bool m_IsRotated = false;
 	bool m_Alive = true;
 
+	bool m_Hit = false;
+	glm::vec4 m_HitColor = glm::vec4(1.0f);
+
 	EnemyProps m_Properties;
 
+	Animator* m_Animator;
 	Entity m_Handle;
 };
 

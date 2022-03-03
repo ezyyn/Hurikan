@@ -220,6 +220,11 @@ void SimpleUI::Init()
 
 		m_UpgradeSpeed[i] = e;
 	}
+	m_Key = m_SceneUI.CreateEntityWithDrawOrder(2);
+	m_Key.AddComponent<SpriteRendererComponent>(glm::vec4(0.0f)).SubTexture = ResourceManager::GetSubTexture("Key");
+	m_Key.Transform().Translation.y = 5;
+	m_Key.Transform().Translation.x = -10;
+	m_Key.Transform().Scale *= 0.65f;
 }
 
 
@@ -339,6 +344,11 @@ void SimpleUI::OnGameEvent(GameEvent& e)
 	{
 		// TODO: implement
 
+		break;
+	}
+	case GameEventType::KEY_OBTAINED:
+	{
+		m_Key.GetComponent<SpriteRendererComponent>().Color = glm::vec4(1.0f);
 		break;
 	}
 	case GameEventType::PLAYER_GONE:

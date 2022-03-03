@@ -18,9 +18,9 @@ public:
 	
 	virtual ~Effect() {};
 
-	inline bool OnUpdateInternal(Timestep& ts)
+	inline bool OnUpdate(Timestep& ts)
 	{
-		OnUpdate(ts);
+		OnUpdateInternal(ts);
 
 		m_Timer += ts;
 		if (m_Timer >= m_Time / 1000.0f)
@@ -35,7 +35,7 @@ public:
 		return false;
 	}
 protected:
-	virtual void OnUpdate(Timestep& ts) = 0;
+	virtual void OnUpdateInternal(Timestep& ts) = 0;
 protected:
 	Scene* m_CurrentScene;
 	std::vector<Entity> m_Entities;
@@ -73,7 +73,7 @@ public:
 
 	float timer = 0.0f;
 
-	void OnUpdate(Timestep& ts) override
+	void OnUpdateInternal(Timestep& ts) override
 	{
 		timer += ts;
 
@@ -118,7 +118,7 @@ public:
 
 	float timer = 0.0f;
 
-	void OnUpdate(Timestep& ts) override
+	void OnUpdateInternal(Timestep& ts) override
 	{
 		timer += ts;
 
@@ -162,7 +162,7 @@ public:
 
 	float timer = 0.0f;
 
-	void OnUpdate(Timestep& ts) override
+	void OnUpdateInternal(Timestep& ts) override
 	{
 		timer += ts;
 
