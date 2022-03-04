@@ -340,12 +340,6 @@ void SimpleUI::OnGameEvent(GameEvent& e)
 		m_Head.GetComponent<Animator>().Play("LeftAnimation");
 		break;
 	}
-	case GameEventType::DISPLAY_KEY_FIRST:
-	{
-		// TODO: implement
-
-		break;
-	}
 	case GameEventType::KEY_OBTAINED:
 	{
 		m_Key.GetComponent<SpriteRendererComponent>().Color = glm::vec4(1.0f);
@@ -368,7 +362,14 @@ void SimpleUI::OnGameEvent(GameEvent& e)
 	{
 		m_PlayerHit = true;
 		const auto& health = std::any_cast<int>(e.Data);
-		m_HeartEntities[health].GetComponent<SpriteRendererComponent>().Color = glm::vec4(0.0f);
+		m_PlayerHealth = health;
+		m_HeartEntities[m_PlayerHealth].GetComponent<SpriteRendererComponent>().Color = glm::vec4(0.0f);
+		break;
+	}
+	case GameEventType::PLAYER_ADD_HEART:
+	{
+		if(m_PlayerHealth < 3)
+			m_HeartEntities[m_PlayerHealth].GetComponent<SpriteRendererComponent>().Color = glm::vec4(1.0f);
 		break;
 	}
 	case GameEventType::PLAYER_SUCCESS_EXIT:

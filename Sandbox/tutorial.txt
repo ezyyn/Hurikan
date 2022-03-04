@@ -1,0 +1,14 @@
+Hudba je ze zacatku trochu nahlas takze v settings si ji muzes ztlumit.
+
+Controls - šipky a B pro placnuti bomby
+
+Jsou tu 4 playable levly, posledni je scuffed boss fight se starym modelem bosse ten je work in progress a nemuzes ho zatim dohrat lol.
+
+Muzes ziskat upgrady:
+	Bomb power- zvysi dosah 
+	Bomb count - zvysi pocet bomb
+	Speed - zvysi tvoji dosavadni rychlost
+
+A vyhrajes tak ze najdes klic a exit, kterym ho teda otevres. Klic se ti objevi az nasbiras 1000 * n skore, kdy n-ko je momentalni level(prvni level 1000,druhy 2000,...) 
+
+Mas tam nejakej limitovanej cas.

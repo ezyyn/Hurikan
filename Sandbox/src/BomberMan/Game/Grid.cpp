@@ -221,7 +221,27 @@ void Grid::Create(Scene* const scene)
 				gnc.Obstacle = true;
 				break;
 			}
+			case 'H': // Add heart
+			{
+				{
+					auto& heart = scene->CreateEntityWithDrawOrder(1);
+					heart.AddComponent<SpriteRendererComponent>(glm::vec4(0.0f)).SubTexture = ResourceManager::GetSubTexture("AddHeart");
+					heart.Transform().Translation = gridEntity.Transform().Translation;
+					gridEntity.AddCustomComponent<LootComponent>(Loot::HEALTH_POINT).LootHandle = heart;
+					gridEntity.GetComponent<LootComponent>().Obtainable = true;
+				}
 
+				gridEntity.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f));
+				gridEntity.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("BreakableWall");
+				gridEntity.GetComponent<EntityTypeComponent>().Type = EntityType::BREAKABLE_WALL;
+				gridEntity.GetComponent<BoxCollider2DComponent>().IsSensor = false;
+				auto& fa = gridEntity.AddCustomComponent<Animator>();
+				fa.SetTarget(gridEntity);
+				fa.Add(ResourceManager::GetAnimation("WallBreakAnimation"));
+
+				gnc.Obstacle = true;
+				break;
+			}
 			case '-': // Empty
 				gridEntity.GetComponent<BoxCollider2DComponent>().IsSensor = true;
 				break;
@@ -337,7 +357,7 @@ void Grid::OnGameEvent(GameEvent& e)
 						}
 						else {
 							// Display -> "You need to find a key first!"
-							Dispatch(GameEventType::DISPLAY_KEY_FIRST);
+							// Dispatch(GameEventType::DISPLAY_KEY_FIRST);
 							return;
 						}
 
@@ -353,6 +373,10 @@ void Grid::OnGameEvent(GameEvent& e)
 					else if (m_PlayerGridPosition.GetComponent<LootComponent>().Type == Loot::SPEED_UPGRADE)
 					{
 						Dispatch(GameEventType::PLAYER_SPEED_UPGRADE);
+					}
+					else if (m_PlayerGridPosition.GetComponent<LootComponent>().Type == Loot::HEALTH_POINT)
+					{
+						Dispatch(GameEventType::PLAYER_ADD_HEART);
 					}
 
 
@@ -412,17 +436,24 @@ void Grid::OnGameEvent(GameEvent& e)
 	}
 }
 
-
 void Grid::OnUpdate(Timestep& ts)
 {
 	const auto& value = 1000 * (SaveLoadSystem::GetGameData().CompletedLevels + 1);
+	const auto& reveal = 1500 * (SaveLoadSystem::GetGameData().CompletedLevels + 1);
 
 	if (m_KeyGridEntity && m_KeyGridEntity.HasComponent<LootComponent>())
-			if(g_InGameData.Score >= value && !m_KeyGridEntity.GetComponent<LootComponent>().Obtainable)
-			{
-				m_KeyGridEntity.GetComponent<LootComponent>().Obtainable = true;
-				m_KeyGridEntity.GetComponent<LootComponent>().LootHandle.GetComponent<SpriteRendererComponent>().Color = glm::vec4(1.0f);
-			}
+	{
+		if(g_InGameData.Score >= value && !m_KeyGridEntity.GetComponent<LootComponent>().Obtainable)
+		{
+			m_KeyGridEntity.GetComponent<LootComponent>().Obtainable = true;
+			m_KeyGridEntity.GetComponent<LootComponent>().LootHandle.GetComponent<SpriteRendererComponent>().Color = glm::vec4(1.0f);
+		}
+		if (g_InGameData.Score >= reveal)
+		{
+			
+			m_KeyGridEntity.GetComponent<SpriteRendererComponent>().Color = glm::vec4(0.5f, 0.8f, 0.8f, 1.0f);
+		}
+	}
 
 	for (size_t i = 0; i < m_AnimationQueue.size(); i++)
 	{

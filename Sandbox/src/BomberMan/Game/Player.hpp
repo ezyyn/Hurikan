@@ -13,6 +13,8 @@ using namespace Hurikan;
 #define MIN_POWER 1
 #define MIN_SPEED 4.0f
 
+#define MAX_HEART 3
+
 struct PlayerData
 {
 	glm::vec2 Direction = { 0, 0 };
@@ -21,7 +23,7 @@ struct PlayerData
 	float Speed = MIN_SPEED;
 	int AvailableBombs = MIN_AVAILABLE_BOMBS;
 	int Power = MIN_POWER;
-	int Health = 3;
+	int Health = MAX_HEART;
 	float Invincibility = 0.0f;
 };
 

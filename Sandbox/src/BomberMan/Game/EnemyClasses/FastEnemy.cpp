@@ -45,6 +45,7 @@ void FastEnemy::OnGameEvent(GameEvent& e)
 				m_Hit = true;
 			}
 		}
+
 	}
 }
 

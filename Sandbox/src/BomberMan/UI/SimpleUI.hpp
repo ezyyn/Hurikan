@@ -65,6 +65,8 @@ private:
 	int m_AvailableBombs = 1;
 
 	int m_CurrentTime = 0;
+	
+	int m_PlayerHealth = 3;
 
 	unsigned short m_LastKey = 0;
 

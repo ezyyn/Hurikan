@@ -20,6 +20,7 @@ void ResourceManager::Init_Impl()
 		m_SubTextureMap["Key"] = SubTexture2D::CreateFromCoords(tileset_16x16, { 7, 0 }, { 16, 16 });
 		m_SubTextureMap["BombCount"] = SubTexture2D::CreateFromCoords(tileset_16x16, { 0, 7 }, { 16, 16 });
 		m_SubTextureMap["BombCountUpgrade"] = SubTexture2D::CreateFromCoords(tileset_16x16, { 7, 7 }, { 16, 16 });
+		m_SubTextureMap["AddHeart"] = SubTexture2D::CreateFromCoords(tileset_16x16, { 5, 7 }, { 16, 16 });
 	}
 	// Background
 	{

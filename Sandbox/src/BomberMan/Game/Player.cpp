@@ -218,6 +218,13 @@ void Player::OnGameEvent(GameEvent& e)
 			g_InGameData.BombCountUpgrade++;
 		}
 	}
+	else if (e.Type == GameEventType::PLAYER_ADD_HEART)
+	{
+		if (m_PlayerData.Health < MAX_HEART)
+		{
+			m_PlayerData.Health++;
+		}
+	}
 }
 
 // DEBUG
