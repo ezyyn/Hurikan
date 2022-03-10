@@ -17,11 +17,12 @@ Boss::Boss(Scene* scene, Entity& grid_entity) : Enemy(scene->CreateEntityWithDra
 	m_Properties.Name = "Bill";
 	m_Properties.Speed = 6.0f;
 
-	m_Animator->Add(ResourceManager::GetAnimation("BossIdleAnimation"));
-	
-	m_Animator->SetTarget(m_Handle);
-	m_Animator->SetColor(glm::vec4(1.0f));
-	m_Animator->Play("BossIdle");
+	auto& animator = m_Handle.GetComponent<Animator>();
+	m_Handle.GetComponent<Animator>().Add(ResourceManager::GetAnimation("BossIdleAnimation"));
+	m_Handle.GetComponent<Animator>().SetTarget(m_Handle);
+	m_Handle.GetComponent<Animator>().SetColor(glm::vec4(1.0f));
+
+	m_Handle.GetComponent<Animator>().Play("BossIdle");
 }
 
 void Boss::OnUpdateInternal(Timestep& ts)
@@ -72,14 +73,34 @@ bool Boss::EnemyLogic(Timestep& ts)
 	if (!m_CutSceneCompleted)
 		return false;
 
-
-	if (m_Path.empty())
+	if (!m_RecalculatePath)
 	{
-		auto& path = Navigation::Navigate(GetLastPositionOnGrid(), m_PlayersParent);
-		Follow(path);
+		m_RecalculatePathTimer -= ts;
+
+		if (m_RecalculatePathTimer <= 0.0f)
+		{
+			auto path = Navigation::RandomPath(GetLastPositionOnGrid());
+			Follow(path);
+			m_RecalculatePath = true;
+		}
 		return false;
 	}
-	else
+
+	if (m_Path.empty() && m_RecalculatePath)
+	{
+		auto& path = Navigation::Navigate(GetLastPositionOnGrid(), m_PlayersParent);
+		if (path.empty())
+		{
+			m_RecalculatePathTimer = 3.0f;
+			m_RecalculatePath = false;
+		}
+		else
+		{
+			Follow(path);
+		}
+		return false;
+	}
+	else if(!m_Path.empty())
 	{
 		// Checking next node to make sure enemy monster does not bump into it
 		if (m_Path.front().GetComponent<GridNodeComponent>().Obstacle)

@@ -61,6 +61,8 @@ public:
 	void Pause();
 
 	bool IsAnyPlaying();
+
+	bool IsEmpty() const { return m_AnimationList.size() == 0; }
 private:
 	size_t m_PlayingAnimationIndex = NO_PLAYING_ANIMATION;
 	Entity m_TargetEntity;

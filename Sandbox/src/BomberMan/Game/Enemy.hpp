@@ -72,7 +72,6 @@ protected:
 
 	EnemyProps m_Properties;
 
-	Animator* m_Animator;
 	Entity m_Handle;
 };
 

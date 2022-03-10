@@ -82,14 +82,16 @@ void Animator::OnUpdate(Timestep ts)
 	}
 
 	HU_CORE_ASSERT(m_TargetEntity, "Entity is not valid");
-	HU_CORE_ASSERT(!m_AnimationList.empty(), "Animator is empty! {0}", m_TargetEntity.GetComponent<TagComponent>().Tag);
 
-	auto& playing_anim = m_AnimationList[m_PlayingAnimationIndex];
-
-	if (playing_anim.m_Playing)
+	if (!m_AnimationList.empty())
 	{
-		playing_anim.OnUpdate(&m_TargetEntity.GetComponent<SpriteRendererComponent>(), ts);
-		m_TargetEntity.GetComponent<SpriteRendererComponent>().Color = m_Color;
+		auto& playing_anim = m_AnimationList[m_PlayingAnimationIndex];
+
+		if (playing_anim.m_Playing)
+		{
+			playing_anim.OnUpdate(&m_TargetEntity.GetComponent<SpriteRendererComponent>(), ts);
+			m_TargetEntity.GetComponent<SpriteRendererComponent>().Color = m_Color;
+		}
 	}
 }
 

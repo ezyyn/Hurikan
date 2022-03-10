@@ -17,7 +17,7 @@ private:
 	glm::vec3 m_PlayerPosition = glm::vec3(0.0f);
 
 	bool m_InRadius = false;
-	float m_FollowRadius = 5.0f;
+	float m_FollowRadius = 7.0f;
 	bool m_FollowsPlayer = false;
 	bool m_RecalculatePath = true;
 

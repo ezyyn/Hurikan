@@ -1,7 +1,15 @@
 #include "SmartEnemy.hpp"
 
+#include <Hurikan/Core/Log.h>
+
 SmartEnemy::SmartEnemy(Entity& handle, Entity& grid_entity) : Enemy(handle, grid_entity)
 {
+	Level level;
+
+	LevelLoader::GetLevelWithGeneratedMap(level);
+
+	HU_INFO(level.MapSkeleton);
+
 	m_Handle.AddCustomComponent<EntityTypeComponent>().Type = EntityType::ENEMY_SMART;
 
 	m_Properties.Health = 3;
@@ -9,10 +17,12 @@ SmartEnemy::SmartEnemy(Entity& handle, Entity& grid_entity) : Enemy(handle, grid
 	m_Properties.Name = "George";
 	m_Properties.Speed = 3.0f;
 
-	m_Animator->Add(ResourceManager::GetAnimation("BlueIceCreamMoveAnimation"));
-	m_Animator->Add(ResourceManager::GetAnimation("BlueIceCreamDeadAnimation"));
+	auto& animator = m_Handle.GetComponent<Animator>();
 
-	m_Animator->Play("BlueIceCreamMove");
+	animator.Add(ResourceManager::GetAnimation("BlueIceCreamMoveAnimation"));
+	animator.Add(ResourceManager::GetAnimation("BlueIceCreamDeadAnimation"));
+
+	animator.Play("BlueIceCreamMove");
 }
 
 void SmartEnemy::OnUpdateInternal(Timestep& ts)
@@ -21,7 +31,8 @@ void SmartEnemy::OnUpdateInternal(Timestep& ts)
 
 void SmartEnemy::OnChangeDirection(Direction& dir)
 {
-	m_Animator->Play("BlueIceCreamMove");
+	auto& animator = m_Handle.GetComponent<Animator>();
+	animator.Play("BlueIceCreamMove");
 }
 
 void SmartEnemy::OnGameEvent(GameEvent& e)
@@ -46,6 +57,7 @@ void SmartEnemy::OnGameEvent(GameEvent& e)
 					break;
 				}
 				m_Hit = true;
+				break;
 			}
 		}
 	}

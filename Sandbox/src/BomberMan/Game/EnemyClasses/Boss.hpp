@@ -20,4 +20,6 @@ private:
 	bool m_RecalculatePath = true;
 
 	bool m_CutSceneCompleted = false;
+
+	float m_RecalculatePathTimer = 3.0f;
 };

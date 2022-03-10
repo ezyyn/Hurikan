@@ -29,8 +29,8 @@ class LevelLoader
 public:
 	static void Deserialize(std::vector<Level>& levels);
 	static void EraseLevelsFile();
-private:
 	static void GetLevelWithGeneratedMap(Level& level);
+private:
 	static void SerializeLevels(std::vector<Level>& levels);
 	static void GetBossLevel(Level& level);
 };

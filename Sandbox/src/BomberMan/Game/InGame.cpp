@@ -164,9 +164,9 @@ void InGame::OnUpdate(Timestep& ts)
 	if (!m_Paused)
 	{
 		m_FXManager.OnUpdate(ts);
-		m_EnemySpawner.OnUpdate(ts);
 		m_Grid.OnUpdate(ts);
 		m_BombManager.OnUpdate(ts);
+		m_EnemySpawner.OnUpdate(ts);
 		m_Player.OnUpdate(ts);
 	}
 }

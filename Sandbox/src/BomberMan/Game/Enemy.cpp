@@ -110,13 +110,11 @@ void EnemySpawner::OnUpdate(Timestep& ts)
 		m_ErasePool.pop_front();
 	}
 
-	for (size_t i = 0; i < m_Enemies.size(); ++i)
+	for (auto enemy : m_Enemies)
 	{
-		m_Enemies[i]->OnUpdate(ts);
+		enemy->OnUpdate(ts);
 	}
 }
-
-
 
 ////////////////////////////////////////////////////////////////////
 ////////////////////////// Enemy ///////////////////////////////////
@@ -133,8 +131,8 @@ Enemy::Enemy(Entity& handle, Entity& grid_entity) : m_Handle(handle), m_LastPosi
 
 	m_Handle.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f));
 
-	m_Animator = &m_Handle.AddCustomComponent<Animator>();
-	m_Animator->SetTarget(m_Handle);
+	auto& animator = m_Handle.AddCustomComponent<Animator>();
+	animator.SetTarget(m_Handle);
 }
 
 void Enemy::Follow(const std::list<Entity>& path)
@@ -159,7 +157,9 @@ void Enemy::OnUpdate(Timestep& ts)
 {
 	OnUpdateInternal(ts);
 	
-	m_Animator->OnUpdate(ts);
+	auto& animator = m_Handle.GetComponent<Animator>();
+	animator.OnUpdate(ts);
+	
 	if (m_Hit)
 	{
 		OnHitUpdate(ts);
@@ -168,13 +168,13 @@ void Enemy::OnUpdate(Timestep& ts)
 	{
 		m_HitColor.g = Utils::Lerp(m_HitColor.g, 1.0f, ts * 2);
 		m_HitColor.b = Utils::Lerp(m_HitColor.b, 1.0f, ts * 2);
-		m_Animator->SetColor(m_HitColor);
+		animator.SetColor(m_HitColor);
 	}
 
 	// Checking enemy's health
 	if (!m_Alive)
 	{
-		if (!m_Animator->IsAnyPlaying())
+		if (!animator.IsAnyPlaying())
 		{
 			Dispatch(GameEventType::ENEMY_DEAD, m_Handle);
 		}
@@ -200,7 +200,6 @@ void Enemy::OnUpdate(Timestep& ts)
 			m_CurrentDirection = Direction::RIGHT;
 			m_Handle.Transform().Scale.x = glm::abs(m_Handle.Transform().Scale.x);
 			m_IsRotated = false;
-
 			OnChangeDirection(m_CurrentDirection);
 		}
 		else if (m_PreviousPosition.x > transform.Translation.x && m_CurrentDirection != Direction::LEFT)
@@ -231,7 +230,6 @@ void Enemy::OnUpdate(Timestep& ts)
 
 		if (transform.Translation.x == m_Path.front().Transform().Translation.x && transform.Translation.y == m_Path.front().Transform().Translation.y)
 		{
-			Dispatch(GameEventType::ENEMY_MOVED, m_Handle);
 			m_Path.pop_front();
 		}
 	}
@@ -239,9 +237,11 @@ void Enemy::OnUpdate(Timestep& ts)
 
 void Enemy::OnHitUpdate(Timestep& ts)
 {
+	auto& animator = m_Handle.GetComponent<Animator>();
+
 	m_HitColor.g = Utils::Lerp(m_HitColor.g, 0.0f, ts * 2);
 	m_HitColor.b = Utils::Lerp(m_HitColor.b, 0.0f, ts * 2);
-	m_Animator->SetColor(m_HitColor);
+	animator.SetColor(m_HitColor);
 
 	if (m_HitColor.g == 0.0f)
 	{

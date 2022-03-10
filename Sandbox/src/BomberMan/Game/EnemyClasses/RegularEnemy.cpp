@@ -9,10 +9,12 @@ RegularEnemy::RegularEnemy(Entity& handle, Entity& grid_entity) : Enemy(handle, 
 	m_Properties.Name = "Dingus";
 	m_Properties.Speed = 2.0f;
 
-	m_Animator->Add(ResourceManager::GetAnimation("BaloonMovingAnimation"));
-	m_Animator->Add(ResourceManager::GetAnimation("BaloonDeathAnimation"));
+	auto& animator = m_Handle.GetComponent<Animator>();
 
-	m_Animator->Play("BaloonMoving");
+	animator.Add(ResourceManager::GetAnimation("BaloonMovingAnimation"));
+	animator.Add(ResourceManager::GetAnimation("BaloonDeathAnimation"));
+
+	animator.Play("BaloonMoving");
 }
 
 void RegularEnemy::OnUpdateInternal(Timestep& ts)
@@ -44,7 +46,8 @@ void RegularEnemy::OnGameEvent(GameEvent& e)
 
 void RegularEnemy::OnChangeDirection(Direction& dir)
 {
-	m_Animator->Play("BaloonMoving");
+	auto& animator = m_Handle.GetComponent<Animator>();
+	animator.Play("BaloonMoving");
 }
 
 bool RegularEnemy::EnemyLogic(Timestep& ts)

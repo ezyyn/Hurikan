@@ -9,16 +9,16 @@ FastEnemy::FastEnemy(Entity& handle, Entity& grid_entity) : Enemy(handle, grid_e
 	m_Properties.Name = "Bob";
 	m_Properties.Speed = 3.0f;
 
-	m_Animator->Add(ResourceManager::GetAnimation("AngryBallMoveAnimation"));
-	m_Animator->Add(ResourceManager::GetAnimation("AngryBallDeadAnimation"));
+	auto& animator = m_Handle.GetComponent<Animator>();
+	animator.Add(ResourceManager::GetAnimation("AngryBallMoveAnimation"));
+	animator.Add(ResourceManager::GetAnimation("AngryBallDeadAnimation"));
 
-	m_Animator->SetTarget(m_Handle);
-	m_Animator->Play("AngryBallMove");
+	animator.SetTarget(m_Handle);
+	animator.Play("AngryBallMove");
 }
 
 void FastEnemy::OnUpdateInternal(Timestep& ts)
 {
-
 }
 
 void FastEnemy::OnGameEvent(GameEvent& e)
@@ -43,6 +43,7 @@ void FastEnemy::OnGameEvent(GameEvent& e)
 					break;
 				}
 				m_Hit = true;
+				break;
 			}
 		}
 
@@ -51,7 +52,8 @@ void FastEnemy::OnGameEvent(GameEvent& e)
 
 void FastEnemy::OnChangeDirection(Direction& dir)
 {
-	m_Animator->Play("AngryBallMove");
+	auto& animator = m_Handle.GetComponent<Animator>();
+	animator.Play("AngryBallMove");
 }
 
 bool FastEnemy::EnemyLogic(Timestep& ts)

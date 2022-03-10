@@ -81,6 +81,15 @@ void Grid::Create(Scene* const scene)
 				gnc.Obstacle = true;
 				break;
 			}
+			case 'E':
+			{
+				auto& exit = scene->CreateEntityWithDrawOrder(1);
+				exit.AddComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("ExitDoor");
+				exit.Transform().Translation = gridEntity.Transform().Translation;
+				gridEntity.AddCustomComponent<LootComponent>(Loot::EXIT).LootHandle = exit;
+				gridEntity.GetComponent<LootComponent>().Obtainable = true;
+				break;
+			}
 			case 'K':
 			{
 				{
@@ -382,8 +391,6 @@ void Grid::OnGameEvent(GameEvent& e)
 
 					g_GameScene->DestroyEntity(m_PlayerGridPosition.GetComponent<LootComponent>().LootHandle);
 					m_PlayerGridPosition.RemoveComponent<LootComponent>();
-					
-
 				}
 
 				Dispatch(GameEventType::PLAYER_CHANGED_GRID_POSITION, m_PlayerGridPosition);

@@ -13,7 +13,7 @@ extern GameData g_InGameData;
 
 void Player::Create(Hurikan::Scene& scene)
 {
-	m_PlayerData.AvailableBombs += g_InGameData.BombPowerUpgrade;
+	m_PlayerData.AvailableBombs += g_InGameData.BombCountUpgrade;
 	m_PlayerData.Speed += g_InGameData.SpeedUpgrade;
 	m_PlayerData.Power += g_InGameData.BombPowerUpgrade;
 
