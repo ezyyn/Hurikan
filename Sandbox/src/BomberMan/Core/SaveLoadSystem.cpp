@@ -9,12 +9,15 @@ SaveLoadSystem SaveLoadSystem::s_Instance;
 
 void SaveLoadSystem::Init_Impl()
 {
-	std::filesystem::create_directory("data");
-
-	LoadData_Impl();
-	LoadUserSettings_Impl();
+	if(!std::filesystem::exists("data"))
+		std::filesystem::create_directory("data");
 
 	LevelLoader::Deserialize(m_Levels);
+
+	LoadData_Impl();
+
+	LoadUserSettings_Impl();
+
 }
 
 void SaveLoadSystem::LoadData_Impl()
@@ -31,6 +34,13 @@ void SaveLoadSystem::LoadData_Impl()
 	stream.close();
 
 	LoadDataFromFile_Impl();
+
+	if (m_GameData.CompletedLevels >= m_Levels.size())
+	{
+		// Player finished the game => erase all his progress
+		std::filesystem::remove(m_FilePath + "progress.data");
+		CreateDataAndFile_Impl();
+	}
 }
 
 void SaveLoadSystem::CreateDataAndFile_Impl()

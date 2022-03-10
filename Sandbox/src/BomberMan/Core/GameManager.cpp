@@ -28,7 +28,7 @@ void GameManager::OnAttach()
 		{
 			const auto& [width, height] = Application::Get().GetWindowSize();
 
-			auto& camera = m_LoadLevelScene.CreateEntity();
+			auto& camera = m_MidScene.CreateEntity();
 			auto& camera_cmp = camera.AddComponent<CameraComponent>();
 			camera_cmp.Camera.SetViewportSize(width, height);
 			camera_cmp.Camera.SetOrthographicSize(10);
@@ -36,7 +36,7 @@ void GameManager::OnAttach()
 		}
 
 		{
-			auto& leveltext = m_LoadLevelScene.CreateEntityWithDrawOrder(3);
+			auto& leveltext = m_MidScene.CreateEntity();
 			leveltext.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)).SubTexture = ResourceManager::GetSubTexture("LevelText");
 
 			//leveltext.Transform().Translation.x = 2.8f;
@@ -47,7 +47,7 @@ void GameManager::OnAttach()
 
 		{
 			// Level counter, gets data from SaveManager
-			m_LevelCount = m_LoadLevelScene.CreateEntityWithDrawOrder(3);
+			m_LevelCount = m_MidScene.CreateEntity();
 			m_LevelCount.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)).SubTexture = 
 				ResourceManager::GetSubTexture("m" + std::to_string(SaveLoadSystem::GetCurrentLevel().ID));
 
@@ -56,6 +56,12 @@ void GameManager::OnAttach()
 			m_LevelCount.Transform().Scale.x *= 0.6f;
 			m_LevelCount.Transform().Scale.y *= 0.6f;
 		}
+	}
+
+	// Game end text
+	{
+		m_GameEndText = m_MidScene.CreateEntity();
+		ResourceManager::GetTexture("GameEndText");
 	}
 
 	m_CurrentScreen = SceneType::MAIN_MENU;
@@ -110,7 +116,7 @@ void GameManager::OnUpdate(Timestep& ts)
 		m_CurrentScreen = SceneType::MAIN_MENU;
 		break;
 	}
-	case SceneType::GAME_COMPLETED:
+	case SceneType::GAME_END_TEXT:
 	{
 		{
 			m_Game->OnUpdate(ts);
@@ -124,16 +130,9 @@ void GameManager::OnUpdate(Timestep& ts)
 			wait = 3.0f;
 		}
 
-		//Dispatch(GameEventType::AUDIO_LEVEL_SCREEN);
-
 		delete m_Game;
 		m_Game = nullptr;
 		m_CurrentScreen = SceneType::MAIN_MENU;
-		break;
-	}
-	case SceneType::GAME_COMPLETED_SCREEN:
-	{
-
 		break;
 	}
 	default:
@@ -166,7 +165,7 @@ void GameManager::LoadLevel(Timestep& ts)
 {
 	{
 		// Display 
-		m_LoadLevelScene.OnUpdateRuntime(ts);
+		m_MidScene.OnUpdateRuntime(ts);
 
 		static float wait1 = 3.0f;
 		wait1 -= ts;
@@ -279,7 +278,7 @@ void GameManager::OnGameEvent(GameEvent& e)
 
 		if (SaveLoadSystem::GetPreviousLevel().BossLevel)
 		{
-			m_CurrentScreen = SceneType::GAME_COMPLETED;
+			m_CurrentScreen = SceneType::GAME_END_TEXT;
 			return;
 		}
 
@@ -293,5 +292,12 @@ void GameManager::OnGameEvent(GameEvent& e)
 		m_CurrentScreen = SceneType::RETURN_TO_MAIN_MENU;
 		m_LevelCount.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("m" + std::to_string(SaveLoadSystem::GetCurrentLevel().ID));
 		m_MainMenu.UpdateUI();
+	}
+	else if (e.Type == GameEventType::GAME_COMPLETED)
+	{
+		// Player finished the game => erase all his progress
+		SaveLoadSystem::EraseData();
+
+		m_CurrentScreen = SceneType::GAME_END_TEXT;
 	}
 }

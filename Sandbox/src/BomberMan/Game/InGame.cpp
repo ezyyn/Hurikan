@@ -107,6 +107,12 @@ void InGame::OnGameEvent(GameEvent& e)
 	}
 	else if (e.Type == GameEventType::PLAYER_SUCCESS_EXIT)
 	{
+		if (SaveLoadSystem::GetGameData().CompletedLevels >= SaveLoadSystem::GetLevels().size())
+		{
+			Dispatch(GameEventType::GAME_COMPLETED);
+			return;
+		}
+
 		g_InGameData.CompletedLevels++;
 		SaveLoadSystem::SaveLevel(g_InGameData);
 		Dispatch(GameEventType::LEVEL_SUCCESS);

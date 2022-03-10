@@ -48,6 +48,8 @@ private:
 	unsigned short m_PressedKey, m_LastKey;
 
 	bool m_BReleased = true;
+
+	bool m_GameOver = false;
 	
 	bool m_PlayerHit = false;
 	glm::vec4 m_HitPulseColor = glm::vec4(1.0f);

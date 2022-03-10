@@ -31,7 +31,6 @@ void MainMenu::Init()
 		m_LevelText.Transform().Scale.y *= 0.4f;
 	}
 
-	HU_INFO("{0}", SaveLoadSystem::GetCurrentLevel().ID);
 	{
 		// Level counter, gets data from SaveManager
 		m_LevelCount = m_MenuScene.CreateEntityWithDrawOrder(3);
@@ -62,8 +61,8 @@ void MainMenu::Init()
 		camera_cmp.Camera.SetOrthographicSize(10);
 		camera_cmp.Camera.SetProjectionType(SceneCamera::ProjectionType::Orthographic);
 	}
-	float scale_x = 5.5f;
-	float scale_y = 0.5f;
+	constexpr float scale_x = 5.5f;
+	constexpr float scale_y = 0.5f;
 	{
 		// New Game
 		m_NewGame = m_MenuScene.CreateEntityWithDrawOrder(2);

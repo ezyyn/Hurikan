@@ -17,8 +17,7 @@ enum class SceneType
 	IN_GAME,
 	LEVEL_FAIL,
 	LEVEL_SUCCESS,
-	GAME_COMPLETED,
-	GAME_COMPLETED_SCREEN,
+	GAME_END_TEXT,
 };
 
 class GameManager : public Layer, public Observer, public Observable
@@ -48,8 +47,10 @@ private:
 
 	unsigned short m_KeyPressed = 0;
 
+	Entity m_GameEndText;
+
 	Entity m_LevelCount;
-	Scene m_LoadLevelScene;
+	Scene m_MidScene;
 
 	SceneType m_CurrentScreen;
 };

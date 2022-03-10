@@ -64,6 +64,9 @@ void EnemySpawner::Spawn(Entity& grid_entity)
 
 void EnemySpawner::OnGameEvent(GameEvent& e)
 {
+	if (m_GameOver)
+		return;
+
 	if (e.Type == GameEventType::ENEMY_CREATE_NEW) // From grid
 	{
 		auto data = std::any_cast<Entity>(e.Data);
@@ -93,6 +96,10 @@ void EnemySpawner::OnGameEvent(GameEvent& e)
 	{
 		Dispatch(GameEventType::ENEMY_MOVED, e.Data);
 	}
+	else if (e.Type == GameEventType::PLAYER_SUCCESS_EXIT)
+	{
+		m_GameOver = true;
+	}
 	else 
 	{
 		for (auto& enemy : m_Enemies)
@@ -109,6 +116,9 @@ void EnemySpawner::OnUpdate(Timestep& ts)
 		delete m_ErasePool.front();
 		m_ErasePool.pop_front();
 	}
+
+	if (m_GameOver)
+		return;
 
 	for (auto enemy : m_Enemies)
 	{

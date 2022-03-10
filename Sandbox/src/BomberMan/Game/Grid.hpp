@@ -91,6 +91,8 @@ private:
 
 	bool m_KeyObtained = false;
 
+	bool m_GameOver = false;
+
 	Entity 
 		m_PlayerGridPosition, 
 		m_KeyGridEntity;

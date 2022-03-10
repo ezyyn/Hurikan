@@ -12,17 +12,19 @@ Boss::Boss(Scene* scene, Entity& grid_entity) : Enemy(scene->CreateEntityWithDra
 
 	m_Handle.Transform().Scale *= 3;
 
-	m_Properties.Health = 10;
+	m_Properties.Health = 1;
 	m_Properties.Intelligence = AI::FOLLOW_RANGE;
 	m_Properties.Name = "Bill";
 	m_Properties.Speed = 6.0f;
 
 	auto& animator = m_Handle.GetComponent<Animator>();
-	m_Handle.GetComponent<Animator>().Add(ResourceManager::GetAnimation("BossIdleAnimation"));
-	m_Handle.GetComponent<Animator>().SetTarget(m_Handle);
-	m_Handle.GetComponent<Animator>().SetColor(glm::vec4(1.0f));
+	animator.Add(ResourceManager::GetAnimation("BossIdleAnimation"));
+	animator.Add(ResourceManager::GetAnimation("BlueIceCreamDeadAnimation"));
+	animator.SetTarget(m_Handle);
+	animator.SetColor(glm::vec4(1.0f));
 
 	m_Handle.GetComponent<Animator>().Play("BossIdle");
+
 }
 
 void Boss::OnUpdateInternal(Timestep& ts)
@@ -51,7 +53,7 @@ void Boss::OnGameEvent(GameEvent& e)
 				if (--m_Properties.Health == 0)
 				{
 					m_Alive = false;
-					//m_Handle.GetComponent<Animator>().Play("BlueIceCreamDead");
+					m_Handle.GetComponent<Animator>().Play("BlueIceCreamDead");
 					break;
 				}
 				m_Hit = true;

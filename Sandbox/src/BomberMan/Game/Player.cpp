@@ -91,6 +91,9 @@ void Player::OnUpdate(Timestep& ts)
 			}
 		}
 
+		if (m_GameOver)
+			return;
+
 		if (m_BReleased && Input::IsKeyPressed(Key::B))
 		{
 			m_BReleased = false;
@@ -224,6 +227,10 @@ void Player::OnGameEvent(GameEvent& e)
 		{
 			m_PlayerData.Health++;
 		}
+	}
+	else if (e.Type == GameEventType::PLAYER_SUCCESS_EXIT)
+	{
+		m_GameOver = true;
 	}
 }
 

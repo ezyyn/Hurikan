@@ -30,5 +30,7 @@ private:
 	bool m_BossFightZoom = false;
 	bool m_BossFight = false;
 
+	bool m_GameOver = false;
+
 	Scene* g_GameScene;
 };

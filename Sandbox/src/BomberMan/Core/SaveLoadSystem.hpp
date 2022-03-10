@@ -46,6 +46,8 @@ public:
 
 	static inline void EraseDataAndDeserialize() { Get().EraseDataAndDeserialize_Impl(); }
 
+	static inline void EraseData() { Get().CreateDataAndFile_Impl(); }
+
 	static inline void SaveUserSettings(float music, float sfx) { Get().SaveUserSettings_Impl(music, sfx); }
 
 	static inline const UserSettings& GetUserSettings() { return Get().m_UserSettings; }
@@ -54,7 +56,10 @@ public:
 
 	static inline void SaveLevel(const GameData& data) { Get().Save_Impl(data); }
 
-	static inline const Level& GetCurrentLevel() { return Get().m_Levels[Get().m_GameData.CompletedLevels]; }
+	static inline const Level& GetCurrentLevel() 
+	{
+		return Get().m_Levels[Get().m_GameData.CompletedLevels]; 
+	}
 	static inline const Level GetPreviousLevel()
 	{ 
 		if(Get().m_GameData.CompletedLevels > 0)

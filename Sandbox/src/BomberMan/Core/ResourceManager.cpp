@@ -28,6 +28,11 @@ void ResourceManager::Init_Impl()
 		m_TextureMap["MainMenu_Background"] = Texture2D::Create(m_Filepath + "mainmenu_background.png");
 	}
 
+	// Game Completed Screen
+	{
+		m_TextureMap["GameCompletedText"] = Texture2D::Create(m_Filepath + "ui/game_end_screen.png");
+	}
+
 	// Enemy idle
 	{
 		//m_SubTextureMap["RegularEnemyIdle"] = SubTexture2D::CreateFromCoords(spriteSheetEntities, { 4, 7 }, { 16, 16 });

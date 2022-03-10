@@ -4,11 +4,11 @@
 
 SmartEnemy::SmartEnemy(Entity& handle, Entity& grid_entity) : Enemy(handle, grid_entity)
 {
-	Level level;
+	/*Level level;*/
 
-	LevelLoader::GetLevelWithGeneratedMap(level);
+	/*LevelLoader::GetLevelWithGeneratedMap(level);
 
-	HU_INFO(level.MapSkeleton);
+	HU_INFO(level.MapSkeleton);*/
 
 	m_Handle.AddCustomComponent<EntityTypeComponent>().Type = EntityType::ENEMY_SMART;
 

@@ -42,7 +42,16 @@ void GCamera::Create(Scene* scene)
 
 void GCamera::OnGameEvent(GameEvent& e)
 {
-	if (!SaveLoadSystem::GetCurrentLevel().OverScreen() && e.Type != GameEventType::PLAYER_SUCCESS_EXIT)
+	if (m_GameOver)
+		return;
+
+	if (e.Type == GameEventType::PLAYER_SUCCESS_EXIT)
+	{
+		m_GameOver = true; 
+		return;
+	}
+
+	if (m_GameOver && !SaveLoadSystem::GetCurrentLevel().OverScreen())
 		return;
 
 	if (e.Type == GameEventType::PLAYER_MOVED || e.Type == GameEventType::PLAYER_START_POSITION)

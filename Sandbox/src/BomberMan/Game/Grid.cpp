@@ -35,8 +35,13 @@ Grid::~Grid()
 	- -> Empty space
 */
 
+static bool b = false;
+
+
 void Grid::Create(Scene* const scene)
 {
+	b = false; // TOOD: REMOVE
+
 	g_GameScene = scene;
 
 	m_Grid = CreateScope<Entity[]>(GetLevelWidth() * GetLevelHeight());
@@ -88,6 +93,9 @@ void Grid::Create(Scene* const scene)
 				exit.Transform().Translation = gridEntity.Transform().Translation;
 				gridEntity.AddCustomComponent<LootComponent>(Loot::EXIT).LootHandle = exit;
 				gridEntity.GetComponent<LootComponent>().Obtainable = true;
+				gridEntity.GetComponent<BoxCollider2DComponent>().IsSensor = true;
+
+				gnc.Obstacle = false;
 				break;
 			}
 			case 'K':
@@ -329,23 +337,24 @@ void Grid::ClearNodes()
 
 void Grid::OnGameEvent(GameEvent& e)
 {
+	if (m_GameOver)
+		return;
+
 	if (e.Type == GameEventType::PLAYER_MOVED)
 	{
-		static bool b = false;
-
-		if(!b && Input::IsKeyPressed(Key::C))
+		if(!b && Input::IsKeyPressed(Key::C)) // TODO: REMOVE!
 		{
+			m_GameOver = true;
 			b = true;
 			Dispatch(GameEventType::PLAYER_SUCCESS_EXIT);
+			return;
 		}
 
 		auto& player_position = std::any_cast<glm::vec3>(e.Data);
 
 		for (int i = 0; i < GetLevelWidth() * GetLevelHeight(); ++i)
 		{
-			auto& grid_tr = m_Grid[i].Transform().Translation;
-
-			if (m_Grid[i] != m_PlayerGridPosition && Utils::Intersect(player_position, grid_tr))
+			if (m_Grid[i] != m_PlayerGridPosition && Utils::Intersect(player_position, m_Grid[i].Transform().Translation))
 			{
 				m_PlayerGridPosition = m_Grid[i];
 
@@ -359,6 +368,7 @@ void Grid::OnGameEvent(GameEvent& e)
 					else if (m_PlayerGridPosition.GetComponent<LootComponent>().Type == Loot::EXIT)
 					{
 						if (m_KeyObtained) {
+							m_GameOver = true;
 							// Won
 							// Play some nice winning music
 							Dispatch(GameEventType::PLAYER_SUCCESS_EXIT);
@@ -441,6 +451,28 @@ void Grid::OnGameEvent(GameEvent& e)
 			GRID_ENTITY.GetComponent<LootComponent>().LootHandle.GetComponent<SpriteRendererComponent>().Color = glm::vec4(1.0f);
 		}
 	}
+	else if (e.Type == GameEventType::ENEMY_DEAD)
+	{
+		auto& enemy = std::any_cast<Entity>(e.Data);
+		
+		if (enemy.GetComponent<EntityTypeComponent>().Type == EntityType::ENEMY_BOSS)
+		{
+			for (int i = 0; i < GetLevelWidth() * GetLevelHeight(); ++i)
+			{
+				if (Utils::Intersect(enemy.Transform().Translation, m_Grid[i].Transform().Translation))
+				{
+					auto& loot = g_GameScene->CreateEntityWithDrawOrder(1);
+					loot.AddComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("Key");
+					loot.Transform().Translation = m_Grid[i].Transform().Translation;
+					auto& lc = m_Grid[i].AddCustomComponent<LootComponent>(Loot::KEY);
+					lc.LootHandle = loot;
+					lc.Obtainable = true;
+					m_KeyGridEntity = m_Grid[i];
+					break;
+				}
+			}
+		}
+	}
 }
 
 void Grid::OnUpdate(Timestep& ts)
@@ -448,7 +480,7 @@ void Grid::OnUpdate(Timestep& ts)
 	const auto& value = 1000 * (SaveLoadSystem::GetGameData().CompletedLevels + 1);
 	const auto& reveal = 1500 * (SaveLoadSystem::GetGameData().CompletedLevels + 1);
 
-	if (m_KeyGridEntity && m_KeyGridEntity.HasComponent<LootComponent>())
+	if (m_KeyGridEntity && m_KeyGridEntity.HasComponent<LootComponent>() && m_KeyGridEntity.HasComponent<SpriteRendererComponent>())
 	{
 		if(g_InGameData.Score >= value && !m_KeyGridEntity.GetComponent<LootComponent>().Obtainable)
 		{
@@ -457,7 +489,6 @@ void Grid::OnUpdate(Timestep& ts)
 		}
 		if (g_InGameData.Score >= reveal)
 		{
-			
 			m_KeyGridEntity.GetComponent<SpriteRendererComponent>().Color = glm::vec4(0.5f, 0.8f, 0.8f, 1.0f);
 		}
 	}

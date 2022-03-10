@@ -91,5 +91,7 @@ private:
 	std::vector<Enemy*> m_Enemies;
 	std::list<Enemy*> m_ErasePool;
 
+	bool m_GameOver = false;
+
 	Scene* g_GameScene;
 };
