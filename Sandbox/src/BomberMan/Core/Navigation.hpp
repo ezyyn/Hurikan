@@ -28,12 +28,10 @@ namespace Navigation
 			end = std::chrono::high_resolution_clock::now();
 
 			duration = end - start;
-
-			//HU_INFO("{0}", duration.count());
 		}
 	};
 
-	static inline std::vector<Entity> Discover(Entity& start)
+	/*static inline std::vector<Entity> Discover(Entity& start)
 	{
 		HU_CORE_ASSERT(start, "");
 
@@ -81,29 +79,22 @@ namespace Navigation
 			{
 				p.GetComponent<SpriteRendererComponent>().Color = { 1, 0, 0, 0.5f };
 			}
-			//HU_INFO("{0} ! {1} ", tr.x, tr.y);
 		}
 
 		return discovered;
-	}
+	}*/
 
-	static inline std::list<Entity> Navigate(Entity& start, Entity& target) // nice but costly
+	static inline std::list<Entity> Navigate(Entity& start, Entity& target)
 	{
 		// Checks validation of @start and @target
 		HU_CORE_ASSERT(start, "");
 		HU_CORE_ASSERT(target, "");
 
-		// Prints out specifications for this current path solving 
-	//	HU_INFO("Enemy: {0}, {1} | Player: {2}, {3}", start.Transform().Translation.x, start.Transform().Translation.y,
-	// target.Transform().Translation.x, target.Transform().Translation.y);
-
 		// Initializing path
 		std::list<Entity> path = {};
 
 		if (target.GetComponent<GridNodeComponent>().Obstacle || start.GetComponent<GridNodeComponent>().Obstacle)
-		{
 			return path;
-		}
 
 		// Clears grid nodes from previous path findings
 		Grid::ClearNodes();
@@ -118,20 +109,15 @@ namespace Navigation
 			return /*distance(a, b)*/ 1.0f;
 		};
 
-		// Algorithm starts on the position of the enemy
-		Entity currentNode = start;
-		{
-			auto& currentNode_ = currentNode.GetComponent<GridNodeComponent>();
-			currentNode_.LocalGoal = 0.0f;
-			currentNode_.GlobalGoal = heuristic(start, target);
-		}
-
+		// Implementace A-Star algoritmu
+		Entity currentNode = start; // 1.
+		auto& currentNode_ = currentNode.GetComponent<GridNodeComponent>();
+		currentNode_.LocalGoal = 0.0f;
+		currentNode_.GlobalGoal = heuristic(start, target); // 2.
 		{
 			Timer alg_performance;
-			// Initializing list
-			std::list<Entity> notTestedNodes = {};
+			std::list<Entity> notTestedNodes = {}; // 3.
 			notTestedNodes.push_back(start);
-
 			while (!notTestedNodes.empty())
 			{
 				if (currentNode == target)
@@ -177,15 +163,6 @@ namespace Navigation
 
 		while (p.GetComponent<GridNodeComponent>().Parent)
 		{
-			/*if (!p.HasComponent<SpriteRendererComponent>())
-			{
-				p.AddComponent<SpriteRendererComponent>().Color = { 1,1,1,0.5f }; // TODO: MINOR FIX
-			}
-			else
-			{
-				p.GetComponent<SpriteRendererComponent>().Color = { 1,1,1,0.5f };
-			}*/
-
 			// Storing each gridnode for enemy to follow each tile
 			path.push_front(p);
 			p = p.GetComponent<GridNodeComponent>().Parent;
@@ -193,16 +170,7 @@ namespace Navigation
 		
 		HU_INFO("Recalculated!");
 
-		//if (!path.empty() && path.front() == start)
-		{
-
-			// Successfully found a path to target
-			return path;
-		}
-		
-		//path.push_front({ start.Transform().Translation.x, start.Transform().Translation.y, 0 });
-
-		return {};
+		return path;
 	}
 
 	enum class Direction

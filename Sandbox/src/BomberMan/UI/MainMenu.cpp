@@ -34,12 +34,12 @@ void MainMenu::Init()
 	{
 		// Level counter, gets data from SaveManager
 		m_LevelCount = m_MenuScene.CreateEntityWithDrawOrder(3);
-		m_LevelCount.AddComponent<SpriteRendererComponent>(color).SubTexture = ResourceManager::GetSubTexture("m" + std::to_string(SaveLoadSystem::GetCurrentLevel().ID));
+		m_LevelCount.AddComponent<SpriteRendererComponent>(color).SubTexture = ResourceManager::GetSubTexture(std::to_string(SaveLoadSystem::GetCurrentLevel().ID));
 
 		m_LevelCount.Transform().Translation.x = 3.8f;
 		m_LevelCount.Transform().Translation.y = -1.1f;
-		m_LevelCount.Transform().Scale.x *= 0.6f;
-		m_LevelCount.Transform().Scale.y *= 0.6f;
+		m_LevelCount.Transform().Scale.x *= 0.4f;
+		m_LevelCount.Transform().Scale.y *= 0.4f;
 	}
 
 	{
@@ -140,9 +140,18 @@ void MainMenu::Init()
 
 		m_Logo.Transform().Translation.y = 2.0f;
 	}
-
+	{
+		// Tutorial
+		m_Tutorial = m_MenuScene.CreateEntityWithDrawOrder(2);
+		m_Tutorial.Transform().Translation.x = -6.0f;
+		m_Tutorial.Transform().Translation.y = -3.0f;
+		m_Tutorial.Transform().Scale *= 4.0f;
+		m_Tutorial.AddComponent<SpriteRendererComponent>().Texture = ResourceManager::GetTexture("Tutorial");
+	}
 	m_MMSettings.Init(&m_MenuScene, m_ArrowHead);
 	m_MMSettings.Attach(this);
+
+	LoadScene();
 }
 
 void MainMenu::OnUpdate(Timestep& ts)
@@ -151,9 +160,15 @@ void MainMenu::OnUpdate(Timestep& ts)
 	m_MenuScene.OnUpdateRuntime(ts);
 }
 
+void MainMenu::OnUpdateLoadScene(Timestep& ts)
+{
+	m_LoadLevelScene.OnUpdateRuntime(ts);
+}
+
 void MainMenu::UpdateUI()
 {
-	m_LevelCount.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("m" + std::to_string(SaveLoadSystem::GetCurrentLevel().ID));
+	m_LevelCountLoadScene.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture(std::to_string(SaveLoadSystem::GetCurrentLevel().ID));
+	m_LevelCount.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture(std::to_string(SaveLoadSystem::GetCurrentLevel().ID));
 	if (SaveLoadSystem::AlreadyPlayed())
 	{
 		m_Continue.GetComponent<SpriteRendererComponent>().Color = glm::vec4(1.0f);
@@ -210,11 +225,6 @@ void MainMenu::OnKeyPressed(KeyPressedEvent& e)
 			// dialog confirm
 			Dispatch(GameEventType::GAME_NEW);
 
-			SaveLoadSystem::EraseDataAndDeserialize();
-			/*ProgressManager::Data().AlreadyPlayed = true;
-			ProgressManager::ResetProgress();
-			ProgressManager::Save();*/
-			
 			UpdateUI();
 			break;
 		case MenuOption::CONTINUE:
@@ -231,6 +241,44 @@ void MainMenu::OnKeyPressed(KeyPressedEvent& e)
 			break;
 		default:
 			break;
+		}
+	}
+}
+
+void MainMenu::LoadScene()
+{
+	// Load level scene
+	{
+		{
+			const auto& [width, height] = Application::Get().GetWindowSize();
+
+			auto& camera = m_LoadLevelScene.CreateEntity();
+			auto& camera_cmp = camera.AddComponent<CameraComponent>();
+			camera_cmp.Camera.SetViewportSize(width, height);
+			camera_cmp.Camera.SetOrthographicSize(10);
+			camera_cmp.Camera.SetProjectionType(SceneCamera::ProjectionType::Orthographic);
+		}
+
+		{
+			auto& leveltext = m_LoadLevelScene.CreateEntity();
+			leveltext.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)).SubTexture = ResourceManager::GetSubTexture("LevelText");
+
+			//leveltext.Transform().Translation.x = 2.8f;
+			//leveltext.Transform().Translation.y = -1.1f;
+			leveltext.Transform().Scale.x *= 1.5f;
+			leveltext.Transform().Scale.y *= 0.4f;
+		}
+
+		{
+			// Level counter, gets data from SaveManager
+			m_LevelCountLoadScene = m_LoadLevelScene.CreateEntity();
+			m_LevelCountLoadScene.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)).SubTexture =
+				ResourceManager::GetSubTexture(std::to_string(SaveLoadSystem::GetCurrentLevel().ID));
+
+			m_LevelCountLoadScene.Transform().Translation.x = 1.0f;
+			//levelcount.Transform().Translation.y = -1.1f;
+			m_LevelCountLoadScene.Transform().Scale.x *= 0.4f;
+			m_LevelCountLoadScene.Transform().Scale.y *= 0.4f;
 		}
 	}
 }

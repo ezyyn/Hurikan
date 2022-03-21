@@ -1,4 +1,4 @@
-#include "Bomb.hpp"
+﻿#include "Bomb.hpp"
 
 #include "BomberMan/Core/ResourceManager.hpp"
 #include "BomberMan/Core/SaveLoadSystem.hpp"
@@ -26,23 +26,24 @@ void BombManager::Init(Scene* scene)
 {
 	g_GameScene = scene;
 }
-bool BombManager::PlaceBomb(BombProps& props)
-{
+bool BombManager::PlaceBomb(BombProps& props) {
 	props.GridEntity = m_PlayerGrid;
-
-	for (auto& bomb : s_BombList)
-	{
-		if (props.GridEntity.Transform().Translation == bomb.Position())
+	// Oveření obsazenosti políčka
+	for (auto& bomb : s_BombList) {
+		if (props.GridEntity.Transform().Translation == bomb.GetPosition()) {
+			// Bomba již existuje na dané pozici 
 			return false;
+		}
 	}
-
+	// Pozastaví program a vypíše error do konzole pokud splní podmínka
 	HU_CORE_ASSERT(g_GameScene, "Scene is nullptr!");
-
+	// Rozhlášení události všem posluchačum
 	Dispatch(GameEventType::BOMB_PLACED, props.GridEntity);
-
+	// Přidání bomby do vektoru
 	auto& bomb = s_BombList.emplace_back(props, g_GameScene);
+	// Přiřazení třídy BombManager jako posluchače třídy Bomb
 	bomb.Attach(this);
-	
+	// Vše proběhlo v pořádku
 	return true;
 }
 
@@ -61,7 +62,7 @@ void BombManager::OnGameEvent(GameEvent& e)
 
 		for (auto& bomb : s_BombList)
 		{
-			if (!bomb.PhysicsEnabled() && glm::distance(PLAYER, bomb.Position()) > 1.0f)
+			if (!bomb.PhysicsEnabled() && glm::distance(PLAYER, bomb.GetPosition()) > 1.0f)
 			{
 				bomb.EnablePhysics();
 			}
@@ -101,8 +102,6 @@ void BombManager::OnUpdate(Timestep& ts)
 	auto& itr = s_BombList.begin();
 	while (itr != s_BombList.end())
 	{
-		//OnUpdateInput((*itr), ts);
-
 		bool destroyable = itr->OnTick(ts);
 		if (destroyable) 
 			itr = s_BombList.erase(itr);
@@ -119,20 +118,19 @@ Bomb::Bomb(const BombProps& props, Scene* scene)
 	: m_Properties(props)
 {
 	g_GameScene = scene;
-
-	m_Handle = scene->CreateEntityWithDrawOrder(1, "BombEntity");
-
 	m_Parent = props.GridEntity;
-
+	// Vytvoření entity
+	m_Handle = scene->CreateEntityWithDrawOrder(1, "BombEntity");
+	// Nastavení pozice odpovídající políčku na kterém stojí hráč
 	m_Handle.Transform().Translation.x = m_Properties.GridEntity.Transform().Translation.x;
 	m_Handle.Transform().Translation.y = m_Properties.GridEntity.Transform().Translation.y;
-
+	// Přidání fyzikálního objektu
 	m_Handle.AddComponent<Rigidbody2DComponent>().Enabled = false;
 	m_Handle.AddComponent<BoxCollider2DComponent>();
-
+	// Přdání komponentu umožnující renderování bomby
 	m_Handle.AddComponent<SpriteRendererComponent>(glm::vec4(0.0f));
 
-	auto& fa = m_Handle.AddCustomComponent<Animator>("Bomb");
+	auto& fa = m_Handle.AddCustomComponent<Animator>();
 	fa.SetTarget(m_Handle);
 	fa.Add(ResourceManager::GetAnimation("BombTicking"));
 	fa.Add(ResourceManager::GetAnimation("BombCenterExplosion"));
@@ -222,26 +220,27 @@ void Bomb::Explode()
 
 void Bomb::Expand()
 {
-	auto& centerfa = m_Handle.GetComponent<Animator>();
-	centerfa.Play("BombCenterExplosion");
-
+	// Spuštení animací exploze pro bombu
+	m_Handle.GetComponent<Animator>().Play("BombCenterExplosion");
+	// Přidání entity do listu entit exploze
 	m_SpreadEntities.push_back(m_Handle);
 
+	// Záskání indexů políčka, na kterém leží bomba.
 	auto& gnc = m_Parent.GetComponent<GridNodeComponent>();
+	const int index_x = gnc.Index.x;
+	const int index_y = gnc.Index.y;
 
-	int index_x = gnc.Index.x;
-	int index_y = gnc.Index.y;
-
-	// Left
+	// Inicializace levého křídla, for-cyklus zde dokud nedosáhne 
+	// maximální délky (muže se měnit) a popřípadě se zastaví 
+	// pokud narazí na překázku jako například zeď.
+	// Tento proces se opakuje pro zbylé směry.
 	for (int j = 1; j <= m_Properties.Reach; ++j)
 	{
 		if (index_x - j >= 0)
 		{
 			auto leftspread = Grid::Get(index_y, index_x - j);
 
-			bool stop_expanding = WingExpand(j, leftspread, 90.0f);
-
-			if (stop_expanding)
+			if (WingExpand(j, leftspread, 90.0f))
 				break;
 		}
 	}
@@ -252,9 +251,7 @@ void Bomb::Expand()
 		{
 			auto& rightspread = Grid::Get(index_y, index_x + j);
 
-			bool stop_expanding = WingExpand(j, rightspread, 270.0f);
-
-			if (stop_expanding)
+			if (WingExpand(j, rightspread, 270.0f))
 				break;
 		}
 	}
@@ -265,9 +262,7 @@ void Bomb::Expand()
 		{
 			auto& upspread = Grid::Get(index_y - j, index_x);
 
-			bool stop_expanding = WingExpand(j, upspread, 0.0f);
-
-			if (stop_expanding)
+			if (WingExpand(j, upspread, 0.0f))
 				break;
 		}
 	}
@@ -278,18 +273,14 @@ void Bomb::Expand()
 		{
 			auto& downspread = Grid::Get(index_y + j, index_x);
 
-			bool stop_expanding = WingExpand(j, downspread, 180.0f);
-
-			if (stop_expanding)
+			if (WingExpand(j, downspread, 180.0f))
 				break;
 		}
 	}
 }
 
-bool Bomb::WingExpand(int index, Entity& entity, float rotation)
-{
-	switch (entity.GetComponent<EntityTypeComponent>().Type)
-	{
+bool Bomb::WingExpand(int index, Entity& entity, float rotation) {
+	switch (entity.GetComponent<EntityTypeComponent>().Type) {
 	case EntityType::WALL:
 		return true;
 	case EntityType::BREAKABLE_WALL:
@@ -299,21 +290,18 @@ bool Bomb::WingExpand(int index, Entity& entity, float rotation)
 	}
 	case EntityType::EMPTY:
 	{
-		Entity spread = g_GameScene->CreateEntityWithDrawOrder(2, "WingEntity");
-
+		auto& spread = g_GameScene->CreateEntityWithDrawOrder(2, "WingEntity");
 		spread.AddComponent<SpriteRendererComponent>(glm::vec4(0.0f));
 		spread.GetComponent<TransformComponent>().Translation = entity.Transform().Translation;
 		spread.GetComponent<TransformComponent>().Rotation.z = glm::radians(rotation);
 
 		auto& fa = spread.AddCustomComponent<Animator>();
 		fa.SetTarget(spread);
-		if (index == m_Properties.Reach)
-		{
+		if (index == m_Properties.Reach) {
 			fa.Add(ResourceManager::GetAnimation("BombEndWingExplosion"));
 			fa.Play("BombEndWingExplosion");
 		}
-		else
-		{
+		else {
 			fa.Add(ResourceManager::GetAnimation("BombSpreadMiddleExplosion"));
 			fa.Play("BombSpreadMiddleExplosion");
 		}
@@ -322,15 +310,11 @@ bool Bomb::WingExpand(int index, Entity& entity, float rotation)
 		return false;
 	}
 
-	case EntityType::BOMB:
-	{
-		for (auto& other : s_BombList)
-		{
+	case EntityType::BOMB: {
+		for (auto& other : s_BombList) {
 			if (*this != other && other.GetState() < BombState::EXPLOSION &&
 				other.m_Handle.Transform().Translation == entity.Transform().Translation)
-			{
 				other.Explode();
-			}
 		}
 		return true;
 	}

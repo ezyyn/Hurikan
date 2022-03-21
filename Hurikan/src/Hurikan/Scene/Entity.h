@@ -13,9 +13,23 @@ namespace Hurikan
 	class Entity
 	{
 	public:
-		Entity() = default;
-		Entity(entt::entity id, Scene* scene);
-		Entity(const Entity&) = default;
+		Entity() {};
+		Entity(const Entity& other)
+		{
+			m_EntityHandle = other.m_EntityHandle;
+			m_Scene = other.m_Scene;
+		}
+
+		Entity(entt::entity id, Scene* scene)
+			: m_EntityHandle(id), m_Scene(scene) {}
+
+		~Entity() {}
+
+		Entity(Entity&& other) noexcept
+		{
+			m_EntityHandle = std::move(other.m_EntityHandle);
+			m_Scene = std::move(other.m_Scene);
+		}
 
 		template<typename T>
 		bool HasComponent()
@@ -72,6 +86,13 @@ namespace Hurikan
 			return *this;
 		}
 
+		inline Entity& operator=(Entity&& other) noexcept
+		{
+			m_EntityHandle = std::move(other.m_EntityHandle);
+			m_Scene = std::move(other.m_Scene);
+			return *this;
+		}
+
 		inline TransformComponent& Transform() { return m_Scene->m_Registry.get<TransformComponent>(m_EntityHandle); }
 
 		operator bool() const { return m_EntityHandle != entt::null; }
@@ -93,7 +114,7 @@ namespace Hurikan
 		bool operator==(const Entity& other) const { return m_EntityHandle == other.m_EntityHandle && m_Scene == other.m_Scene; }
 		bool operator!=(const Entity& other) const { return (*this == other) == false; }
 	private:
-		entt::entity m_EntityHandle = entt::null;
+		entt::entity m_EntityHandle{ entt::null };
 		Scene* m_Scene = nullptr;
 	};
 

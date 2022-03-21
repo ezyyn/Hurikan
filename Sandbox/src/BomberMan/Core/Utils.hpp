@@ -1,6 +1,8 @@
 #pragma once
 
 #include <random>
+#include <functional>
+
 #include <glm/glm.hpp>
 
 namespace Utils
@@ -56,4 +58,48 @@ namespace Utils
 
 		return distribution(rng);
 	}
+
+	template<typename... Args>
+	class Timer
+	{
+	public:
+		Timer() {}
+		~Timer() {}
+
+		void Create(float desired, const std::function<void(float)>& until, const std::function<void(Args...)>& reached)
+		{
+			m_DesiredTime = desired;
+			m_DoUntilFunc = until;
+			m_DoWhenReached = reached;
+		}
+
+		void Tick(float ts, Args ...args)
+		{
+			if (m_EstimatedTime < m_DesiredTime)
+			{
+				m_DoUntilFunc(ts);
+
+				m_EstimatedTime += ts;
+
+				if (m_EstimatedTime > m_DesiredTime)
+				{
+					m_DoWhenReached(args...);
+				}
+			}
+		}
+
+		void Reset()
+		{
+			m_EstimatedTime = 0.0f;
+		}
+
+	private:
+		Timer(const Timer&) = delete;
+
+		std::function<void(float)> m_DoUntilFunc;
+		std::function<void(Args...)> m_DoWhenReached;
+
+		float m_DesiredTime{ 0.0f };
+		float m_EstimatedTime{ 0.0f };
+	};
 }

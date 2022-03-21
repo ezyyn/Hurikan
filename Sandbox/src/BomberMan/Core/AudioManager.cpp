@@ -1,4 +1,4 @@
-#include "AudioManager.hpp"
+﻿#include "AudioManager.hpp"
 
 #include "BomberMan/Core/SaveLoadSystem.hpp"
 #include "BomberMan/Core/LevelLoader.hpp"
@@ -18,7 +18,7 @@ void AudioManager::Init()
 	// Sfx
 	Hurikan::SoundInfo sfx;
 	sfx.Gain = SaveLoadSystem::GetUserSettings().SfxVolume;
-	s_SoundLibrary["BombPlaced"] = Hurikan::BasicAudio::Create("assets/audio/bomb_placed.ogg", sfx);
+	//s_SoundLibrary["BombPlaced"] = Hurikan::BasicAudio::Create("assets/audio/bomb_placed.ogg", sfx);
 	s_SoundLibrary["BombExplosion"] = Hurikan::BasicAudio::Create("assets/audio/bomb_explosion.ogg", sfx);
 
 	// Music
@@ -26,13 +26,14 @@ void AudioManager::Init()
 	loop.Loop = true;
 	loop.Gain = SaveLoadSystem::GetUserSettings().MusicVolume;
 	s_SoundLibrary["MainMenuLoop"] = Hurikan::BasicAudio::Create("assets/audio/main_menu.ogg", loop);
-	s_SoundLibrary["InGameLoop"] = Hurikan::BasicAudio::Create("assets/audio/level_theme_cut.ogg", loop);
+	s_SoundLibrary["InGameLoop"] = Hurikan::BasicAudio::Create("assets/audio/level_theme.ogg", loop);
 
-	Hurikan::SoundInfo music;
-	music.Gain = SaveLoadSystem::GetUserSettings().MusicVolume;
-	s_SoundLibrary["LevelStart"] = Hurikan::BasicAudio::Create("assets/audio/level_start.ogg", music);
-	s_SoundLibrary["LevelLost"] = Hurikan::BasicAudio::Create("assets/audio/level_lost.ogg", music);
-	s_SoundLibrary["LevelCompleted"] = Hurikan::BasicAudio::Create("assets/audio/level_completed.ogg", music);
+	//  Bohužel nemohu použit kvůli licensím
+	//Hurikan::SoundInfo music; 
+	//music.Gain = SaveLoadSystem::GetUserSettings().MusicVolume;
+	//s_SoundLibrary["LevelStart"] = Hurikan::BasicAudio::Create("assets/audio/level_start.ogg", music);
+	//s_SoundLibrary["LevelLost"] = Hurikan::BasicAudio::Create("assets/audio/level_lost.ogg", music);
+	//s_SoundLibrary["LevelCompleted"] = Hurikan::BasicAudio::Create("assets/audio/level_completed.ogg", music);
 
 
 	Play("MainMenuLoop");
@@ -64,13 +65,13 @@ void AudioManager::Unpause(const std::string& name)
 
 void AudioManager::UpdateVolume(float music, float sfx)
 {
-	Hurikan::BasicAudio::SetGain(s_SoundLibrary["BombPlaced"], sfx);
+	//Hurikan::BasicAudio::SetGain(s_SoundLibrary["BombPlaced"], sfx);
 	Hurikan::BasicAudio::SetGain(s_SoundLibrary["BombExplosion"], sfx);
 	Hurikan::BasicAudio::SetGain(s_SoundLibrary["MainMenuLoop"], music);
 	Hurikan::BasicAudio::SetGain(s_SoundLibrary["InGameLoop"], music);
-	Hurikan::BasicAudio::SetGain(s_SoundLibrary["LevelStart"], music);
-	Hurikan::BasicAudio::SetGain(s_SoundLibrary["LevelLost"], music);
-	Hurikan::BasicAudio::SetGain(s_SoundLibrary["LevelCompleted"], music);
+	//Hurikan::BasicAudio::SetGain(s_SoundLibrary["LevelStart"], music);
+	//Hurikan::BasicAudio::SetGain(s_SoundLibrary["LevelLost"], music);
+	//Hurikan::BasicAudio::SetGain(s_SoundLibrary["LevelCompleted"], music);
 }
 
 // AudioAssistant
@@ -81,7 +82,7 @@ void AudioAssistant::OnGameEvent(GameEvent& e)
 {
 	if (e.Type == GameEventType::BOMB_PLACED)
 	{
-		AudioManager::Play("BombPlaced");
+		//AudioManager::Play("BombPlaced");
 	}
 	else if (e.Type == GameEventType::BOMB_EXPLODED)
 	{
@@ -90,31 +91,32 @@ void AudioAssistant::OnGameEvent(GameEvent& e)
 	else if (e.Type == GameEventType::AUDIO_LEVEL_SCREEN)
 	{
 		AudioManager::Stop("MainMenuLoop");
-		AudioManager::Play("LevelStart");
+		//AudioManager::Play("LevelStart");
 	}
 	else if (e.Type == GameEventType::RETURN_TO_MAIN_MENU)
 	{
 		AudioManager::Stop("InGameLoop");
 		AudioManager::Play("MainMenuLoop");
 	}
-	else if (e.Type == GameEventType::AUDIO_PAUSE_INGAME_LOOP)
+	else if (e.Type == GameEventType::GAME_PAUSED)
 	{
-		AudioManager::Pause("InGameLoop");
+		if (!SaveLoadSystem::GetCurrentLevel().BossLevel)
+			AudioManager::Pause("InGameLoop");
 	}
-	else if (e.Type == GameEventType::AUDIO_UNPAUSE_INGAME_LOOP)
+	else if (e.Type == GameEventType::GAME_UNPAUSED)
 	{
-		AudioManager::Unpause("InGameLoop");
+		if (!SaveLoadSystem::GetCurrentLevel().BossLevel)
+			AudioManager::Unpause("InGameLoop");
 	}
 	else if (e.Type == GameEventType::AUDIO_LEVEL_FAILED)
 	{
 		AudioManager::Stop("InGameLoop");
-		AudioManager::Play("BombExplosion");
-		AudioManager::Play("LevelLost");
+		//AudioManager::Play("LevelLost");
 	}
 	else if (e.Type == GameEventType::AUDIO_LEVEL_SUCCESS)
 	{
 		AudioManager::Stop("InGameLoop");
-		AudioManager::Play("LevelCompleted");
+		//AudioManager::Play("LevelCompleted");
 	}
 	else if (e.Type == GameEventType::AUDIO_INGAME_LOOP)
 	{
@@ -122,6 +124,7 @@ void AudioAssistant::OnGameEvent(GameEvent& e)
 	}
 	else if (e.Type == GameEventType::CUTSCENE_COMPLETED)
 	{
-		AudioManager::Play("BossLoop");
+		//AudioManager::Play("BossLoop");
+		AudioManager::Stop("InGameLoop");
 	}
 }

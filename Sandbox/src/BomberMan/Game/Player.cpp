@@ -1,4 +1,4 @@
-#include "Player.hpp"
+﻿#include "Player.hpp"
 
 #include "BomberMan/Core/ResourceManager.hpp"
 #include "BomberMan/Core/SaveLoadSystem.hpp"
@@ -20,7 +20,6 @@ void Player::Create(Hurikan::Scene& scene)
 	m_Handle = scene.CreateEntityWithDrawOrder(3, "Player");
 	m_Handle.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f));
 	// PLAYER ANIMATIONS
-	m_PlayerAnimator.SetDebugTag("Player");
 	m_PlayerAnimator.SetTarget(m_Handle);
 	
 	m_PlayerAnimator.Add(ResourceManager::GetAnimation("PlayerIdleAnimation"));
@@ -47,7 +46,6 @@ void Player::Create(Hurikan::Scene& scene)
 	cc2d.Friction = 0.0f;
 	cc2d.IsSensor = false;
 
-	m_PlayerTransform = &m_Handle.Transform();
 	m_PlayerAnimator.Play("PlayerIdle");
 }
 
@@ -213,6 +211,14 @@ void Player::OnGameEvent(GameEvent& e)
 		m_PlayerData.Power++;
 		g_InGameData.BombPowerUpgrade++;
 	}
+	else if (e.Type == GameEventType::GAME_PAUSED)
+	{
+		m_Paused = true;
+	}
+	else if (e.Type == GameEventType::GAME_UNPAUSED)
+	{
+		m_Paused = false;
+	}
 	else if (e.Type == GameEventType::PLAYER_BOMB_COUNT_UPGRADE)
 	{
 		if (g_InGameData.BombCountUpgrade < MAX_UPGRADE_COUNT_BOMBS)
@@ -257,11 +263,16 @@ void Player::OnUpdateMovement()
 {
 	m_PlayerData.Direction = { 0, 0 };
 
+	auto& player_transform = m_Handle.Transform();
+
+	if (m_Paused)
+		return;
+
 	if (Input::IsKeyPressed(kkey_up))
 	{
 		m_PlayerData.Direction.y = 1;
 		m_PlayerData.Rotated = false;
-		m_PlayerTransform->Scale.x = glm::abs(m_PlayerTransform->Scale.x);
+		player_transform.Scale.x = glm::abs(player_transform.Scale.x);
 		m_PressedKey = kkey_up;
 	}
 
@@ -271,7 +282,7 @@ void Player::OnUpdateMovement()
 		if (!m_PlayerData.Rotated)
 		{
 			m_PlayerData.Rotated = true;
-			m_PlayerTransform->Scale.x *= (-1);
+			player_transform.Scale.x *= (-1);
 		}
 		m_PressedKey = kkey_right;
 	}
@@ -280,7 +291,7 @@ void Player::OnUpdateMovement()
 	{
 		m_PlayerData.Direction.y = -1;
 		m_PlayerData.Rotated = false;
-		m_PlayerTransform->Scale.x = glm::abs(m_Handle.GetComponent<TransformComponent>().Scale.x);
+		player_transform.Scale.x = glm::abs(m_Handle.GetComponent<TransformComponent>().Scale.x);
 		m_PressedKey = kkey_down;
 	}
 
@@ -288,7 +299,7 @@ void Player::OnUpdateMovement()
 	{
 		m_PlayerData.Direction.x = -1;
 		m_PlayerData.Rotated = false;
-		m_PlayerTransform->Scale.x = glm::abs(m_Handle.GetComponent<TransformComponent>().Scale.x);
+		player_transform.Scale.x = glm::abs(m_Handle.GetComponent<TransformComponent>().Scale.x);
 		m_PressedKey = kkey_left;
 	}
 
@@ -347,35 +358,17 @@ void Player::OnUpdateMovement()
 		m_PressedKey = 0;
 	}
 
-	m_PlayerData.Velocity.x = m_PlayerData.Direction.x * m_PlayerData.Speed;
+ 	m_PlayerData.Velocity.x = m_PlayerData.Direction.x * m_PlayerData.Speed;
 	m_PlayerData.Velocity.y = m_PlayerData.Direction.y * m_PlayerData.Speed;
-
-	auto body = static_cast<b2Body*>(m_Handle.GetComponent<Rigidbody2DComponent>().RuntimeBody);
-
-	if (glm::abs(m_PlayerData.Velocity.x) == 1 && glm::abs(m_PlayerData.Velocity.y) == 1)
-	{
-		switch (m_LastKey)
-		{
-		case Key::W:
-		case Key::S:
-			m_PlayerData.Velocity.x = 0;
-			break;
-		case Key::A:
-		case Key::D:
-			m_PlayerData.Velocity.y = 0;
-			break;
-		default:
-			break;
-		}
-	}
-
-	body->SetLinearVelocity({ m_PlayerData.Velocity.x, m_PlayerData.Velocity.y });
-
-
-	// Dispatch to all observers that player has moved
+	
+	// Získání fyzikálního objektu z komponentu Rigidbody2D 
+	auto player_body = static_cast<b2Body*>(m_Handle.GetComponent<Rigidbody2DComponent>().RuntimeBody);
+	// Nastavení lineární rychlosti hráče
+	player_body->SetLinearVelocity({ m_PlayerData.Velocity.x, m_PlayerData.Velocity.y });
+	
+	// Pokud se hráč pohnul rozešle se jeho pozice všem jeho posluchačům
 	if(m_PlayerData.Velocity.x != 0 || m_PlayerData.Velocity.y != 0)
 	{
-		//HU_INFO("DAMN: {0}, {1}", m_PlayerData.Velocity.x, m_PlayerData.Velocity.y);
 		Dispatch(GameEventType::PLAYER_MOVED, m_Handle.Transform().Translation);
 	}
 }

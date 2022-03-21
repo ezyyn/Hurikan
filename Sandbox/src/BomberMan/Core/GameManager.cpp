@@ -1,4 +1,4 @@
-#include "GameManager.hpp"
+﻿#include "GameManager.hpp"
 
 #include "BomberMan/Core/SaveLoadSystem.hpp"
 #include "BomberMan/Game/InGame.hpp"
@@ -9,73 +9,74 @@
 
 #include <imgui.h>
 
+static KeyCode s_KeyPressed = 0;
+
 extern GameData g_InGameData;
 
 void GameManager::OnAttach()
 {
+	// This is where GameManager begins
+
+	// Init of crutial modules
 	SaveLoadSystem::Init();
 	ResourceManager::Init();
 	AudioManager::Init();
 
+	// MainMenu class is attaching its listeners
 	m_MainMenu.Attach(this);
 	m_MainMenu.Attach(&m_AudioAssistant);
+
+	// AudioAssistant is just a listener that listens to events specified for him. See "Observer.hpp"
 	Attach(&m_AudioAssistant);
 
 	m_MainMenu.Init(); 
 
-	// Load level scene
-	{
+	// Vytvářím úlohy, které se spustí až bude potřeba
+
+	m_NextLevelTimer.Create(3.0f, [this](float ts) 
 		{
-			const auto& [width, height] = Application::Get().GetWindowSize();
-
-			auto& camera = m_MidScene.CreateEntity();
-			auto& camera_cmp = camera.AddComponent<CameraComponent>();
-			camera_cmp.Camera.SetViewportSize(width, height);
-			camera_cmp.Camera.SetOrthographicSize(10);
-			camera_cmp.Camera.SetProjectionType(SceneCamera::ProjectionType::Orthographic);
-		}
-
+			m_Game->OnUpdate((Timestep)ts);
+		}, 
+		[this](SceneType type)
 		{
-			auto& leveltext = m_MidScene.CreateEntity();
-			leveltext.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)).SubTexture = ResourceManager::GetSubTexture("LevelText");
+			Dispatch(GameEventType::AUDIO_LEVEL_SCREEN);
+			 
+			delete m_Game;
+			m_Game = nullptr;
+			m_CurrentScreen = type;
+			m_NextLevelTimer.Reset();
+		});
 
-			//leveltext.Transform().Translation.x = 2.8f;
-			//leveltext.Transform().Translation.y = -1.1f;
-			leveltext.Transform().Scale.x *= 1.5f;
-			leveltext.Transform().Scale.y *= 0.4f;
-		}
-
+	m_LoadLevelTimer.Create(3.0f, [this](float ts)
 		{
-			// Level counter, gets data from SaveManager
-			m_LevelCount = m_MidScene.CreateEntity();
-			m_LevelCount.AddComponent<SpriteRendererComponent>(glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)).SubTexture = 
-				ResourceManager::GetSubTexture("m" + std::to_string(SaveLoadSystem::GetCurrentLevel().ID));
+			m_MainMenu.OnUpdateLoadScene((Timestep)ts);
+		},
+		[this](SceneType type)
+		{
+			HU_CORE_ASSERT(m_Game == nullptr, "Game is already initialized!");
+			m_Game = new InGame;
+			m_Game->Attach(this);
+			m_Game->Init(m_AudioAssistant);
+			m_CurrentScreen = type;
+			m_LoadLevelTimer.Reset();
+		});
 
-			m_LevelCount.Transform().Translation.x = 1.0f;
-			//levelcount.Transform().Translation.y = -1.1f;
-			m_LevelCount.Transform().Scale.x *= 0.6f;
-			m_LevelCount.Transform().Scale.y *= 0.6f;
-		}
-	}
-
-	// Game end text
-	{
-		m_GameEndText = m_MidScene.CreateEntity();
-		ResourceManager::GetTexture("GameEndText");
-	}
 
 	m_CurrentScreen = SceneType::MAIN_MENU;
 }
 
 void GameManager::OnDetach()
 {
+	// When app ("Application.h") captures that the user is exiting the game it will call this method
+	// to ensure that everything gets a chance to be released
+
 	AudioManager::Shutdown();
 
 	if (m_Game)
 		delete m_Game;
 }
 
-Timestep timestep;
+Timestep timestep; // TODO:REMOVE
 
 void GameManager::OnUpdate(Timestep& ts)
 {
@@ -94,7 +95,7 @@ void GameManager::OnUpdate(Timestep& ts)
 	}
 	case SceneType::LOADING_LEVEL:
 	{
-		LoadLevel(ts);
+		m_LoadLevelTimer.Tick(ts, SceneType::IN_GAME);
 		break;
 	}
 	case SceneType::IN_GAME:
@@ -105,11 +106,13 @@ void GameManager::OnUpdate(Timestep& ts)
 	}
 	case SceneType::LEVEL_FAIL:
 	case SceneType::LEVEL_SUCCESS:
-		WaitAndSwitch(SceneType::LOADING_LEVEL, ts);
+	{
+		m_NextLevelTimer.Tick(ts, SceneType::LOADING_LEVEL);
 		break;
-
+	}
 	case SceneType::RETURN_TO_MAIN_MENU:
 	{
+
 		delete m_Game;
 		m_Game = nullptr;
 
@@ -118,68 +121,12 @@ void GameManager::OnUpdate(Timestep& ts)
 	}
 	case SceneType::GAME_END_TEXT:
 	{
-		{
-			m_Game->OnUpdate(ts);
-
-			static float wait = 3.0f;
-			wait -= ts;
-
-			if (wait > 0.0f)
-				return;
-
-			wait = 3.0f;
-		}
-
-		delete m_Game;
-		m_Game = nullptr;
-		m_CurrentScreen = SceneType::MAIN_MENU;
+		m_NextLevelTimer.Tick(ts, SceneType::MAIN_MENU);
 		break;
 	}
 	default:
 		break;
 	}
-}
-
-void GameManager::WaitAndSwitch(SceneType type, Timestep& ts)
-{
-	{
-		m_Game->OnUpdate(ts);
-
-		static float wait = 3.0f;
-		wait -= ts;
-
-		if (wait > 0.0f)
-			return;
-
-		wait = 3.0f;
-	}
-
-	Dispatch(GameEventType::AUDIO_LEVEL_SCREEN);
-
-	delete m_Game;
-	m_Game = nullptr;
-	m_CurrentScreen = type;
-}
-
-void GameManager::LoadLevel(Timestep& ts)
-{
-	{
-		// Display 
-		m_MidScene.OnUpdateRuntime(ts);
-
-		static float wait1 = 3.0f;
-		wait1 -= ts;
-
-		if (wait1 > 0.0f)
-			return;
-		
-		wait1 = 3.0f;
-	}
-	m_Game = new InGame;
-	m_Game->Attach(this);
-	m_Game->Init(m_AudioAssistant);
-	//Switch
-	m_CurrentScreen = SceneType::IN_GAME;
 }
 
 void GameManager::OnImGuiRender()
@@ -219,18 +166,19 @@ bool GameManager::OnKeyPressed(KeyPressedEvent& e)
 {
 	if (m_CurrentScreen == SceneType::IN_GAME && m_Game)
 	{
-		if (m_KeyPressed != Key::Escape && e.GetKeyCode() == Key::Escape) // Player cannot pause while level completed or fail -> WORKING
+		if (s_KeyPressed != Key::Escape && e.GetKeyCode() == Key::Escape) 
 		{
 			m_Game->Pause(!m_Game->Paused());
 
-			m_KeyPressed = Key::Escape;
+			s_KeyPressed = Key::Escape;
 		}
 	}
 
-	if (m_KeyPressed != Key::F5 && e.GetKeyCode() == Key::F5)
+	if (s_KeyPressed != Key::F5 && e.GetKeyCode() == Key::F5)
 	{
-		m_KeyPressed = Key::F5;
+		s_KeyPressed = Key::F5;
 		Application::Get().SetFullScreen(!Application::Get().FullScreenEnabled());
+		return true;
 	}
 
 	if(m_CurrentScreen == SceneType::MAIN_MENU)
@@ -241,9 +189,9 @@ bool GameManager::OnKeyPressed(KeyPressedEvent& e)
 
 bool GameManager::OnKeyReleased(KeyReleasedEvent& e)
 {
-	m_KeyPressed = 0;
+	s_KeyPressed = 0;
 
-	return false;
+	return true;
 }
 
 void GameManager::OnGameEvent(GameEvent& e)
@@ -254,7 +202,6 @@ void GameManager::OnGameEvent(GameEvent& e)
 
 		SaveLoadSystem::EraseDataAndDeserialize();
 		m_CurrentScreen = SceneType::LOADING_LEVEL;
-		m_LevelCount.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("m" + std::to_string(SaveLoadSystem::GetCurrentLevel().ID));
 	}
 	else if (e.Type == GameEventType::GAME_CONTINUE)
 	{
@@ -283,20 +230,22 @@ void GameManager::OnGameEvent(GameEvent& e)
 		}
 
 		m_CurrentScreen = SceneType::LEVEL_SUCCESS;
-		m_LevelCount.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("m" + std::to_string(SaveLoadSystem::GetCurrentLevel().ID));
+
+		m_MainMenu.UpdateUI();
 	}
 	else if (e.Type == GameEventType::RETURN_TO_MAIN_MENU)
 	{
 		// Already dispatched to AudioManager via InGame
 		
 		m_CurrentScreen = SceneType::RETURN_TO_MAIN_MENU;
-		m_LevelCount.GetComponent<SpriteRendererComponent>().SubTexture = ResourceManager::GetSubTexture("m" + std::to_string(SaveLoadSystem::GetCurrentLevel().ID));
+
 		m_MainMenu.UpdateUI();
 	}
 	else if (e.Type == GameEventType::GAME_COMPLETED)
 	{
 		// Player finished the game => erase all his progress
 		SaveLoadSystem::EraseData();
+		m_MainMenu.UpdateUI();
 
 		m_CurrentScreen = SceneType::GAME_END_TEXT;
 	}

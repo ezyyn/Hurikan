@@ -7,6 +7,7 @@ include "Dependencies.lua"
 workspace "Hurikan"
 	architecture "x86_64"
 	startproject "Sandbox"
+	toolset "v143"
 
 	configurations
 	{
@@ -43,4 +44,4 @@ group ""
 
 include "Hurikan"
 include "Sandbox"
-include "Storm"
+--include "Storm"

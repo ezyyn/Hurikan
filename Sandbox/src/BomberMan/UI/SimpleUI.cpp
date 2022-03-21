@@ -76,7 +76,6 @@ void SimpleUI::Init()
 
 		auto& animator = m_Head.AddCustomComponent<Animator>();
 		animator.SetTarget(m_Head);
-		animator.SetDebugTag("PlayerHead");
 		animator.Add(ResourceManager::GetAnimation("HeadUpAnimation"));
 		animator.Add(ResourceManager::GetAnimation("HeadDownAnimation"));
 		animator.Add(ResourceManager::GetAnimation("HeadLeftAnimation"));
@@ -370,6 +369,16 @@ void SimpleUI::OnGameEvent(GameEvent& e)
 	{
 		if(m_PlayerHealth < 3)
 			m_HeartEntities[m_PlayerHealth].GetComponent<SpriteRendererComponent>().Color = glm::vec4(1.0f);
+		break;
+	}
+	case GameEventType::GAME_PAUSED:
+	{
+		DisplayPauseMenu();
+		break;
+	}
+	case GameEventType::GAME_UNPAUSED:
+	{
+		HidePauseMenu();
 		break;
 	}
 	case GameEventType::PLAYER_SUCCESS_EXIT:

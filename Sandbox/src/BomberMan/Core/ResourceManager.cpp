@@ -8,6 +8,7 @@ void ResourceManager::Init_Impl()
 
 	Ref<Texture2D> entities_16x16 =  Texture2D::Create(m_Filepath + "entities_16x16.png");
 	Ref<Texture2D> tileset_16x16 = Texture2D::Create(m_Filepath + "tileset_16x16.png");
+	m_TextureMap["Tutorial"] = Texture2D::Create(m_Filepath + "ui/tutorial.png");
 
 	// Grid
 	{
@@ -109,18 +110,6 @@ void ResourceManager::Init_Impl()
 			m_SubTextureMap["7"] = SubTexture2D::CreateFromCoords(numbersSpriteSheet, { 7, 0 }, { 9, 9 });
 			m_SubTextureMap["8"] = SubTexture2D::CreateFromCoords(numbersSpriteSheet, { 8, 0 }, { 9, 9 });
 			m_SubTextureMap["9"] = SubTexture2D::CreateFromCoords(numbersSpriteSheet, { 9, 0 }, { 9, 9 });
-
-			Ref<Texture2D> numbersSpriteSheet2 = Texture2D::Create(m_Filepath + "/font_spritesheet.png");
-			m_SubTextureMap["m0"] = SubTexture2D::CreateFromCoords(numbersSpriteSheet2, { 1, 7 }, { 20, 20 });
-			m_SubTextureMap["m1"] = SubTexture2D::CreateFromCoords(numbersSpriteSheet2, { 2, 6 }, { 20, 20 });
-			m_SubTextureMap["m2"] = SubTexture2D::CreateFromCoords(numbersSpriteSheet2, { 3, 6 }, { 20, 20 });
-			m_SubTextureMap["m3"] = SubTexture2D::CreateFromCoords(numbersSpriteSheet2, { 4, 6 }, { 20, 20 });
-			m_SubTextureMap["m4"] = SubTexture2D::CreateFromCoords(numbersSpriteSheet2, { 5, 6 }, { 20, 20 });
-			m_SubTextureMap["m5"] = SubTexture2D::CreateFromCoords(numbersSpriteSheet2, { 6, 6 }, { 20, 20 });
-			m_SubTextureMap["m6"] = SubTexture2D::CreateFromCoords(numbersSpriteSheet2, { 7, 6 }, { 20, 20 });
-			m_SubTextureMap["m7"] = SubTexture2D::CreateFromCoords(numbersSpriteSheet2, { 8, 6 }, { 20, 20 });
-			m_SubTextureMap["m8"] = SubTexture2D::CreateFromCoords(numbersSpriteSheet2, { 9, 6 }, { 20, 20 });
-			m_SubTextureMap["m9"] = SubTexture2D::CreateFromCoords(numbersSpriteSheet2, { 10, 6 },{ 20, 20 });
 		}	
 		// Level text
 		{
@@ -271,22 +260,6 @@ void ResourceManager::Init_Impl()
 
 	// Enemy animations
 	{
-		Animation bossIdle;
-		{
-			bossIdle.Tag = "BossIdle";
-			bossIdle.Repeat = true;
-			bossIdle.Delay = 100.0f;
-
-			std::vector<Frame> frames;
-			frames.reserve(4);
-			frames.emplace_back(glm::vec2{ 0, 0 }, glm::vec4(1.0f));
-			frames.emplace_back(glm::vec2{ 1, 0 }, glm::vec4(1.0f));
-			frames.emplace_back(glm::vec2{ 2, 0 }, glm::vec4(1.0f));
-			frames.emplace_back(glm::vec2{ 1, 0 }, glm::vec4(1.0f));
-
-			bossIdle.Create(Texture2D::Create(m_Filepath + "boss/robot_boss.png"), {128, 128}, frames);
-			m_AnimationMap["BossIdleAnimation"] = bossIdle;
-		}
 		// Regular
 		Animation baloonAnimation, baloonDeadAnimation;
 		{
@@ -478,6 +451,76 @@ void ResourceManager::Init_Impl()
 		m_AnimationMap["BombCenterExplosion"] = bombSpreadCenterAnimation;
 		m_AnimationMap["BombSpreadMiddleExplosion"] = bombSpreadMiddleAnimation;
 		m_AnimationMap["BombEndWingExplosion"] = bombSpreadEndAnimation;
+	}
+	// Boss 
+	{
+		Animation bossDeath, bossLeft, bossUp, bossDown, bossIdle;
+		{
+			bossIdle.Tag = "BossIdle";
+			bossIdle.Delay = 100.0f;
+
+			std::vector<Frame> frames;
+			frames.reserve(1);
+			frames.emplace_back(glm::vec2{ 0, 3 }, glm::vec4(1.0f));
+			bossIdle.Create(Texture2D::Create(m_Filepath + "boss_spritesheet.png"), { 32, 32 }, frames);
+		}
+		{
+			bossDeath.Tag = "BossDead";
+			bossDeath.Delay = 100.0f;
+
+			std::vector<Frame> frames;
+			frames.reserve(7);
+			frames.emplace_back(glm::vec2{ 0, 3 }, glm::vec4(1.0f));
+			frames.emplace_back(glm::vec2{ 1, 3 }, glm::vec4(1.0f));
+			frames.emplace_back(glm::vec2{ 2, 3 }, glm::vec4(1.0f));
+			frames.emplace_back(glm::vec2{ 3, 3 }, glm::vec4(1.0f));
+			frames.emplace_back(glm::vec2{ 0, 2 }, glm::vec4(1.0f));
+			frames.emplace_back(glm::vec2{ 1, 2 }, glm::vec4(1.0f));
+			frames.emplace_back(glm::vec2{ 2, 2 }, glm::vec4(1.0f));
+			bossDeath.Create(Texture2D::Create(m_Filepath + "boss_spritesheet.png"), { 32, 32 }, frames);
+		}
+
+		{
+			bossLeft.Tag = "BossLeft";
+			bossLeft.Delay = 100.0f;
+			bossLeft.Repeat = true;
+
+			std::vector<Frame> frames;
+			frames.reserve(2);
+			frames.emplace_back(glm::vec2{ 4, 3 }, glm::vec4(1.0f));
+			frames.emplace_back(glm::vec2{ 4, 4 }, glm::vec4(1.0f));
+			bossLeft.Create(Texture2D::Create(m_Filepath + "boss_spritesheet.png"), { 32, 32 }, frames);
+		}
+
+		{
+			bossUp.Tag = "BossUp";
+			bossUp.Delay = 100.0f;
+			bossUp.Repeat = true;
+
+			std::vector<Frame> frames;
+			frames.reserve(2);
+			frames.emplace_back(glm::vec2{ 2, 1 }, glm::vec4(1.0f));
+			frames.emplace_back(glm::vec2{ 3, 1 }, glm::vec4(1.0f));
+			bossUp.Create(Texture2D::Create(m_Filepath + "boss_spritesheet.png"), { 32, 32 }, frames);
+		}
+
+		{
+			bossDown.Tag = "BossDown";
+			bossDown.Delay = 100.0f;
+			bossDown.Repeat = true;
+
+			std::vector<Frame> frames;
+			frames.reserve(2);
+			frames.emplace_back(glm::vec2{ 2, 0 }, glm::vec4(1.0f));
+			frames.emplace_back(glm::vec2{ 3, 0 }, glm::vec4(1.0f));
+			bossDown.Create(Texture2D::Create(m_Filepath + "boss_spritesheet.png"), { 32, 32 }, frames);
+		}
+
+		m_AnimationMap["BossIdleAnimation"] = bossIdle;
+		m_AnimationMap["BossDownAnimation"] = bossDown;
+		m_AnimationMap["BossLeftAnimation"] = bossLeft;
+		m_AnimationMap["BossUpAnimation"] = bossUp;
+		m_AnimationMap["BossDeadAnimation"] = bossDeath;
 	}
 
 	// Grid animations

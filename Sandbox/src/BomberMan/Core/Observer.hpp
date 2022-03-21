@@ -1,7 +1,15 @@
+﻿/*
+ * This is the observer design pattern.
+ */
+
 #pragma once
 
 #include <list>
 #include <any>
+
+/*
+ * List of all events happening in this game
+ */
 
 enum class GameEventType : unsigned short
 {
@@ -36,6 +44,8 @@ enum class GameEventType : unsigned short
 
 	GAME_NEW,
 	GAME_CONTINUE,
+	GAME_PAUSED,
+	GAME_UNPAUSED,
 	GAME_EXIT,
 	GAME_COMPLETED,
 
@@ -54,11 +64,12 @@ enum class GameEventType : unsigned short
 	AUDIO_LEVEL_SCREEN,
 	AUDIO_MAINMENU,
 	AUDIO_INGAME_LOOP,
-	AUDIO_PAUSE_INGAME_LOOP,
-	AUDIO_UNPAUSE_INGAME_LOOP,
 	AUDIO_BOSS_LOOP,
 };
-
+/*
+ * This struct just combines the actual event that has happened and a feature (std::any) that can store literally anyhing.
+ * std::any is just a safe variant of a void pointer
+ */
 struct GameEvent
 {
 	GameEvent(GameEventType type, const std::any& data)
@@ -76,20 +87,29 @@ struct GameEvent
 	std::any Data;
 };
 
+// Dědíme když chceme, aby daná třída byla schopna odposlouchávat komunikaci.
 class Observer
 {
 private:
+	// Zavolá se pokaždé, když třída Observable zavolá funkci Dispatch.
 	virtual void OnGameEvent(GameEvent& e) = 0;
 
 	friend class Observable;
 };
 
+// Dědíme když víme, že tato třída bude vyvolávat události, na které musí zareagovat ostatní třídy.
 class Observable
 {
 public:
+	// Přídaní posluchače událostí
 	void Attach(Observer* obs);
+	// Odebrání posluchače událostí
 	void Detach(Observer* obs);
 protected:
+	// Třída dědící z této třídy má k dispozici tuto funkci pro rozhlášení všem přidaným posluchačum, že 
+	// se stala nějaká událost.
+	// GameEventType specifikuje, jaká událost se právě stala. Data jsou volitelný argument, lze 
+	// tedy i poslat důležitá data.
 	void Dispatch(GameEventType type, const std::any& data = std::any());
 private:
 	std::list<Observer*> m_Observers;

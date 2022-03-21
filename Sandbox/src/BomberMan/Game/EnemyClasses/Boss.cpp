@@ -10,21 +10,21 @@ Boss::Boss(Scene* scene, Entity& grid_entity) : Enemy(scene->CreateEntityWithDra
 
 	m_Handle.AddCustomComponent<EntityTypeComponent>().Type = EntityType::ENEMY_BOSS;
 
-	m_Handle.Transform().Scale *= 3;
-
-	m_Properties.Health = 1;
+	m_Properties.Health = 3;
 	m_Properties.Intelligence = AI::FOLLOW_RANGE;
 	m_Properties.Name = "Bill";
 	m_Properties.Speed = 6.0f;
 
 	auto& animator = m_Handle.GetComponent<Animator>();
 	animator.Add(ResourceManager::GetAnimation("BossIdleAnimation"));
-	animator.Add(ResourceManager::GetAnimation("BlueIceCreamDeadAnimation"));
+	animator.Add(ResourceManager::GetAnimation("BossLeftAnimation"));
+	animator.Add(ResourceManager::GetAnimation("BossUpAnimation"));
+	animator.Add(ResourceManager::GetAnimation("BossDownAnimation"));
+	animator.Add(ResourceManager::GetAnimation("BossDeadAnimation"));
 	animator.SetTarget(m_Handle);
 	animator.SetColor(glm::vec4(1.0f));
 
 	m_Handle.GetComponent<Animator>().Play("BossIdle");
-
 }
 
 void Boss::OnUpdateInternal(Timestep& ts)
@@ -33,6 +33,14 @@ void Boss::OnUpdateInternal(Timestep& ts)
 
 void Boss::OnChangeDirection(Direction& dir)
 {
+	if(dir == Direction::DOWN)
+		m_Handle.GetComponent<Animator>().Play("BossDown");
+	else if (dir == Direction::UP)
+		m_Handle.GetComponent<Animator>().Play("BossUp");
+	else if (dir == Direction::LEFT)
+		m_Handle.GetComponent<Animator>().Play("BossLeft");
+	else if (dir == Direction::RIGHT)
+		m_Handle.GetComponent<Animator>().Play("BossLeft");
 }
 
 void Boss::OnGameEvent(GameEvent& e)
@@ -53,7 +61,7 @@ void Boss::OnGameEvent(GameEvent& e)
 				if (--m_Properties.Health == 0)
 				{
 					m_Alive = false;
-					m_Handle.GetComponent<Animator>().Play("BlueIceCreamDead");
+					m_Handle.GetComponent<Animator>().Play("BossDead");
 					break;
 				}
 				m_Hit = true;
@@ -73,7 +81,10 @@ void Boss::OnGameEvent(GameEvent& e)
 bool Boss::EnemyLogic(Timestep& ts)
 {
 	if (!m_CutSceneCompleted)
+	{
+		m_Moving = false;
 		return false;
+	}
 
 	if (!m_RecalculatePath)
 	{
@@ -85,6 +96,7 @@ bool Boss::EnemyLogic(Timestep& ts)
 			Follow(path);
 			m_RecalculatePath = true;
 		}
+		m_Moving = false;
 		return false;
 	}
 
@@ -100,6 +112,7 @@ bool Boss::EnemyLogic(Timestep& ts)
 		{
 			Follow(path);
 		}
+		m_Moving = false;
 		return false;
 	}
 	else if(!m_Path.empty())
@@ -114,10 +127,10 @@ bool Boss::EnemyLogic(Timestep& ts)
 				path = Navigation::RandomPath(GetLastPositionOnGrid());
 			}
 			Follow(path);
-
+			m_Moving = false;
 			return false;
 		}
 	}
-
+	m_Moving = true;
 	return true;
 }

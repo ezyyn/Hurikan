@@ -1,4 +1,4 @@
-#include "SaveLoadSystem.hpp"
+﻿#include "SaveLoadSystem.hpp"
 
 #include <Hurikan/Core/Log.h>
 
@@ -9,13 +9,14 @@ SaveLoadSystem SaveLoadSystem::s_Instance;
 
 void SaveLoadSystem::Init_Impl()
 {
+	// Vytvoření složky data
 	if(!std::filesystem::exists("data"))
 		std::filesystem::create_directory("data");
-
+	// Načtení seznamu levelů 
 	LevelLoader::Deserialize(m_Levels);
-
+	// Načtení dat
 	LoadData_Impl();
-
+	// Načtení dat hráče týkající se nastavení hladiny zvuku
 	LoadUserSettings_Impl();
 
 }

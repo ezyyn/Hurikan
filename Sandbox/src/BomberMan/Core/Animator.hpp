@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #define NO_PLAYING_ANIMATION -1
 
@@ -11,8 +11,9 @@ struct Frame
 {
 	Frame(const glm::vec2& coords, const glm::vec4 color)
 		: Coords(coords), Color(color)
-	{
-	}
+	{}
+
+	Frame(const Frame&) = default;
 
 	glm::vec2 Coords;
 	glm::vec4 Color;
@@ -44,31 +45,39 @@ private:
 class Animator
 {
 public:
-	Animator(const std::string& tag = std::string()) : m_DebugTag(tag) {}
+	Animator() {}
 	Animator(const Animator&) = default;
 	~Animator();
-
+	// Nastavení cílené entity
 	void SetTarget(Entity& e);
+	// Nastavení barvy animace
 	inline void SetColor(const glm::vec4& color) { m_Color = color; }
 	void OnUpdate(Timestep ts);
+	// Přídání animace
 	void Add(const Animation& animation);
-	inline void SetDebugTag(const std::string& tag) { m_DebugTag = tag; }
-	inline const std::string& GetDebugTag() { return m_DebugTag; }
-	
-	void Play(size_t index);
+	// Správa animací
 	void Play(const std::string& tag);
 	void Stop();
 	void Pause();
 
-	bool IsAnyPlaying();
+	inline std::string GetCurrentAnimation() const
+	{
+		if (m_PlayingAnimationIndex == NO_PLAYING_ANIMATION)
+			return std::string();
+		return m_AnimationList[m_PlayingAnimationIndex].Tag;
+	}
 
+	// Indikátor jestli je animátor vůbec aktivní
+	bool IsAnyPlaying();
+	// Indikátor prázdného animátoru
 	bool IsEmpty() const { return m_AnimationList.size() == 0; }
+private:
+	// Pomocná funkce Play funkce
+	void Play_Impl(size_t index);
 private:
 	size_t m_PlayingAnimationIndex = NO_PLAYING_ANIMATION;
 	Entity m_TargetEntity;
 	glm::vec4 m_Color = glm::vec4(1.0f);
-
+	// Vektor animací
 	std::vector<Animation> m_AnimationList = {};
-
-	std::string m_DebugTag;
 };

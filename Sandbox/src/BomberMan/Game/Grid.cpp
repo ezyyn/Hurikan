@@ -8,14 +8,14 @@
 #include <Hurikan/Core/KeyCodes.h>
 #include <box2d/b2_body.h>
 
-Scope<Entity[]> Grid::m_Grid;
+Entity* Grid::m_Grid;
 
 extern GameData g_InGameData;
 
 Grid::~Grid()
 {
-	//m_Grid.release();
-	m_Grid.reset();
+	delete[] m_Grid;
+	m_Grid = nullptr;
 }
 
 /*
@@ -38,13 +38,13 @@ Grid::~Grid()
 static bool b = false;
 
 
-void Grid::Create(Scene* const scene)
+void Grid::Create(Scene* scene)
 {
 	b = false; // TOOD: REMOVE
 
 	g_GameScene = scene;
 
-	m_Grid = CreateScope<Entity[]>(GetLevelWidth() * GetLevelHeight());
+	m_Grid = new Entity[GetLevelWidth() * GetLevelHeight()];
 
 	constexpr float offset_x = -15.5f;
 
@@ -56,7 +56,8 @@ void Grid::Create(Scene* const scene)
 			m_Grid[y * GetLevelWidth() + x] = gridEntity;
 
 			gridEntity.AddCustomComponent<EntityTypeComponent>().Type = EntityType::EMPTY;
-			gridEntity.GetComponent<TransformComponent>().Translation = { x + offset_x, (y + 1.5f - GetLevelHeight() / 2) * (-1), 0.0f };
+			gridEntity.GetComponent<TransformComponent>().Translation = 
+			{ x + offset_x, (y + 1.5f - GetLevelHeight() / 2) * (-1), 0.0f };
 			gridEntity.AddComponent<Rigidbody2DComponent>();
 			gridEntity.AddComponent<BoxCollider2DComponent>();
 			auto& gnc = gridEntity.AddCustomComponent<GridNodeComponent>();
@@ -284,21 +285,13 @@ void Grid::Create(Scene* const scene)
 			auto& gnc = m_Grid[y * GetLevelWidth() + x].GetComponent<GridNodeComponent>();
 
 			if (y > 0)
-			{
 				gnc.Neighbours.push_back(m_Grid[(y - 1) * GetLevelWidth() + x]);
-			}
 			if (x > 0)
-			{
 				gnc.Neighbours.push_back(m_Grid[y * GetLevelWidth() + x - 1]);
-			}
 			if (y < GetLevelHeight() - 1)
-			{
 				gnc.Neighbours.push_back(m_Grid[(y + 1) * GetLevelWidth() + x]);
-			}
 			if (x < GetLevelWidth() - 1)
-			{
 				gnc.Neighbours.push_back(m_Grid[y * GetLevelWidth() + x + 1]);
-			}
 		}
 	}
 
@@ -307,15 +300,15 @@ void Grid::Create(Scene* const scene)
 
 Entity& Grid::Get(unsigned int y, unsigned int x)
 {
-	return m_Grid[y * SaveLoadSystem::GetCurrentLevel().Width + x];
+	return m_Grid[y * GetLevelWidth() + x];
 }
 
-const int Grid::GetLevelHeight() const
+const int Grid::GetLevelHeight() 
 {
 	return SaveLoadSystem::GetCurrentLevel().Height;
 }
 
-const int Grid::GetLevelWidth() const
+const int Grid::GetLevelWidth() 
 {
 	return SaveLoadSystem::GetCurrentLevel().Width;
 }
@@ -324,14 +317,14 @@ void Grid::ClearNodes()
 {
 	int size = SaveLoadSystem::GetCurrentLevel().Width * SaveLoadSystem::GetCurrentLevel().Height;
 
-	for (int i = 0; i < size; ++i) // TODO: Optimize
+	for (int i = 0; i < size; ++i) 
 	{
 		auto& node = m_Grid[i].GetComponent<GridNodeComponent>();
 
 		node.Visited = false;
 		node.GlobalGoal = INFINITY;
 		node.LocalGoal = INFINITY;
-		node.Parent = Entity{};
+		node.Parent = {};
 	}
 }
 

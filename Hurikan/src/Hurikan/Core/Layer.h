@@ -6,7 +6,8 @@
 
 #include "Hurikan/Events/Event.h"
 
-namespace Hurikan {
+namespace Hurikan 
+{
 	class Layer
 	{
 	public:

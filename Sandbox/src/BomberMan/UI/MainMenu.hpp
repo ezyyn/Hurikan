@@ -26,9 +26,15 @@ public:
 
 	void OnUpdate(Timestep& ts);
 
+	void OnUpdateLoadScene(Timestep& ts);
+
 	void UpdateUI();
 
 	void OnKeyPressed(KeyPressedEvent& e);
+private:
+	void LoadScene();
+
+	virtual void OnGameEvent(GameEvent& e) override;
 private:
 	Entity 
 		m_ArrowHead, 
@@ -50,7 +56,10 @@ private:
 		m_SelectedOption = MenuOption::NEW_GAME;
 
 	Scene m_MenuScene;
-
 private:
-	virtual void OnGameEvent(GameEvent& e) override;
+	Entity m_Tutorial;
+private:
+	Entity m_GameEndText;
+	Entity m_LevelCountLoadScene;
+	Scene m_LoadLevelScene;
 };

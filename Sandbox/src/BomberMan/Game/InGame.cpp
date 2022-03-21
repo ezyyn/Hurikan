@@ -12,10 +12,6 @@
 
 extern GameData g_InGameData = GameData();
 
-InGame::~InGame()
-{
-}
-
 void InGame::Init(AudioAssistant& assistant)
 {
 	g_InGameData = SaveLoadSystem::GetGameData();
@@ -47,7 +43,9 @@ void InGame::Init(AudioAssistant& assistant)
 
 	{
 		// InGame's listeners
+		Attach(&m_Player);
 		Attach(&assistant);
+		Attach(&m_SimpleUI);
 
 		// Camera's listeners
 		m_GameCamera.Attach(&assistant);
@@ -107,13 +105,14 @@ void InGame::OnGameEvent(GameEvent& e)
 	}
 	else if (e.Type == GameEventType::PLAYER_SUCCESS_EXIT)
 	{
-		if (SaveLoadSystem::GetGameData().CompletedLevels >= SaveLoadSystem::GetLevels().size())
+		g_InGameData.CompletedLevels++;
+
+		if (g_InGameData.CompletedLevels == SaveLoadSystem::GetLevels().size())
 		{
 			Dispatch(GameEventType::GAME_COMPLETED);
 			return;
 		}
 
-		g_InGameData.CompletedLevels++;
 		SaveLoadSystem::SaveLevel(g_InGameData);
 		Dispatch(GameEventType::LEVEL_SUCCESS);
 	}
@@ -146,25 +145,18 @@ void InGame::Pause(bool pause)
 		return;
 
 	m_Paused = pause;
+
 	if (m_Paused)
-	{
-		m_SimpleUI.DisplayPauseMenu();
-		if (!SaveLoadSystem::GetCurrentLevel().BossLevel)
-			Dispatch(GameEventType::AUDIO_PAUSE_INGAME_LOOP);
-	}
+		Dispatch(GameEventType::GAME_PAUSED);
 	else
-	{
-		m_SimpleUI.HidePauseMenu();
-		if (!SaveLoadSystem::GetCurrentLevel().BossLevel)
-			Dispatch(GameEventType::AUDIO_UNPAUSE_INGAME_LOOP);
-	}
+		Dispatch(GameEventType::GAME_UNPAUSED);
 }
 
 void InGame::OnUpdate(Timestep& ts)
 {
 	// Rendering
 	m_InGameScene.OnUpdateRuntime(ts);
-	m_SimpleUI.OnUpdate(ts,m_Paused);
+	m_SimpleUI.OnUpdate(ts,m_Paused); 
 	m_GameCamera.OnUpdate(ts);
 	// Logic
 	if (!m_Paused)

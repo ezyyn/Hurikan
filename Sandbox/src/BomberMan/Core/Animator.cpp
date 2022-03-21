@@ -100,7 +100,7 @@ void Animator::Add(const Animation& animation)
 	m_AnimationList.emplace_back(animation);
 }
 
-void Animator::Play(size_t index)
+void Animator::Play_Impl(size_t index)
 {
 	HU_CORE_ASSERT(m_TargetEntity, "Entity is not valid!");
 	HU_CORE_ASSERT(index < m_AnimationList.size(), "Index out of range!");
@@ -118,7 +118,7 @@ void Animator::Play(const std::string& tag)
 	{
 		if (strcmp(m_AnimationList[i].Tag.c_str(), tag.c_str()) == 0)
 		{
-			Play(i);
+			Play_Impl(i);
 			return;
 		}
 	}

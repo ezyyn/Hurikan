@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "LevelLoader.hpp"
 
@@ -72,30 +72,36 @@ public:
 	static inline bool AlreadyPlayed() { return Get().m_FirstTimePlayed == false; }
 
 private:
-	SaveLoadSystem() = default;
+	SaveLoadSystem() {};
+	~SaveLoadSystem() {};
 	
 	static SaveLoadSystem& Get() { return s_Instance; }
-
+	// Inicializace třídy
 	void Init_Impl();
+	// Načtení dat
 	void LoadData_Impl();
+	// Vytvoření souborů a dat při prvním spuštěním
 	void CreateDataAndFile_Impl();
+	// Pomocná funkce LoadData_Impl funkce
 	void LoadDataFromFile_Impl();
+	// Mazání dat
 	void EraseDataAndDeserialize_Impl();
+	// Ukládání dat ohledně nastavení zvuku
 	void SaveUserSettings_Impl(float music, float sfx);
+	// Načítání dat ohledně nastavení zvuku
 	void LoadUserSettings_Impl();
+	// Uložení dat
 	void Save_Impl(const GameData& data);
 	void SaveData_Impl();
 private:
 	bool m_DataFilePresent = false;
-	GameData m_GameData;
-
+	GameData m_GameData{};
+	// Vektor načtených levelů 
 	std::vector<Level> m_Levels;
 
 	UserSettings m_UserSettings;
-
 	bool m_FirstTimePlayed = false;
-
 	const std::string m_FilePath = "data//";
-
+	// Singleton instance
 	static SaveLoadSystem s_Instance;
 };

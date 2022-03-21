@@ -1,8 +1,8 @@
 #include "hupch.h"
 #include "LayerStack.h"
 
-namespace Hurikan {
-
+namespace Hurikan 
+{
 	LayerStack::LayerStack()
 	{
 	}

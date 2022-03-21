@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "BomberMan/Game/GCamera.hpp"
 #include "BomberMan/Game/Grid.hpp"
@@ -17,32 +17,29 @@ class AudioAssistant;
 class InGame : public Observer, public Observable
 {
 public:
-	~InGame();
-
+	InGame() {};
+	~InGame() {};
+	// Inicializace všech modůlu třídy InGame
+	// Třída AudioAssistant je sdílena se třídou GameManager
 	void Init(AudioAssistant& assistant);
-
-	// Render and game logic
+	// Voláná funkcí OnUpdate ve tříde GameManager
 	void OnUpdate(Timestep& ts);
-
+	// Zděděná funkce ze třídy Observer
 	void OnGameEvent(GameEvent& e) override;
-
+	// Funkce pro pozastavení hry.
 	void Pause(bool pause);
 	bool Paused() const { return m_Paused; }
-
 private:
-	Scene m_InGameScene;
-	
-	GCamera m_GameCamera;
-	Grid m_Grid;
-	Player m_Player;
-	BombManager m_BombManager;
-	EnemySpawner m_EnemySpawner;
-	FXManager m_FXManager;
+	// Třída Scene pochází z Hurikan enginu, je součástí entity komponent systému.
+	// Stará se všechno renderování a simulaci fyziky.
+	Hurikan::Scene m_InGameScene;
+	GCamera m_GameCamera; // Herní kamera, která se pohybuje s hráčem
+	Grid m_Grid; // Herní pole, kde se odehrává celá hra
+	Player m_Player; // Správa hráče a jeho pohybu
+	BombManager m_BombManager; // Správa bomb a jejich explozí
+	EnemySpawner m_EnemySpawner; // Správa všech nepřátelských entit 
+	FXManager m_FXManager; // Správce všech grafických efektů
+	SimpleUI m_SimpleUI; // Jednoduché grafické uživatelské rozhraní 
 
-	SimpleUI m_SimpleUI;
-
-	bool m_Paused = false;
-
-	// Maybe abstract vvvvvv
-	unsigned short m_PressedKey, m_LastPressedKey;
+	bool m_Paused = false; // Indikátor pozastavení hry
 };

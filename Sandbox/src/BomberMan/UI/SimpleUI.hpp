@@ -25,11 +25,9 @@ public:
 
 	void Init();
 	void OnUpdate(Timestep& ts, bool paused);
-
-
+private:
 	void DisplayPauseMenu();
 	void HidePauseMenu();
-private:
 	void OnGameEvent(GameEvent& e) override;
 	void OnUpdateScore(Timestep& ts);
 	void OnUpdateClock(Timestep& ts);
