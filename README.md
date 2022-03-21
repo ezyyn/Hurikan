@@ -4,7 +4,7 @@
 ## How to build
 #### You need to have python installed
 #### Go to folder *scripts/*
-#### Launch *Setup.bat* (if it does not recognize command "py", edit this file and change for "python"
+#### Launch *Setup.bat* (if it does not recognize command "py", edit this file and change for "python")
 #### The script will install everything and ultimately fail.
 #### That is okay, close the window and launch *AudioStuff.bat*
 #### This will install additional libraries
