@@ -1,2 +1,2 @@
 # Hurikan
-HurikanEngine
+OpenGL Game Engine
